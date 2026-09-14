@@ -35,6 +35,7 @@ import {
   RESEARCH_AGENT_STEPS, 
   extractCleanHostname 
 } from '../../services/aiResearchEngine';
+import { COUNTRIES_AND_CITIES } from '../../data/geoData';
 
 interface AiSeoResearchAgentProps {
   client: ClientProject;
@@ -95,6 +96,47 @@ export const AiSeoResearchAgent: React.FC<AiSeoResearchAgentProps> = ({
   const [targetCity, setTargetCity] = useState<string>('Colombo');
   const [businessType, setBusinessType] = useState<string>('Web Design Agency');
   const [targetAudience, setTargetAudience] = useState<string>('Small Businesses & Startups');
+
+  // Country & City Dropdown / Auto-suggest State
+  const [showCountryDropdown, setShowCountryDropdown] = useState<boolean>(false);
+  const [showCityDropdown, setShowCityDropdown] = useState<boolean>(false);
+
+  // Selected country object to get its specific cities
+  const selectedCountryObj = COUNTRIES_AND_CITIES.find(
+    c => c.name.toLowerCase() === targetCountry.trim().toLowerCase()
+  );
+
+  // Filtered countries based on user typing
+  const filteredCountries = COUNTRIES_AND_CITIES.filter(c => 
+    c.name.toLowerCase().includes(targetCountry.toLowerCase()) ||
+    c.code.toLowerCase().includes(targetCountry.toLowerCase())
+  );
+
+  // Filtered cities based on selected country or general list + user typing
+  const availableCities: string[] = selectedCountryObj
+    ? selectedCountryObj.popularCities
+    : Array.from(new Set(COUNTRIES_AND_CITIES.flatMap(c => c.popularCities)));
+
+  const filteredCities = availableCities.filter(city => 
+    city.toLowerCase().includes(targetCity.toLowerCase())
+  );
+
+  const handleSelectCountry = (countryName: string) => {
+    setTargetCountry(countryName);
+    setShowCountryDropdown(false);
+    // If current city is not in the newly selected country's cities, auto-pick the capital/first city
+    const match = COUNTRIES_AND_CITIES.find(c => c.name.toLowerCase() === countryName.toLowerCase());
+    if (match && match.popularCities.length > 0) {
+      if (!match.popularCities.some(ci => ci.toLowerCase() === targetCity.toLowerCase())) {
+        setTargetCity(match.popularCities[0]);
+      }
+    }
+  };
+
+  const handleSelectCity = (cityName: string) => {
+    setTargetCity(cityName);
+    setShowCityDropdown(false);
+  };
 
   // Agent execution state
   const [isRunning, setIsRunning] = useState<boolean>(false);
@@ -320,38 +362,176 @@ export const AiSeoResearchAgent: React.FC<AiSeoResearchAgentProps> = ({
             </p>
           </div>
 
-          <div className="md:col-span-3">
-            <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">
-              Target Country
-            </label>
+          {/* Target Country Input & Dropdown */}
+          <div className="md:col-span-3 relative">
+            <div className="flex items-center justify-between mb-2">
+              <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider">
+                Target Country
+              </label>
+              <span className="text-[10px] text-indigo-400 font-medium">Type or Select</span>
+            </div>
             <div className="relative">
-              <MapPin className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5" />
+              <span className="absolute left-3 top-3.5 text-base pointer-events-none">
+                {selectedCountryObj ? selectedCountryObj.flag : '🌐'}
+              </span>
               <input
                 type="text"
                 value={targetCountry}
-                onChange={(e) => setTargetCountry(e.target.value)}
-                placeholder="e.g. Sri Lanka (or Auto-detect)"
-                className="w-full bg-slate-950 border border-slate-700/80 rounded-xl pl-10 pr-4 py-3 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 transition-all"
+                onChange={(e) => {
+                  setTargetCountry(e.target.value);
+                  setShowCountryDropdown(true);
+                }}
+                onFocus={() => setShowCountryDropdown(true)}
+                placeholder="Type or pick a country..."
+                className="w-full bg-slate-950 border border-slate-700/80 rounded-xl pl-10 pr-9 py-3 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all font-medium"
               />
+              <button
+                type="button"
+                onClick={() => setShowCountryDropdown(!showCountryDropdown)}
+                className="absolute right-3 top-3.5 text-slate-400 hover:text-white transition-colors"
+                title="Toggle Country Dropdown"
+              >
+                <ChevronDown className={`w-4 h-4 transition-transform ${showCountryDropdown ? 'rotate-180' : ''}`} />
+              </button>
             </div>
-            <p className="text-[11px] text-slate-400 mt-1.5">Leave empty to infer automatically.</p>
+
+            {/* Country Suggestions Dropdown Popup */}
+            {showCountryDropdown && (
+              <>
+                <div 
+                  className="fixed inset-0 z-20" 
+                  onClick={() => setShowCountryDropdown(false)}
+                ></div>
+                <div className="absolute left-0 right-0 top-full mt-1 z-30 bg-slate-900 border border-indigo-500/30 rounded-xl shadow-2xl max-h-60 overflow-y-auto divide-y divide-slate-800 backdrop-blur-xl animate-fadeIn">
+                  <div className="p-2 bg-slate-950/80 sticky top-0 text-[11px] font-semibold text-slate-400 uppercase tracking-wider flex items-center justify-between">
+                    <span>Select Country ({filteredCountries.length})</span>
+                    <button 
+                      onClick={() => {
+                        setTargetCountry('');
+                        setShowCountryDropdown(false);
+                      }}
+                      className="text-xs text-rose-400 hover:underline capitalize font-normal"
+                    >
+                      Clear
+                    </button>
+                  </div>
+                  {filteredCountries.length > 0 ? (
+                    filteredCountries.map((c, i) => (
+                      <button
+                        key={i}
+                        type="button"
+                        onClick={() => handleSelectCountry(c.name)}
+                        className={`w-full px-3.5 py-2.5 text-left text-xs flex items-center justify-between transition-colors ${
+                          targetCountry.toLowerCase() === c.name.toLowerCase()
+                            ? 'bg-indigo-600/30 text-white font-bold'
+                            : 'text-slate-300 hover:bg-slate-800/80 hover:text-white'
+                        }`}
+                      >
+                        <div className="flex items-center gap-2.5">
+                          <span className="text-base">{c.flag}</span>
+                          <span>{c.name}</span>
+                        </div>
+                        <span className="text-[10px] font-mono text-slate-500">{c.code}</span>
+                      </button>
+                    ))
+                  ) : (
+                    <div className="p-3 text-center text-xs text-slate-500">
+                      No matching countries. (Custom typed country will be used)
+                    </div>
+                  )}
+                </div>
+              </>
+            )}
+            <p className="text-[11px] text-slate-400 mt-1.5">Pick from menu or type any custom country.</p>
           </div>
 
-          <div className="md:col-span-3">
-            <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">
-              Target City / Region
-            </label>
+          {/* Target City / Region Input & Dropdown */}
+          <div className="md:col-span-3 relative">
+            <div className="flex items-center justify-between mb-2">
+              <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider">
+                Target City / Region
+              </label>
+              <span className="text-[10px] text-indigo-400 font-medium">Auto-suggests</span>
+            </div>
             <div className="relative">
               <MapPin className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5" />
               <input
                 type="text"
                 value={targetCity}
-                onChange={(e) => setTargetCity(e.target.value)}
-                placeholder="e.g. Colombo (Optional)"
-                className="w-full bg-slate-950 border border-slate-700/80 rounded-xl pl-10 pr-4 py-3 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 transition-all"
+                onChange={(e) => {
+                  setTargetCity(e.target.value);
+                  setShowCityDropdown(true);
+                }}
+                onFocus={() => setShowCityDropdown(true)}
+                placeholder="Type or pick a city..."
+                className="w-full bg-slate-950 border border-slate-700/80 rounded-xl pl-10 pr-9 py-3 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all font-medium"
               />
+              <button
+                type="button"
+                onClick={() => setShowCityDropdown(!showCityDropdown)}
+                className="absolute right-3 top-3.5 text-slate-400 hover:text-white transition-colors"
+                title="Toggle City Dropdown"
+              >
+                <ChevronDown className={`w-4 h-4 transition-transform ${showCityDropdown ? 'rotate-180' : ''}`} />
+              </button>
             </div>
-            <p className="text-[11px] text-slate-400 mt-1.5">Enables hyper-local search intent.</p>
+
+            {/* City Suggestions Dropdown Popup */}
+            {showCityDropdown && (
+              <>
+                <div 
+                  className="fixed inset-0 z-20" 
+                  onClick={() => setShowCityDropdown(false)}
+                ></div>
+                <div className="absolute left-0 right-0 top-full mt-1 z-30 bg-slate-900 border border-indigo-500/30 rounded-xl shadow-2xl max-h-60 overflow-y-auto divide-y divide-slate-800 backdrop-blur-xl animate-fadeIn">
+                  <div className="p-2 bg-slate-950/80 sticky top-0 text-[11px] font-semibold text-slate-400 uppercase tracking-wider flex items-center justify-between">
+                    <span>
+                      {selectedCountryObj ? `${selectedCountryObj.name} Cities` : 'Popular Cities'} ({filteredCities.length})
+                    </span>
+                    <button 
+                      onClick={() => {
+                        setTargetCity('');
+                        setShowCityDropdown(false);
+                      }}
+                      className="text-xs text-rose-400 hover:underline capitalize font-normal"
+                    >
+                      Clear
+                    </button>
+                  </div>
+                  {filteredCities.length > 0 ? (
+                    filteredCities.map((city, i) => (
+                      <button
+                        key={i}
+                        type="button"
+                        onClick={() => handleSelectCity(city)}
+                        className={`w-full px-3.5 py-2.5 text-left text-xs flex items-center justify-between transition-colors ${
+                          targetCity.toLowerCase() === city.toLowerCase()
+                            ? 'bg-indigo-600/30 text-white font-bold'
+                            : 'text-slate-300 hover:bg-slate-800/80 hover:text-white'
+                        }`}
+                      >
+                        <div className="flex items-center gap-2">
+                          <MapPin className="w-3.5 h-3.5 text-indigo-400" />
+                          <span>{city}</span>
+                        </div>
+                        {selectedCountryObj && (
+                          <span className="text-[10px] font-medium text-slate-500">
+                            {selectedCountryObj.flag}
+                          </span>
+                        )}
+                      </button>
+                    ))
+                  ) : (
+                    <div className="p-3 text-center text-xs text-slate-500">
+                      No matching cities found. (Custom typed city will be used)
+                    </div>
+                  )}
+                </div>
+              </>
+            )}
+            <p className="text-[11px] text-slate-400 mt-1.5">
+              {selectedCountryObj ? `Filtered for ${selectedCountryObj.name}` : 'Enables hyper-local search intent.'}
+            </p>
           </div>
 
           <div className="md:col-span-4">
