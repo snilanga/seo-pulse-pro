@@ -54,11 +54,7 @@ export function App() {
   const [reportConfig, setReportConfig] = useState<ClientReportConfig>(INITIAL_REPORT_CONFIG);
   const [backlinks, setBacklinks] = useState<BacklinkItem[]>(INITIAL_BACKLINKS);
   const [outreachOps] = useState<OutreachOpportunity[]>(INITIAL_OUTREACH);
-  const [activeKeywordsToDeploy, setActiveKeywordsToDeploy] = useState<string[]>([
-    'virtual doctor consultation online',
-    'same day telehealth appointment',
-    'online prescription renewal clinic'
-  ]);
+  const [activeKeywordsToDeploy, setActiveKeywordsToDeploy] = useState<string[]>([]);
 
   // Filter client data
   const currentKeywords = keywords.filter(k => k.clientId === selectedClient.id);
@@ -279,6 +275,7 @@ export function App() {
                 <ClientCodeInjector
                   client={selectedClient}
                   keywordsList={activeKeywordsToDeploy}
+                  trackedKeywords={currentKeywords}
                 />
               )}
 

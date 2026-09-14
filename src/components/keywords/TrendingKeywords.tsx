@@ -27,71 +27,176 @@ interface TrendingKeywordItem {
   addedToTracker: boolean;
 }
 
-export const TrendingKeywords: React.FC<TrendingKeywordsProps> = ({
-  client,
-  onAddTrackedKeyword,
-  onNavigateToCodeInjector
-}) => {
-  const [seedInput, setSeedInput] = useState(client.industry.split(' ')[0] || 'telehealth');
-  const [selectedCategory, setSelectedCategory] = useState<string>('All');
+function getInitialTrendingForClient(client: ClientProject): TrendingKeywordItem[] {
+  const brand = client.name;
+  const ind = client.industry || 'Business';
+  const region = client.targetRegion || 'United States';
 
-  const [trendingList, setTrendingList] = useState<TrendingKeywordItem[]>([
+  if (ind.toLowerCase().includes('health') || ind.toLowerCase().includes('telehealth') || ind.toLowerCase().includes('medical')) {
+    return [
+      {
+        id: 'trend-1',
+        keyword: 'same day virtual doctor prescription online',
+        trendGrowth: '+310% Search Interest',
+        monthlyVolume: 32500,
+        difficulty: 54,
+        cpc: 6.80,
+        intent: 'Transactional',
+        category: 'Breakout Viral',
+        addedToTracker: false
+      },
+      {
+        id: 'trend-2',
+        keyword: '24 7 telehealth urgent care consultation',
+        trendGrowth: '+185% Search Interest',
+        monthlyVolume: 41200,
+        difficulty: 62,
+        cpc: 8.40,
+        intent: 'Transactional',
+        category: 'Top Volume Ranker',
+        addedToTracker: false
+      },
+      {
+        id: 'trend-3',
+        keyword: 'affordable online doctor visit without insurance',
+        trendGrowth: '+275% Search Interest',
+        monthlyVolume: 28400,
+        difficulty: 46,
+        cpc: 4.90,
+        intent: 'Commercial',
+        category: 'High Conversion',
+        addedToTracker: false
+      }
+    ];
+  }
+
+  if (ind.toLowerCase().includes('tech') || ind.toLowerCase().includes('cloud') || ind.toLowerCase().includes('security') || ind.toLowerCase().includes('saas')) {
+    return [
+      {
+        id: 'trend-1',
+        keyword: `zero trust cloud security platform for enterprise`,
+        trendGrowth: '+380% Search Interest',
+        monthlyVolume: 24500,
+        difficulty: 68,
+        cpc: 14.50,
+        intent: 'Commercial',
+        category: 'Breakout Viral',
+        addedToTracker: false
+      },
+      {
+        id: 'trend-2',
+        keyword: `automated cloud posture management compliance`,
+        trendGrowth: '+290% Search Interest',
+        monthlyVolume: 18900,
+        difficulty: 61,
+        cpc: 16.20,
+        intent: 'Transactional',
+        category: 'Top Volume Ranker',
+        addedToTracker: false
+      },
+      {
+        id: 'trend-3',
+        keyword: `best enterprise sase cloud security solutions`,
+        trendGrowth: '+210% Search Interest',
+        monthlyVolume: 15400,
+        difficulty: 55,
+        cpc: 12.80,
+        intent: 'Commercial',
+        category: 'High Conversion',
+        addedToTracker: false
+      }
+    ];
+  }
+
+  if (ind.toLowerCase().includes('decor') || ind.toLowerCase().includes('shop') || ind.toLowerCase().includes('commerce') || ind.toLowerCase().includes('retail')) {
+    return [
+      {
+        id: 'trend-1',
+        keyword: `artisan handcrafted minimalist home furniture`,
+        trendGrowth: '+340% Search Interest',
+        monthlyVolume: 36000,
+        difficulty: 48,
+        cpc: 3.40,
+        intent: 'Transactional',
+        category: 'Breakout Viral',
+        addedToTracker: false
+      },
+      {
+        id: 'trend-2',
+        keyword: `sustainable organic modern home decor accents`,
+        trendGrowth: '+250% Search Interest',
+        monthlyVolume: 27500,
+        difficulty: 42,
+        cpc: 2.80,
+        intent: 'Commercial',
+        category: 'Top Volume Ranker',
+        addedToTracker: false
+      },
+      {
+        id: 'trend-3',
+        keyword: `luxury handmade ceramic vases living room`,
+        trendGrowth: '+195% Search Interest',
+        monthlyVolume: 19200,
+        difficulty: 39,
+        cpc: 2.50,
+        intent: 'Commercial',
+        category: 'High Conversion',
+        addedToTracker: false
+      }
+    ];
+  }
+
+  return [
     {
       id: 'trend-1',
-      keyword: 'same day virtual doctor prescription online',
+      keyword: `top rated ${ind.toLowerCase()} services in ${region}`,
       trendGrowth: '+310% Search Interest',
-      monthlyVolume: 32500,
-      difficulty: 54,
-      cpc: 6.80,
+      monthlyVolume: 22000,
+      difficulty: 45,
+      cpc: 5.20,
       intent: 'Transactional',
       category: 'Breakout Viral',
       addedToTracker: false
     },
     {
       id: 'trend-2',
-      keyword: '24 7 telehealth urgent care consultation',
-      trendGrowth: '+185% Search Interest',
-      monthlyVolume: 41200,
-      difficulty: 62,
-      cpc: 8.40,
-      intent: 'Transactional',
+      keyword: `best ${ind.toLowerCase()} provider near me online`,
+      trendGrowth: '+220% Search Interest',
+      monthlyVolume: 18500,
+      difficulty: 40,
+      cpc: 4.80,
+      intent: 'Commercial',
       category: 'Top Volume Ranker',
       addedToTracker: false
     },
     {
       id: 'trend-3',
-      keyword: 'affordable online doctor visit without insurance',
-      trendGrowth: '+275% Search Interest',
-      monthlyVolume: 28400,
-      difficulty: 46,
-      cpc: 4.90,
+      keyword: `${brand.toLowerCase()} reviews and customer pricing`,
+      trendGrowth: '+180% Search Interest',
+      monthlyVolume: 14000,
+      difficulty: 35,
+      cpc: 3.90,
       intent: 'Commercial',
       category: 'High Conversion',
       addedToTracker: false
-    },
-    {
-      id: 'trend-4',
-      keyword: 'best telehealth app for online prescription refill',
-      trendGrowth: '+195% Search Interest',
-      monthlyVolume: 19800,
-      difficulty: 42,
-      cpc: 5.20,
-      intent: 'Commercial',
-      category: 'Breakout Viral',
-      addedToTracker: false
-    },
-    {
-      id: 'trend-5',
-      keyword: 'how to consult licensed doctor online fast',
-      trendGrowth: '+140% Search Interest',
-      monthlyVolume: 15600,
-      difficulty: 38,
-      cpc: 3.10,
-      intent: 'Informational',
-      category: 'Top Volume Ranker',
-      addedToTracker: false
     }
-  ]);
+  ];
+}
+
+export const TrendingKeywords: React.FC<TrendingKeywordsProps> = ({
+  client,
+  onAddTrackedKeyword,
+  onNavigateToCodeInjector
+}) => {
+  const [seedInput, setSeedInput] = useState(client.industry.split(' ')[0] || 'services');
+  const [selectedCategory, setSelectedCategory] = useState<string>('All');
+  const [trendingList, setTrendingList] = useState<TrendingKeywordItem[]>(() => getInitialTrendingForClient(client));
+
+  React.useEffect(() => {
+    setSeedInput(client.industry.split(' ')[0] || 'services');
+    setTrendingList(getInitialTrendingForClient(client));
+  }, [client.id, client.industry, client.name]);
+
 
   const handleGenerateTrending = (e: React.FormEvent) => {
     e.preventDefault();
