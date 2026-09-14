@@ -101,31 +101,40 @@ export const DatabaseModal: React.FC<DatabaseModalProps> = ({
         )}
 
         {/* Storage Stats Grid */}
-        <div className="grid grid-cols-3 gap-4">
-          <div className="p-4 rounded-2xl bg-slate-900 border border-slate-800 text-center">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <div className="p-3.5 rounded-2xl bg-slate-900 border border-slate-800 text-center">
             <div className="flex justify-center mb-1 text-pink-400">
-              <Sparkles className="w-5 h-5" />
+              <Sparkles className="w-4 h-4" />
             </div>
-            <div className="text-2xl font-black text-white">{researchReports.length}</div>
-            <div className="text-[11px] text-slate-400 font-medium">AI Keyword Reports</div>
+            <div className="text-xl font-black text-white">{researchReports.length}</div>
+            <div className="text-[10px] text-slate-400 font-medium">AI Keyword Reports</div>
           </div>
 
-          <div className="p-4 rounded-2xl bg-slate-900 border border-slate-800 text-center">
+          <div className="p-3.5 rounded-2xl bg-slate-900 border border-slate-800 text-center">
             <div className="flex justify-center mb-1 text-emerald-400">
-              <MapPin className="w-5 h-5" />
+              <MapPin className="w-4 h-4" />
             </div>
-            <div className="text-2xl font-black text-white">{mapsReports.length}</div>
-            <div className="text-[11px] text-slate-400 font-medium">Maps & Review Scans</div>
+            <div className="text-xl font-black text-white">{mapsReports.length}</div>
+            <div className="text-[10px] text-slate-400 font-medium">Maps & Reviews</div>
           </div>
 
-          <div className="p-4 rounded-2xl bg-slate-900 border border-slate-800 text-center">
+          <div className="p-3.5 rounded-2xl bg-slate-900 border border-slate-800 text-center">
             <div className="flex justify-center mb-1 text-indigo-400">
-              <Search className="w-5 h-5" />
+              <Search className="w-4 h-4" />
             </div>
-            <div className="text-2xl font-black text-white">{siteAudits.length}</div>
-            <div className="text-[11px] text-slate-400 font-medium">Site Audit Scans</div>
+            <div className="text-xl font-black text-white">{siteAudits.length}</div>
+            <div className="text-[10px] text-slate-400 font-medium">Site Audits</div>
+          </div>
+
+          <div className="p-3.5 rounded-2xl bg-slate-900 border border-slate-800 text-center">
+            <div className="flex justify-center mb-1 text-blue-400">
+              <Database className="w-4 h-4" />
+            </div>
+            <div className="text-xl font-black text-white">{dbService.getSavedBacklinks().length}</div>
+            <div className="text-[10px] text-slate-400 font-medium">Active Backlinks</div>
           </div>
         </div>
+
 
         {/* Actions */}
         <div className="space-y-3 pt-2">

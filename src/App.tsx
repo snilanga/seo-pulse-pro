@@ -137,11 +137,20 @@ export function App() {
   };
 
   const handleAddBacklink = (newBL: BacklinkItem) => {
-    setBacklinks([newBL, ...backlinks]);
+    setBacklinks(prev => [newBL, ...prev]);
+  };
+
+  const handleAddMultipleBacklinks = (newBLs: BacklinkItem[]) => {
+    setBacklinks(prev => [...newBLs, ...prev]);
+  };
+
+  const handleDeleteBacklink = (id: string) => {
+    setBacklinks(prev => prev.filter(b => b.id !== id));
   };
 
   const criticalIssuesCount = auditReport.issues.filter(i => i.severity === 'critical' && !i.fixed).length;
   const page1KeywordsCount = currentKeywords.filter(k => k.googlePosition.page1 || k.bingPosition.page1).length;
+
 
   return (
     <div className="min-h-screen bg-[#0b0f19] text-slate-100 font-sans flex flex-col antialiased selection:bg-indigo-500 selection:text-white">
@@ -242,8 +251,11 @@ export function App() {
                   backlinks={backlinks}
                   outreachOps={outreachOps}
                   onAddBacklink={handleAddBacklink}
+                  onAddMultipleBacklinks={handleAddMultipleBacklinks}
+                  onDeleteBacklink={handleDeleteBacklink}
                 />
               )}
+
 
               {activeTab === 'page-inspector' && (
                 <SerpPageInspector

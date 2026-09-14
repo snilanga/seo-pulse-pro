@@ -1,4 +1,5 @@
-import type { AiSeoResearchReport, LocalBusinessReport, SiteAuditReport, ClientProject, TrackedKeyword } from '../types/seo';
+import type { AiSeoResearchReport, LocalBusinessReport, SiteAuditReport, ClientProject, TrackedKeyword, BacklinkItem } from '../types/seo';
+
 
 export interface AppDatabaseExport {
   version: number;
@@ -8,7 +9,9 @@ export interface AppDatabaseExport {
   mapsReports: LocalBusinessReport[];
   siteAudits: SiteAuditReport[];
   trackedKeywords: TrackedKeyword[];
+  backlinks?: BacklinkItem[];
 }
+
 
 class DatabaseService {
   private isStorageAvailable(): boolean {
@@ -97,6 +100,33 @@ class DatabaseService {
     return this.getFromLocal<SiteAuditReport[]>('site_audits', []);
   }
 
+  // --- Backlinks Storage ---
+  public saveBacklink(item: BacklinkItem): void {
+    const list = this.getSavedBacklinks();
+    const existingIndex = list.findIndex(b => b.id === item.id);
+    if (existingIndex >= 0) {
+      list[existingIndex] = item;
+    } else {
+      list.unshift(item);
+    }
+    this.saveToLocal('backlinks', list.slice(0, 200));
+  }
+
+  public saveMultipleBacklinks(items: BacklinkItem[]): void {
+    const list = this.getSavedBacklinks();
+    const combined = [...items, ...list.filter(b => !items.some(newItem => newItem.id === b.id))];
+    this.saveToLocal('backlinks', combined.slice(0, 200));
+  }
+
+  public getSavedBacklinks(): BacklinkItem[] {
+    return this.getFromLocal<BacklinkItem[]>('backlinks', []);
+  }
+
+  public deleteBacklink(id: string): void {
+    const list = this.getSavedBacklinks().filter(b => b.id !== id);
+    this.saveToLocal('backlinks', list);
+  }
+
   // --- Full Database Backup & Restore ---
   public exportFullBackup(clients: ClientProject[], trackedKeywords: TrackedKeyword[]): AppDatabaseExport {
     return {
@@ -106,9 +136,11 @@ class DatabaseService {
       researchReports: this.getSavedResearchReports(),
       mapsReports: this.getSavedLocalBusinessReports(),
       siteAudits: this.getSavedSiteAudits(),
-      trackedKeywords
+      trackedKeywords,
+      backlinks: this.getSavedBacklinks()
     };
   }
+
 
   public downloadBackupJson(clients: ClientProject[], trackedKeywords: TrackedKeyword[]): void {
     const data = this.exportFullBackup(clients, trackedKeywords);
@@ -136,6 +168,9 @@ class DatabaseService {
       if (Array.isArray(data.siteAudits)) {
         this.saveToLocal('site_audits', data.siteAudits);
       }
+      if (Array.isArray(data.backlinks)) {
+        this.saveToLocal('backlinks', data.backlinks);
+      }
       return data;
     } catch (e) {
       console.error('Failed to import database backup:', e);
@@ -145,9 +180,10 @@ class DatabaseService {
 
   public clearAllDatabase(): void {
     if (!this.isStorageAvailable()) return;
-    const keysToRemove = ['rpp_research_reports', 'rpp_maps_reports', 'rpp_site_audits'];
+    const keysToRemove = ['rpp_research_reports', 'rpp_maps_reports', 'rpp_site_audits', 'rpp_backlinks'];
     keysToRemove.forEach(k => localStorage.removeItem(k));
   }
 }
 
 export const dbService = new DatabaseService();
+
