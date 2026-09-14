@@ -19,8 +19,13 @@ import {
   Trash2,
   Clock,
   Flame,
-  Award
+  Award,
+  ChevronDown
 } from 'lucide-react';
+import { 
+  COUNTRIES_AND_CITIES, 
+  ALL_BUSINESS_TYPES 
+} from '../../data/geoData';
 
 
 interface GoogleMapsLocalRankerProps {
@@ -28,6 +33,7 @@ interface GoogleMapsLocalRankerProps {
   initialDomain?: string;
   initialCity?: string;
 }
+
 
 export const GoogleMapsLocalRanker: React.FC<GoogleMapsLocalRankerProps> = ({
   initialBusinessName = '',
@@ -40,6 +46,82 @@ export const GoogleMapsLocalRanker: React.FC<GoogleMapsLocalRankerProps> = ({
   const [city, setCity] = useState<string>(initialCity || 'Colombo');
   const [country, setCountry] = useState<string>('Sri Lanka');
   const [keyword, setKeyword] = useState<string>('Telemedicine & Primary Clinic');
+
+  // Auto-suggest Dropdown States
+  const [showCountryDropdown, setShowCountryDropdown] = useState<boolean>(false);
+  const [showCityDropdown, setShowCityDropdown] = useState<boolean>(false);
+  const [showKeywordDropdown, setShowKeywordDropdown] = useState<boolean>(false);
+
+  // Country & City Auto-Filtering
+  const selectedCountryObj = COUNTRIES_AND_CITIES.find(
+    c => c.name.toLowerCase() === country.trim().toLowerCase()
+  );
+
+  const filteredCountries = COUNTRIES_AND_CITIES.filter(c => 
+    c.name.toLowerCase().includes(country.toLowerCase()) ||
+    c.code.toLowerCase().includes(country.toLowerCase())
+  );
+
+  const availableCities: string[] = selectedCountryObj
+    ? selectedCountryObj.popularCities
+    : Array.from(new Set(COUNTRIES_AND_CITIES.flatMap(c => c.popularCities)));
+
+  const filteredCities = availableCities.filter(ci => 
+    ci.toLowerCase().includes(city.toLowerCase())
+  );
+
+  // Keywords Auto-Filtering based on common local commercial queries and business categories
+  const POPULAR_LOCAL_KEYWORDS = [
+    'Web Design Agency',
+    'SEO Agency & Digital Marketing',
+    'Software Development & Mobile Apps',
+    'Telemedicine & Primary Clinic',
+    'Dental Clinic & Orthodontics',
+    'Cosmetic Surgery & Dermatology',
+    'Luxury Hotel & Boutique Resort',
+    'Fine Dining Restaurant & Cafe',
+    'Real Estate & Property Management',
+    'Criminal Defense & Corporate Lawyer',
+    'Immigration & Visa Consultant',
+    'HVAC Repair & Air Conditioning',
+    'Plumbing & Emergency Drainage',
+    'Electrician & Solar Installation',
+    'Commercial Cleaning & Janitorial',
+    'Pest Control & Termite Treatment',
+    'Auto Repair & Collision Center',
+    'Car Rental & Airport Transfers',
+    'Accounting & Tax Consultancy',
+    'Fitness Gym & Personal Trainer',
+    'Wedding Photography & Videography',
+    'Veterinary Clinic & Pet Hospital'
+  ];
+
+  const filteredKeywords = Array.from(new Set([
+    ...POPULAR_LOCAL_KEYWORDS,
+    ...ALL_BUSINESS_TYPES
+  ])).filter(k => k.toLowerCase().includes(keyword.toLowerCase()));
+
+  const handleSelectCountry = (countryName: string) => {
+    setCountry(countryName);
+    setShowCountryDropdown(false);
+    const match = COUNTRIES_AND_CITIES.find(c => c.name.toLowerCase() === countryName.toLowerCase());
+    if (match && match.popularCities.length > 0) {
+      if (!match.popularCities.some(ci => ci.toLowerCase() === city.toLowerCase())) {
+        setCity(match.popularCities[0]);
+      }
+    }
+  };
+
+  const handleSelectCity = (cityName: string) => {
+    setCity(cityName);
+    setShowCityDropdown(false);
+  };
+
+  const handleSelectKeyword = (selectedKw: string) => {
+    setKeyword(selectedKw);
+    setShowKeywordDropdown(false);
+  };
+
 
   // Loading & Results
   const [isScanning, setIsScanning] = useState<boolean>(false);
@@ -152,47 +234,155 @@ export const GoogleMapsLocalRanker: React.FC<GoogleMapsLocalRankerProps> = ({
               </div>
             </div>
 
-            {/* Target City & Country */}
-            <div className="md:col-span-3">
-              <label className="block text-xs font-semibold text-slate-300 mb-1.5 flex items-center justify-between">
-                <span>Target City & Country *</span>
-                <span className="text-[10px] text-slate-500">Geo Location</span>
+            {/* Target Country & City with Auto-suggest */}
+            <div className="md:col-span-3 space-y-1">
+              <label className="block text-xs font-semibold text-slate-300 mb-1 flex items-center justify-between">
+                <span>Target Location *</span>
+                <span className="text-[10px] text-emerald-400 font-medium">Auto-Suggests</span>
               </label>
               <div className="grid grid-cols-2 gap-2">
-                <input
-                  type="text"
-                  required
-                  value={city}
-                  onChange={(e) => setCity(e.target.value)}
-                  placeholder="e.g. Colombo"
-                  className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500"
-                />
-                <input
-                  type="text"
-                  required
-                  value={country}
-                  onChange={(e) => setCountry(e.target.value)}
-                  placeholder="e.g. Sri Lanka"
-                  className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500"
-                />
+                
+                {/* Country Dropdown / Input */}
+                <div className="relative">
+                  <input
+                    type="text"
+                    required
+                    value={country}
+                    onChange={(e) => {
+                      setCountry(e.target.value);
+                      setShowCountryDropdown(true);
+                    }}
+                    onFocus={() => setShowCountryDropdown(true)}
+                    placeholder="Country..."
+                    className="w-full bg-slate-900 border border-slate-700 rounded-xl pl-2.5 pr-6 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowCountryDropdown(!showCountryDropdown)}
+                    className="absolute right-2 top-3 text-slate-400 hover:text-white"
+                  >
+                    <ChevronDown className={`w-3.5 h-3.5 transition-transform ${showCountryDropdown ? 'rotate-180' : ''}`} />
+                  </button>
+
+                  {/* Country Popup Menu */}
+                  {showCountryDropdown && (
+                    <>
+                      <div className="fixed inset-0 z-20" onClick={() => setShowCountryDropdown(false)} />
+                      <div className="absolute left-0 right-0 top-full mt-1 z-30 bg-slate-900 border border-emerald-500/30 rounded-xl shadow-2xl max-h-52 overflow-y-auto divide-y divide-slate-800 backdrop-blur-xl">
+                        {filteredCountries.slice(0, 15).map((c) => (
+                          <button
+                            key={c.code}
+                            type="button"
+                            onClick={() => handleSelectCountry(c.name)}
+                            className="w-full px-2.5 py-1.5 text-left text-xs flex items-center justify-between hover:bg-slate-800 text-slate-300 hover:text-white"
+                          >
+                            <span className="truncate">{c.name}</span>
+                            <span className="text-xs shrink-0 ml-1">{c.flag}</span>
+                          </button>
+                        ))}
+                      </div>
+                    </>
+                  )}
+                </div>
+
+                {/* City Dropdown / Input */}
+                <div className="relative">
+                  <input
+                    type="text"
+                    required
+                    value={city}
+                    onChange={(e) => {
+                      setCity(e.target.value);
+                      setShowCityDropdown(true);
+                    }}
+                    onFocus={() => setShowCityDropdown(true)}
+                    placeholder="City..."
+                    className="w-full bg-slate-900 border border-slate-700 rounded-xl pl-2.5 pr-6 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowCityDropdown(!showCityDropdown)}
+                    className="absolute right-2 top-3 text-slate-400 hover:text-white"
+                  >
+                    <ChevronDown className={`w-3.5 h-3.5 transition-transform ${showCityDropdown ? 'rotate-180' : ''}`} />
+                  </button>
+
+                  {/* City Popup Menu */}
+                  {showCityDropdown && (
+                    <>
+                      <div className="fixed inset-0 z-20" onClick={() => setShowCityDropdown(false)} />
+                      <div className="absolute left-0 right-0 top-full mt-1 z-30 bg-slate-900 border border-emerald-500/30 rounded-xl shadow-2xl max-h-52 overflow-y-auto divide-y divide-slate-800 backdrop-blur-xl">
+                        {filteredCities.slice(0, 20).map((ci, idx) => (
+                          <button
+                            key={idx}
+                            type="button"
+                            onClick={() => handleSelectCity(ci)}
+                            className="w-full px-2.5 py-1.5 text-left text-xs flex items-center space-x-1.5 hover:bg-slate-800 text-slate-300 hover:text-white"
+                          >
+                            <MapPin className="w-3 h-3 text-emerald-400 shrink-0" />
+                            <span className="truncate">{ci}</span>
+                          </button>
+                        ))}
+                      </div>
+                    </>
+                  )}
+                </div>
+
               </div>
             </div>
 
-            {/* Target Keyword / Service */}
-            <div className="md:col-span-3">
-              <label className="block text-xs font-semibold text-slate-300 mb-1.5 flex items-center justify-between">
+            {/* Target Keyword / Service with Auto-suggest */}
+            <div className="md:col-span-3 relative">
+              <label className="block text-xs font-semibold text-slate-300 mb-1 flex items-center justify-between">
                 <span>Target Search Keyword *</span>
-                <span className="text-[10px] text-slate-500">What users search</span>
+                <span className="text-[10px] text-emerald-400 font-medium">Auto-Suggests</span>
               </label>
-              <input
-                type="text"
-                required
-                value={keyword}
-                onChange={(e) => setKeyword(e.target.value)}
-                placeholder="e.g. Telemedicine Clinic"
-                className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500"
-              />
+              <div className="relative">
+                <input
+                  type="text"
+                  required
+                  value={keyword}
+                  onChange={(e) => {
+                    setKeyword(e.target.value);
+                    setShowKeywordDropdown(true);
+                  }}
+                  onFocus={() => setShowKeywordDropdown(true)}
+                  placeholder="e.g. Telemedicine Clinic..."
+                  className="w-full bg-slate-900 border border-slate-700 rounded-xl pl-3 pr-7 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowKeywordDropdown(!showKeywordDropdown)}
+                  className="absolute right-2 top-3 text-slate-400 hover:text-white"
+                >
+                  <ChevronDown className={`w-3.5 h-3.5 transition-transform ${showKeywordDropdown ? 'rotate-180' : ''}`} />
+                </button>
+              </div>
+
+              {/* Keywords Popup Menu */}
+              {showKeywordDropdown && (
+                <>
+                  <div className="fixed inset-0 z-20" onClick={() => setShowKeywordDropdown(false)} />
+                  <div className="absolute left-0 right-0 top-full mt-1 z-30 bg-slate-900 border border-emerald-500/30 rounded-xl shadow-2xl max-h-56 overflow-y-auto divide-y divide-slate-800 backdrop-blur-xl">
+                    <div className="p-2 bg-slate-950/80 sticky top-0 text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center justify-between">
+                      <span>Popular Local Search Queries ({filteredKeywords.length})</span>
+                    </div>
+                    {filteredKeywords.slice(0, 25).map((kwItem, idx) => (
+                      <button
+                        key={idx}
+                        type="button"
+                        onClick={() => handleSelectKeyword(kwItem)}
+                        className="w-full px-3 py-1.5 text-left text-xs flex items-center space-x-2 hover:bg-slate-800 text-slate-300 hover:text-white"
+                      >
+                        <Search className="w-3 h-3 text-emerald-400 shrink-0" />
+                        <span className="truncate">{kwItem}</span>
+                      </button>
+                    ))}
+                  </div>
+                </>
+              )}
             </div>
+
 
             {/* Action Submit */}
             <div className="md:col-span-2 flex items-end">
