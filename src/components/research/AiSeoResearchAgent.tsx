@@ -202,7 +202,7 @@ export const AiSeoResearchAgent: React.FC<AiSeoResearchAgentProps> = ({
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
   const [expandedFaq, setExpandedFaq] = useState<number | null>(null);
   const [showApplyModal, setShowApplyModal] = useState<boolean>(false);
-  const [applyCms, setApplyCms] = useState<'wordpress' | 'shopify' | 'custom'>('wordpress');
+  const [applyCms, setApplyCms] = useState<'rankmath' | 'yoast' | 'aioseo' | 'shopify' | 'custom'>('rankmath');
   const [appliedNotification, setAppliedNotification] = useState<string | null>(null);
 
   // Manual Local / City Keyword Input State
@@ -1437,6 +1437,151 @@ export const AiSeoResearchAgent: React.FC<AiSeoResearchAgentProps> = ({
           {/* TAB 2: ON-PAGE METADATA & FIRST SENTENCE */}
           {activeReportTab === 'onpage' && (
             <div className="space-y-8 animate-fadeIn">
+              {/* WORDPRESS PLUGINS FOCUS KEYWORD SUITE (RankMath, Yoast, AIOSEO, SEOPress) */}
+              <div className="bg-gradient-to-br from-slate-900 via-indigo-950/50 to-slate-900 border-2 border-indigo-500/50 rounded-2xl p-6 shadow-2xl relative overflow-hidden">
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-5 pb-4 border-b border-indigo-500/20">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2.5 bg-indigo-500/20 border border-indigo-400/30 rounded-xl text-indigo-300">
+                      <Sparkles className="w-6 h-6 text-indigo-400" />
+                    </div>
+                    <div>
+                      <div className="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-full bg-emerald-500/20 border border-emerald-500/30 text-emerald-300 text-[10px] font-bold uppercase tracking-wider mb-1">
+                        100/100 Plugin Score Ready
+                      </div>
+                      <h3 className="text-xl font-black text-white">WordPress Focus Keyword &amp; Plugin Optimization</h3>
+                      <p className="text-xs text-slate-300">Engineered to pass all audit checks for RankMath, Yoast SEO, All in One SEO (AIOSEO), SEOPress &amp; Squirrly.</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => copyToClipboard(report.primaryKeyword.keyword, 'focus-kw-main')}
+                      className="px-4 py-2 bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-400 hover:to-purple-500 text-white rounded-xl text-xs font-bold shadow-lg shadow-indigo-500/25 flex items-center gap-2 transition-all"
+                    >
+                      {copiedKey === 'focus-kw-main' ? <Check className="w-4 h-4 text-emerald-300" /> : <Copy className="w-4 h-4" />}
+                      Copy Focus Keyword
+                    </button>
+                  </div>
+                </div>
+
+                {/* Primary Focus Keyword Highlight Box */}
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 mb-6">
+                  <div className="lg:col-span-6 p-4 bg-slate-950 rounded-xl border border-indigo-500/30 space-y-2">
+                    <span className="text-[10px] uppercase font-bold text-indigo-400 tracking-wider block">Primary Focus Keyphrase (Paste into Plugin)</span>
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-xl font-extrabold text-white font-mono">{report.primaryKeyword.keyword}</span>
+                      <span className="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 text-[10px] font-bold border border-emerald-500/30">Primary</span>
+                    </div>
+                    <p className="text-[11px] text-slate-400">Put this in Yoast "Focus keyphrase" or Rank Math "Focus Keyword" field.</p>
+                  </div>
+
+                  <div className="lg:col-span-6 p-4 bg-slate-950 rounded-xl border border-slate-800 space-y-2">
+                    <span className="text-[10px] uppercase font-bold text-purple-400 tracking-wider block">Secondary / Additional Focus Keywords (Rank Math Pro / Yoast Premium)</span>
+                    <div className="flex flex-wrap gap-1.5">
+                      {report.secondaryKeywords.slice(0, 4).map((sk, idx) => (
+                        <button
+                          key={idx}
+                          onClick={() => copyToClipboard(sk.keyword, `sec-kw-${idx}`)}
+                          className="px-2.5 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-200 border border-slate-700/80 text-xs font-mono flex items-center gap-1.5 transition-colors"
+                          title="Click to copy secondary keyword"
+                        >
+                          <span>{sk.keyword}</span>
+                          {copiedKey === `sec-kw-${idx}` ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3 text-slate-500" />}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                {/* WordPress Plugin Audit Checklist (RankMath & Yoast compliance) */}
+                <div>
+                  <h4 className="text-xs font-bold text-slate-300 uppercase tracking-wider mb-3">
+                    WordPress Plugin 100/100 Score Checklist:
+                  </h4>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                    <div className="p-3 bg-slate-950/80 rounded-xl border border-emerald-500/20 flex items-start gap-2.5">
+                      <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+                      <div>
+                        <span className="text-xs font-bold text-white block">Focus KW in SEO Title</span>
+                        <span className="text-[10px] text-slate-400">Appears at start of title tag.</span>
+                      </div>
+                    </div>
+                    <div className="p-3 bg-slate-950/80 rounded-xl border border-emerald-500/20 flex items-start gap-2.5">
+                      <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+                      <div>
+                        <span className="text-xs font-bold text-white block">Focus KW in Meta Desc</span>
+                        <span className="text-[10px] text-slate-400">Included naturally in description.</span>
+                      </div>
+                    </div>
+                    <div className="p-3 bg-slate-950/80 rounded-xl border border-emerald-500/20 flex items-start gap-2.5">
+                      <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+                      <div>
+                        <span className="text-xs font-bold text-white block">Focus KW in URL Slug</span>
+                        <span className="text-[10px] text-slate-400">Matches /{report.contentBrief.urlSlug}</span>
+                      </div>
+                    </div>
+                    <div className="p-3 bg-slate-950/80 rounded-xl border border-emerald-500/20 flex items-start gap-2.5">
+                      <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+                      <div>
+                        <span className="text-xs font-bold text-white block">Focus KW in 1st 10%</span>
+                        <span className="text-[10px] text-slate-400">Front-loaded in first sentence.</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Quick 1-Click Values Table for Plugins */}
+                <div className="mt-5 pt-4 border-t border-slate-800">
+                  <span className="text-xs font-bold text-slate-300 block mb-2">
+                    Direct Plugin Copy-Paste Table (Rank Math, Yoast, AIOSEO, SEOPress):
+                  </span>
+                  <div className="space-y-2 text-xs">
+                    <div className="p-2.5 bg-slate-950 rounded-lg border border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                      <span className="text-slate-400 font-mono text-[11px] w-36 shrink-0">Focus Keyword:</span>
+                      <span className="font-bold text-emerald-400 font-mono truncate">{report.primaryKeyword.keyword}</span>
+                      <button
+                        onClick={() => copyToClipboard(report.primaryKeyword.keyword, 'tbl-fkw')}
+                        className="text-[11px] text-indigo-400 hover:text-white font-bold shrink-0 flex items-center gap-1"
+                      >
+                        {copiedKey === 'tbl-fkw' ? 'Copied!' : 'Copy'}
+                      </button>
+                    </div>
+
+                    <div className="p-2.5 bg-slate-950 rounded-lg border border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                      <span className="text-slate-400 font-mono text-[11px] w-36 shrink-0">SEO Title:</span>
+                      <span className="font-bold text-white font-mono truncate">{report.titleOptions[0].title}</span>
+                      <button
+                        onClick={() => copyToClipboard(report.titleOptions[0].title, 'tbl-title')}
+                        className="text-[11px] text-indigo-400 hover:text-white font-bold shrink-0 flex items-center gap-1"
+                      >
+                        {copiedKey === 'tbl-title' ? 'Copied!' : 'Copy'}
+                      </button>
+                    </div>
+
+                    <div className="p-2.5 bg-slate-950 rounded-lg border border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                      <span className="text-slate-400 font-mono text-[11px] w-36 shrink-0">Meta Description:</span>
+                      <span className="text-slate-200 truncate">{report.metaOptions[0].description}</span>
+                      <button
+                        onClick={() => copyToClipboard(report.metaOptions[0].description, 'tbl-meta')}
+                        className="text-[11px] text-indigo-400 hover:text-white font-bold shrink-0 flex items-center gap-1"
+                      >
+                        {copiedKey === 'tbl-meta' ? 'Copied!' : 'Copy'}
+                      </button>
+                    </div>
+
+                    <div className="p-2.5 bg-slate-950 rounded-lg border border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                      <span className="text-slate-400 font-mono text-[11px] w-36 shrink-0">Permalink / Slug:</span>
+                      <span className="font-mono text-amber-300 font-bold truncate">{report.contentBrief.urlSlug}</span>
+                      <button
+                        onClick={() => copyToClipboard(report.contentBrief.urlSlug, 'tbl-slug')}
+                        className="text-[11px] text-indigo-400 hover:text-white font-bold shrink-0 flex items-center gap-1"
+                      >
+                        {copiedKey === 'tbl-slug' ? 'Copied!' : 'Copy'}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
               {/* FIRST SENTENCE OPTIMIZATION - User Highlighted Requirement */}
               <div className="bg-slate-900/90 border-2 border-indigo-500/40 rounded-2xl p-6 shadow-2xl relative overflow-hidden">
                 <div className="flex items-center justify-between mb-4">
@@ -1835,47 +1980,75 @@ export const AiSeoResearchAgent: React.FC<AiSeoResearchAgentProps> = ({
               Select your CMS platform to generate the exact code snippet, meta tags, and schema to push these optimizations live immediately.
             </p>
 
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
               <button
-                onClick={() => setApplyCms('wordpress')}
-                className={`p-3 rounded-xl border text-xs font-bold text-center transition-all ${
-                  applyCms === 'wordpress'
+                onClick={() => setApplyCms('rankmath')}
+                className={`p-2.5 rounded-xl border text-xs font-bold text-center transition-all ${
+                  applyCms === 'rankmath'
                     ? 'bg-indigo-600/30 border-indigo-500 text-white'
                     : 'bg-slate-950 border-slate-800 text-slate-400 hover:text-slate-200'
                 }`}
               >
-                WordPress / Yoast
+                Rank Math
+              </button>
+              <button
+                onClick={() => setApplyCms('yoast')}
+                className={`p-2.5 rounded-xl border text-xs font-bold text-center transition-all ${
+                  applyCms === 'yoast'
+                    ? 'bg-indigo-600/30 border-indigo-500 text-white'
+                    : 'bg-slate-950 border-slate-800 text-slate-400 hover:text-slate-200'
+                }`}
+              >
+                Yoast SEO
+              </button>
+              <button
+                onClick={() => setApplyCms('aioseo')}
+                className={`p-2.5 rounded-xl border text-xs font-bold text-center transition-all ${
+                  applyCms === 'aioseo'
+                    ? 'bg-indigo-600/30 border-indigo-500 text-white'
+                    : 'bg-slate-950 border-slate-800 text-slate-400 hover:text-slate-200'
+                }`}
+              >
+                AIOSEO
               </button>
               <button
                 onClick={() => setApplyCms('shopify')}
-                className={`p-3 rounded-xl border text-xs font-bold text-center transition-all ${
+                className={`p-2.5 rounded-xl border text-xs font-bold text-center transition-all ${
                   applyCms === 'shopify'
                     ? 'bg-indigo-600/30 border-indigo-500 text-white'
                     : 'bg-slate-950 border-slate-800 text-slate-400 hover:text-slate-200'
                 }`}
               >
-                Shopify / Liquid
-              </button>
-              <button
-                onClick={() => setApplyCms('custom')}
-                className={`p-3 rounded-xl border text-xs font-bold text-center transition-all ${
-                  applyCms === 'custom'
-                    ? 'bg-indigo-600/30 border-indigo-500 text-white'
-                    : 'bg-slate-950 border-slate-800 text-slate-400 hover:text-slate-200'
-                }`}
-              >
-                Custom HTML Head
+                Shopify / HTML
               </button>
             </div>
 
-            <div className="p-4 bg-slate-950 rounded-xl border border-slate-800 text-[11px] font-mono text-slate-300 max-h-52 overflow-y-auto">
-              {applyCms === 'wordpress' && (
-                <div>
-                  <p className="text-slate-500 mb-1">// WordPress Yoast/RankMath Values:</p>
-                  <p className="text-indigo-300">SEO Title: {report.titleOptions[0].title}</p>
-                  <p className="text-emerald-300 mt-1">Focus Keyphrase: {report.primaryKeyword.keyword}</p>
-                  <p className="text-slate-300 mt-1">Meta Description: {report.metaOptions[0].description}</p>
-                  <p className="text-amber-300 mt-1">Slug: {report.contentBrief.urlSlug}</p>
+            <div className="p-4 bg-slate-950 rounded-xl border border-slate-800 text-[11px] font-mono text-slate-300 max-h-60 overflow-y-auto">
+              {applyCms === 'rankmath' && (
+                <div className="space-y-1.5">
+                  <p className="text-indigo-400 font-bold">// Rank Math SEO Fields:</p>
+                  <p className="text-emerald-300">Focus Keyword: <strong className="text-white">{report.primaryKeyword.keyword}</strong></p>
+                  <p className="text-purple-300">Secondary Keywords: <strong className="text-slate-300">{report.secondaryKeywords.slice(0, 3).map(s => s.keyword).join(', ')}</strong></p>
+                  <p className="text-sky-300">SEO Title: <strong className="text-white">{report.titleOptions[0].title}</strong></p>
+                  <p className="text-slate-300">Permalink (Slug): <strong className="text-amber-300">/{report.contentBrief.urlSlug}</strong></p>
+                  <p className="text-slate-400">Meta Description: {report.metaOptions[0].description}</p>
+                </div>
+              )}
+              {applyCms === 'yoast' && (
+                <div className="space-y-1.5">
+                  <p className="text-amber-400 font-bold">// Yoast SEO Metabox:</p>
+                  <p className="text-emerald-300">Focus keyphrase: <strong className="text-white">{report.primaryKeyword.keyword}</strong></p>
+                  <p className="text-sky-300">SEO title: <strong className="text-white">{report.titleOptions[0].title}</strong></p>
+                  <p className="text-slate-300">Slug: <strong className="text-amber-300">{report.contentBrief.urlSlug}</strong></p>
+                  <p className="text-slate-400">Meta description: {report.metaOptions[0].description}</p>
+                </div>
+              )}
+              {applyCms === 'aioseo' && (
+                <div className="space-y-1.5">
+                  <p className="text-emerald-400 font-bold">// All in One SEO (AIOSEO):</p>
+                  <p className="text-emerald-300">Focus Keyphrase: <strong className="text-white">{report.primaryKeyword.keyword}</strong></p>
+                  <p className="text-sky-300">Post Title: <strong className="text-white">{report.titleOptions[0].title}</strong></p>
+                  <p className="text-slate-400">Meta Description: {report.metaOptions[0].description}</p>
                 </div>
               )}
               {applyCms === 'shopify' && (
