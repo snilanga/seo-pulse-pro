@@ -192,6 +192,181 @@ export interface DomainVerificationState {
   verifiedAt?: string;
 }
 
+// ---------------------------------------------------------------------------
+// AI SEO Research & Keyword Analysis Agent Types
+// ---------------------------------------------------------------------------
 
+export interface ResearchAgentInput {
+  url: string;
+  targetCountry?: string;
+  targetCity?: string;
+  businessType?: string;
+  targetAudience?: string;
+}
 
+export interface BusinessUnderstanding {
+  category: string;
+  subcategory: string;
+  mainServices: string[];
+  targetCustomer: string[];
+  targetLocation: string;
+  reasoningWhy: {
+    categoryReason: string;
+    audienceReason: string;
+    locationReason: string;
+  };
+}
 
+export interface CrawledPageData {
+  url: string;
+  title: string;
+  metaDescription: string;
+  h1: string;
+  h2Headings: string[];
+  h3Headings: string[];
+  visibleTextSnippet: string;
+  identifiedServices: string[];
+  identifiedEntities: string[];
+  existingKeywords: string[];
+  missingElements: string[];
+  urlStructureGrade: string;
+  internalLinkOpportunities: string[];
+  callsToAction: string[];
+}
+
+export interface ResearchPrimaryKeyword {
+  keyword: string;
+  intent: 'Informational' | 'Navigational' | 'Commercial Investigation' | 'Transactional' | 'Local' | string;
+  relevance: number; // 0-100%
+  estimatedCompetition: 'Low' | 'Medium' | 'High' | 'Very High';
+  businessValue: 'High' | 'Very High';
+  locationRelevance: string;
+  reasonForSelection: string;
+}
+
+export interface ResearchSupportingKeyword {
+  keyword: string;
+  intent: 'Informational' | 'Navigational' | 'Commercial Investigation' | 'Transactional' | 'Local';
+  relevanceScore: number;
+  competition: 'Low' | 'Medium' | 'High';
+  businessValue: 'High' | 'Medium';
+  suggestedPlacement?: string;
+  note?: string;
+}
+
+export interface ResearchShortTailKeyword {
+  keyword: string;
+  searchDemand: string;
+  competition: 'High' | 'Very High' | 'Extreme';
+  isRealisticTarget: boolean;
+  aiVerdict: string;
+}
+
+export interface ResearchLocalKeyword {
+  keyword: string;
+  patternType: 'Service + City' | 'Service + Country' | 'Service + Near Me' | 'Service + Area';
+  location: string;
+  localIntentScore: number;
+}
+
+export interface TitleOption {
+  title: string;
+  charCount: number;
+  primaryKeywordIncluded: boolean;
+  seoScore: number;
+  ctrPotential: 'High' | 'Very High' | 'Medium';
+  isWarning: boolean;
+}
+
+export interface MetaDescriptionOption {
+  description: string;
+  charCount: number;
+  primaryKeywordIncluded: boolean;
+  valuePropIncluded: boolean;
+  ctaIncluded: boolean;
+  isRecommendedRange: boolean;
+}
+
+export interface FirstSentenceOptimization {
+  sentence: string;
+  hasPrimaryKeyword: boolean;
+  naturalLanguage: boolean;
+  clearValue: boolean;
+  matchesSearchIntent: boolean;
+  noKeywordStuffing: boolean;
+}
+
+export interface CompetitorResearchItem {
+  url: string;
+  title: string;
+  mainKeyword: string;
+  h1: string;
+  servicesCovered: string[];
+  contentStrengths: string[];
+  contentWeaknesses: string[];
+  keywordOpportunities: string[];
+}
+
+export interface ContentGapItem {
+  contentGap: string;
+  category: 'Topics' | 'Questions' | 'Services' | 'Keywords' | 'Trust Signals' | 'FAQs' | 'Local Info' | 'Conversion Elements';
+  whyItMatters: string;
+  recommendedAction: string;
+}
+
+export interface SeoContentBrief {
+  targetKeyword: string;
+  searchIntent: string;
+  recommendedTitle: string;
+  recommendedH1: string;
+  metaDescription: string;
+  urlSlug: string;
+  introduction: string;
+  h2Structure: string[];
+  h3Structure: { h2Parent: string; h3s: string[] }[];
+  supportingKeywords: string[];
+  longTailKeywords: string[];
+  faqs: { question: string; answer: string }[];
+  recommendedCta: string;
+  internalLinks: string[];
+  contentGapsToAddress: string[];
+}
+
+export interface AiSeoResearchReport {
+  id: string;
+  generatedAt: string;
+  input: ResearchAgentInput;
+  crawledPage: CrawledPageData;
+  businessUnderstanding: BusinessUnderstanding;
+  primaryKeyword: ResearchPrimaryKeyword;
+  secondaryKeywords: ResearchSupportingKeyword[];
+  longTailKeywords: ResearchSupportingKeyword[];
+  shortTailKeywords: ResearchShortTailKeyword[];
+  localKeywords: ResearchLocalKeyword[];
+  questionKeywords: string[];
+  keywordOpportunityScore: number;
+  opportunityScoreExplanation: {
+    relevance: number;
+    intentFit: number;
+    businessValue: number;
+    competitionEase: number;
+    localFit: number;
+    summary: string;
+  };
+  currentSeoScore: number;
+  potentialSeoScore: number;
+  titleOptions: TitleOption[];
+  metaOptions: MetaDescriptionOption[];
+  firstSentence: FirstSentenceOptimization;
+  pageRecommendations: {
+    h1: string;
+    h2s: string[];
+    h3s: string[];
+    introduction: string;
+    cta: string;
+    internalLinks: string[];
+  };
+  competitors: CompetitorResearchItem[];
+  contentGaps: ContentGapItem[];
+  contentBrief: SeoContentBrief;
+}

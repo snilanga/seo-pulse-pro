@@ -16,7 +16,7 @@ import {
   ShieldCheck
 } from 'lucide-react';
 
-export type TabType = 'domain-checker' | 'dashboard' | 'audit' | 'serp' | 'keywords' | 'competitors' | 'reports' | 'ai-agent' | 'trending-keywords' | 'code-injector' | 'page-inspector' | 'backlinks' | 'admin';
+export type TabType = 'domain-checker' | 'research-agent' | 'dashboard' | 'audit' | 'serp' | 'keywords' | 'competitors' | 'reports' | 'ai-agent' | 'trending-keywords' | 'code-injector' | 'page-inspector' | 'backlinks' | 'admin';
 
 interface SidebarProps {
   activeTab: TabType;
@@ -42,6 +42,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
       icon: SearchCheck,
       badge: 'Page # & Grade',
       badgeColor: 'bg-gradient-to-r from-blue-500 to-indigo-500 text-white border-blue-400'
+    },
+    {
+      id: 'research-agent' as TabType,
+      label: 'AI SEO Research Agent',
+      icon: Sparkles,
+      badge: '✨ AI Consultant',
+      badgeColor: 'bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 text-white border-pink-400 animate-pulse'
     },
     {
       id: 'dashboard' as TabType,

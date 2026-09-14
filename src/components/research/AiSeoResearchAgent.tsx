@@ -1,0 +1,1406 @@
+import React, { useState } from 'react';
+import { 
+  Bot, 
+  Sparkles, 
+  Globe, 
+  MapPin, 
+  Building2, 
+  CheckCircle2, 
+  AlertCircle, 
+  Copy, 
+  Check, 
+  Download, 
+  ExternalLink, 
+  FileText, 
+  Layers, 
+  TrendingUp, 
+  Target, 
+  HelpCircle, 
+  ArrowRight,
+  RefreshCw,
+  Wand2,
+  ChevronDown,
+  ChevronUp,
+  SlidersHorizontal,
+  BookmarkPlus
+} from 'lucide-react';
+import type { 
+  ResearchAgentInput, 
+  AiSeoResearchReport, 
+  ClientProject,
+  TrackedKeyword
+} from '../../types/seo';
+import { 
+  runAiSeoResearch, 
+  RESEARCH_AGENT_STEPS, 
+  extractCleanHostname 
+} from '../../services/aiResearchEngine';
+
+interface AiSeoResearchAgentProps {
+  client: ClientProject;
+  onAddKeyword?: (keyword: TrackedKeyword) => void;
+}
+
+// Preset test scenarios matching user request
+const DEMO_PRESETS: { label: string; input: ResearchAgentInput }[] = [
+  {
+    label: 'Webcorexa Web Design (Colombo, Sri Lanka)',
+    input: {
+      url: 'https://webcorexa.com/services/web-design',
+      targetCountry: 'Sri Lanka',
+      targetCity: 'Colombo',
+      businessType: 'Web Design Agency',
+      targetAudience: 'SMEs & Startup Founders'
+    }
+  },
+  {
+    label: 'Apex 24/7 Telehealth (USA)',
+    input: {
+      url: 'https://apexhealth.io/virtual-consultation',
+      targetCountry: 'United States',
+      targetCity: 'Austin',
+      businessType: 'Healthcare & Telemedicine Clinic',
+      targetAudience: 'Patients seeking same-day Rx & consultations'
+    }
+  },
+  {
+    label: 'Nexus Cloud Zero Trust (Global)',
+    input: {
+      url: 'https://nexuscloud.io/compliance-platform',
+      targetCountry: 'Global',
+      targetCity: '',
+      businessType: 'B2B SaaS & Cyber Security Platform',
+      targetAudience: 'DevOps & Enterprise CISOs'
+    }
+  },
+  {
+    label: 'UrbanCraft Living Furniture (Canada)',
+    input: {
+      url: 'https://urbancraftliving.ca/collections/dining',
+      targetCountry: 'Canada',
+      targetCity: 'Toronto',
+      businessType: 'Home Decor & Furniture E-Commerce',
+      targetAudience: 'Modern Homeowners & Interior Designers'
+    }
+  }
+];
+
+export const AiSeoResearchAgent: React.FC<AiSeoResearchAgentProps> = ({
+  client,
+  onAddKeyword
+}) => {
+  // Input form state
+  const [inputUrl, setInputUrl] = useState<string>('https://webcorexa.com/services/web-design');
+  const [targetCountry, setTargetCountry] = useState<string>('Sri Lanka');
+  const [targetCity, setTargetCity] = useState<string>('Colombo');
+  const [businessType, setBusinessType] = useState<string>('Web Design Agency');
+  const [targetAudience, setTargetAudience] = useState<string>('Small Businesses & Startups');
+
+  // Agent execution state
+  const [isRunning, setIsRunning] = useState<boolean>(false);
+  const [currentStep, setCurrentStep] = useState<number>(0);
+  const [stepMessage, setStepMessage] = useState<string>('');
+  const [completedSteps, setCompletedSteps] = useState<number[]>([]);
+  const [report, setReport] = useState<AiSeoResearchReport | null>(null);
+
+  // Active view tab inside the report
+  type ReportTab = 'keywords' | 'onpage' | 'content-brief' | 'competitors-gaps' | 'raw-json';
+  const [activeReportTab, setActiveReportTab] = useState<ReportTab>('keywords');
+
+  // Interactive UI states
+  const [copiedKey, setCopiedKey] = useState<string | null>(null);
+  const [expandedFaq, setExpandedFaq] = useState<number | null>(null);
+  const [showApplyModal, setShowApplyModal] = useState<boolean>(false);
+  const [applyCms, setApplyCms] = useState<'wordpress' | 'shopify' | 'custom'>('wordpress');
+  const [appliedNotification, setAppliedNotification] = useState<string | null>(null);
+
+  const copyToClipboard = (text: string, key: string) => {
+    navigator.clipboard.writeText(text);
+    setCopiedKey(key);
+    setTimeout(() => setCopiedKey(null), 2500);
+  };
+
+  const handleApplyPreset = (preset: typeof DEMO_PRESETS[0]) => {
+    setInputUrl(preset.input.url);
+    setTargetCountry(preset.input.targetCountry || '');
+    setTargetCity(preset.input.targetCity || '');
+    setBusinessType(preset.input.businessType || '');
+    setTargetAudience(preset.input.targetAudience || '');
+  };
+
+  const handleStartResearch = async () => {
+    if (!inputUrl) return;
+    setIsRunning(true);
+    setCurrentStep(1);
+    setCompletedSteps([]);
+    setReport(null);
+
+    try {
+      const payload: ResearchAgentInput = {
+        url: inputUrl,
+        targetCountry: targetCountry.trim() || undefined,
+        targetCity: targetCity.trim() || undefined,
+        businessType: businessType.trim() || undefined,
+        targetAudience: targetAudience.trim() || undefined
+      };
+
+      const result = await runAiSeoResearch(payload, (stepId, message) => {
+        setCurrentStep(stepId);
+        setStepMessage(message);
+        setCompletedSteps(prev => (prev.includes(stepId) ? prev : [...prev, stepId]));
+      });
+
+      setReport(result);
+    } catch (err) {
+      console.error('Research error:', err);
+    } finally {
+      setIsRunning(false);
+    }
+  };
+
+  const handleExportJson = () => {
+    if (!report) return;
+    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(report, null, 2));
+    const downloadAnchor = document.createElement('a');
+    downloadAnchor.setAttribute("href", dataStr);
+    downloadAnchor.setAttribute("download", `SEO_Research_Report_${extractCleanHostname(report.input.url)}.json`);
+    document.body.appendChild(downloadAnchor);
+    downloadAnchor.click();
+    downloadAnchor.remove();
+  };
+
+  const handleExportCsv = () => {
+    if (!report) return;
+    let csv = 'Keyword Type,Keyword,Intent,Relevance,Competition,Business Value,Search Demand / Placement\n';
+    csv += `Primary,"${report.primaryKeyword.keyword}","${report.primaryKeyword.intent}",${report.primaryKeyword.relevance}%,${report.primaryKeyword.estimatedCompetition},${report.primaryKeyword.businessValue},"Target Keyword"\n`;
+    
+    report.secondaryKeywords.forEach(k => {
+      csv += `Secondary,"${k.keyword}","${k.intent}",${k.relevanceScore}%,${k.competition},${k.businessValue},"${k.suggestedPlacement || ''}"\n`;
+    });
+    report.longTailKeywords.forEach(k => {
+      csv += `Long-Tail,"${k.keyword}","${k.intent}",${k.relevanceScore}%,${k.competition},${k.businessValue},"${k.suggestedPlacement || ''}"\n`;
+    });
+    report.shortTailKeywords.forEach(k => {
+      csv += `Short-Tail,"${k.keyword}","General Demand",N/A,${k.competition},"${k.isRealisticTarget ? 'Viable' : 'Unrealistic'}","${k.searchDemand}"\n`;
+    });
+    report.localKeywords.forEach(k => {
+      csv += `Local,"${k.keyword}","Local Intent",${k.localIntentScore}%,Medium,High,"${k.location}"\n`;
+    });
+
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    link.setAttribute('download', `Keyword_Strategy_${extractCleanHostname(report.input.url)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+  };
+
+  const handleTrackKeyword = (kw: string) => {
+    if (!onAddKeyword) return;
+    const newKw: TrackedKeyword = {
+      id: `kw-${Date.now()}`,
+      clientId: client.id,
+      keyword: kw,
+      searchVolume: 1450,
+      difficulty: 38,
+      cpc: 2.85,
+      intent: 'Commercial',
+      googlePosition: {
+        engine: 'google',
+        device: 'desktop',
+        position: 18,
+        previousPosition: 24,
+        url: inputUrl,
+        serpFeatures: ['Featured Snippet', 'People Also Ask'],
+        page1: false
+      },
+      bingPosition: {
+        engine: 'bing',
+        device: 'desktop',
+        position: 14,
+        previousPosition: 19,
+        url: inputUrl,
+        serpFeatures: ['People Also Ask'],
+        page1: false
+      },
+      updatedAt: 'Just now',
+      tags: ['AI Research', 'High Opportunity'],
+      history: [
+        { date: '2026-09-01', googlePos: 32, bingPos: 28 },
+        { date: '2026-09-07', googlePos: 24, bingPos: 20 },
+        { date: '2026-09-14', googlePos: 18, bingPos: 14 }
+      ]
+    };
+    onAddKeyword(newKw);
+    setAppliedNotification(`Keyword "${kw}" added to Tracked SERP Keywords!`);
+    setTimeout(() => setAppliedNotification(null), 3000);
+  };
+
+  return (
+    <div className="space-y-8 animate-fadeIn pb-16">
+      {/* Header Banner */}
+      <div className="relative overflow-hidden rounded-3xl p-8 bg-gradient-to-br from-slate-900 via-indigo-950/80 to-slate-900 border border-indigo-500/30 shadow-2xl">
+        <div className="absolute top-0 right-0 w-96 h-96 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none -mr-20 -mt-20"></div>
+        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+          <div className="space-y-3">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/20 border border-indigo-400/30 text-indigo-300 text-xs font-semibold uppercase tracking-wider">
+              <Sparkles className="w-3.5 h-3.5 text-indigo-400 animate-spin-slow" />
+              Autonomous AI SEO Consultant &amp; Researcher
+            </div>
+            <h1 className="text-3xl font-extrabold text-white tracking-tight sm:text-4xl flex items-center gap-3">
+              AI SEO Research &amp; Keyword Agent
+              <span className="px-2.5 py-0.5 text-xs font-bold bg-purple-500/20 text-purple-300 border border-purple-500/30 rounded-full">v3.0 Live Engine</span>
+            </h1>
+            <p className="text-slate-300 max-w-2xl text-sm leading-relaxed">
+              Submit any website or specific page URL. The autonomous agent inspects DOM elements, extracts search intent, benchmarks competitors, and outputs an actionable, high-ROI SEO roadmap.
+            </p>
+          </div>
+
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+            {report && (
+              <>
+                <button
+                  onClick={handleExportCsv}
+                  className="px-4 py-2.5 bg-slate-800/90 hover:bg-slate-700 text-slate-200 rounded-xl text-xs font-semibold border border-slate-700 transition-all flex items-center justify-center gap-2 shadow-sm"
+                >
+                  <Download className="w-3.5 h-3.5" />
+                  Export CSV / Excel
+                </button>
+                <button
+                  onClick={() => setShowApplyModal(true)}
+                  className="px-5 py-2.5 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-white font-bold rounded-xl text-xs transition-all shadow-lg shadow-emerald-500/20 flex items-center justify-center gap-2"
+                >
+                  <Wand2 className="w-4 h-4" />
+                  Apply Recommendations
+                </button>
+              </>
+            )}
+          </div>
+        </div>
+
+        {/* Preset Quick-Picks */}
+        <div className="mt-6 pt-6 border-t border-slate-800/80 flex flex-wrap items-center gap-2">
+          <span className="text-xs font-medium text-slate-400 flex items-center gap-1.5 mr-2">
+            <SlidersHorizontal className="w-3.5 h-3.5 text-indigo-400" />
+            Quick Demo Presets:
+          </span>
+          {DEMO_PRESETS.map((preset, idx) => (
+            <button
+              key={idx}
+              onClick={() => handleApplyPreset(preset)}
+              className="px-3 py-1.5 rounded-lg bg-slate-800/80 hover:bg-indigo-900/40 border border-slate-700 hover:border-indigo-500/40 text-xs text-slate-300 hover:text-white transition-all"
+            >
+              {preset.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Main Input Form */}
+      <div className="bg-slate-900/90 rounded-2xl p-6 border border-slate-800 shadow-xl backdrop-blur-md">
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
+          <div className="md:col-span-6">
+            <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">
+              Website / Target Page URL <span className="text-rose-400">*</span>
+            </label>
+            <div className="relative">
+              <Globe className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5" />
+              <input
+                type="text"
+                value={inputUrl}
+                onChange={(e) => setInputUrl(e.target.value)}
+                placeholder="https://example.com/services/web-design"
+                className="w-full bg-slate-950 border border-slate-700/80 rounded-xl pl-10 pr-4 py-3 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all font-mono"
+              />
+            </div>
+            <p className="text-[11px] text-slate-400 mt-1.5">
+              Target page will be inspected for headings, existing tags, and services.
+            </p>
+          </div>
+
+          <div className="md:col-span-3">
+            <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">
+              Target Country
+            </label>
+            <div className="relative">
+              <MapPin className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5" />
+              <input
+                type="text"
+                value={targetCountry}
+                onChange={(e) => setTargetCountry(e.target.value)}
+                placeholder="e.g. Sri Lanka (or Auto-detect)"
+                className="w-full bg-slate-950 border border-slate-700/80 rounded-xl pl-10 pr-4 py-3 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 transition-all"
+              />
+            </div>
+            <p className="text-[11px] text-slate-400 mt-1.5">Leave empty to infer automatically.</p>
+          </div>
+
+          <div className="md:col-span-3">
+            <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">
+              Target City / Region
+            </label>
+            <div className="relative">
+              <MapPin className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5" />
+              <input
+                type="text"
+                value={targetCity}
+                onChange={(e) => setTargetCity(e.target.value)}
+                placeholder="e.g. Colombo (Optional)"
+                className="w-full bg-slate-950 border border-slate-700/80 rounded-xl pl-10 pr-4 py-3 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 transition-all"
+              />
+            </div>
+            <p className="text-[11px] text-slate-400 mt-1.5">Enables hyper-local search intent.</p>
+          </div>
+
+          <div className="md:col-span-4">
+            <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">
+              Business Type / Industry (Optional)
+            </label>
+            <div className="relative">
+              <Building2 className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5" />
+              <input
+                type="text"
+                value={businessType}
+                onChange={(e) => setBusinessType(e.target.value)}
+                placeholder="e.g. Web Design Agency"
+                className="w-full bg-slate-950 border border-slate-700/80 rounded-xl pl-10 pr-4 py-3 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 transition-all"
+              />
+            </div>
+          </div>
+
+          <div className="md:col-span-5">
+            <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">
+              Target Audience / ICP (Optional)
+            </label>
+            <div className="relative">
+              <Target className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5" />
+              <input
+                type="text"
+                value={targetAudience}
+                onChange={(e) => setTargetAudience(e.target.value)}
+                placeholder="e.g. Local Business Owners, Healthcare seekers"
+                className="w-full bg-slate-950 border border-slate-700/80 rounded-xl pl-10 pr-4 py-3 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 transition-all"
+              />
+            </div>
+          </div>
+
+          <div className="md:col-span-3 flex items-end">
+            <button
+              onClick={handleStartResearch}
+              disabled={isRunning || !inputUrl}
+              className={`w-full py-3 px-6 rounded-xl font-bold text-sm shadow-xl flex items-center justify-center gap-2.5 transition-all ${
+                isRunning
+                  ? 'bg-indigo-600/50 text-indigo-200 cursor-not-allowed'
+                  : 'bg-gradient-to-r from-indigo-500 via-purple-600 to-pink-500 hover:from-indigo-400 hover:via-purple-500 hover:to-pink-400 text-white shadow-indigo-500/25 active:scale-[0.99]'
+              }`}
+            >
+              {isRunning ? (
+                <>
+                  <RefreshCw className="w-4 h-4 animate-spin text-white" />
+                  Researching...
+                </>
+              ) : (
+                <>
+                  <Bot className="w-4 h-4 text-white" />
+                  Launch AI Research
+                </>
+              )}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Applied Notification Banner */}
+      {appliedNotification && (
+        <div className="p-4 bg-emerald-950/80 border border-emerald-500/40 rounded-xl text-emerald-300 text-xs font-medium flex items-center justify-between animate-fadeIn">
+          <div className="flex items-center gap-2">
+            <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+            <span>{appliedNotification}</span>
+          </div>
+          <button onClick={() => setAppliedNotification(null)} className="text-emerald-400 hover:text-white">✕</button>
+        </div>
+      )}
+
+      {/* 18-Step Live Progress Panel */}
+      {isRunning && (
+        <div className="bg-slate-900/95 border border-indigo-500/30 rounded-2xl p-6 shadow-2xl backdrop-blur-xl">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-5">
+            <div>
+              <div className="flex items-center gap-2.5">
+                <span className="relative flex h-3 w-3">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-3 w-3 bg-indigo-500"></span>
+                </span>
+                <h3 className="text-base font-bold text-white">
+                  Autonomous AI Agent Active: Step {currentStep} of 18
+                </h3>
+              </div>
+              <p className="text-xs text-indigo-300 mt-1 font-mono">{stepMessage}</p>
+            </div>
+            <div className="text-right">
+              <span className="text-2xl font-black text-indigo-400">
+                {Math.round((currentStep / 18) * 100)}%
+              </span>
+              <span className="text-xs text-slate-400 block">Progress</span>
+            </div>
+          </div>
+
+          {/* Progress Bar */}
+          <div className="w-full bg-slate-950 rounded-full h-2.5 mb-6 overflow-hidden border border-slate-800">
+            <div 
+              className="bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 h-2.5 rounded-full transition-all duration-300"
+              style={{ width: `${(currentStep / 18) * 100}%` }}
+            ></div>
+          </div>
+
+          {/* 18 Steps Grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 max-h-60 overflow-y-auto pr-1">
+            {RESEARCH_AGENT_STEPS.map((step) => {
+              const isDone = completedSteps.includes(step.id);
+              const isCurrent = currentStep === step.id;
+
+              return (
+                <div 
+                  key={step.id} 
+                  className={`flex items-start gap-2.5 p-2 rounded-lg border text-xs transition-all ${
+                    isDone
+                      ? 'bg-emerald-950/20 border-emerald-500/30 text-slate-300'
+                      : isCurrent
+                      ? 'bg-indigo-950/40 border-indigo-500/50 text-white shadow-sm'
+                      : 'bg-slate-950/40 border-slate-800/60 text-slate-500'
+                  }`}
+                >
+                  <div className="mt-0.5">
+                    {isDone ? (
+                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                    ) : isCurrent ? (
+                      <RefreshCw className="w-3.5 h-3.5 text-indigo-400 animate-spin shrink-0" />
+                    ) : (
+                      <span className="w-3.5 h-3.5 rounded-full border border-slate-700 flex items-center justify-center text-[9px] text-slate-500 shrink-0">
+                        {step.id}
+                      </span>
+                    )}
+                  </div>
+                  <div className="min-w-0">
+                    <p className="font-semibold truncate">{step.label}</p>
+                    <p className="text-[10px] text-slate-400 truncate">{step.description}</p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Completed Report Display */}
+      {report && (
+        <div className="space-y-8 animate-fadeIn">
+          {/* Executive Summary Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
+            {/* Business Understanding Card */}
+            <div className="bg-slate-900/90 border border-slate-800 rounded-2xl p-5 shadow-lg relative overflow-hidden">
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">Business Model</span>
+                <span className="p-1.5 rounded-lg bg-indigo-500/20 text-indigo-400">
+                  <Building2 className="w-4 h-4" />
+                </span>
+              </div>
+              <p className="text-lg font-bold text-white truncate">{report.businessUnderstanding.category}</p>
+              <p className="text-xs text-indigo-300 font-medium mt-0.5 truncate">{report.businessUnderstanding.subcategory}</p>
+              <div className="mt-4 pt-3 border-t border-slate-800/80 text-[11px] text-slate-400 flex items-center gap-1.5">
+                <MapPin className="w-3.5 h-3.5 text-slate-500" />
+                <span className="truncate">Market: <strong className="text-slate-300">{report.businessUnderstanding.targetLocation}</strong></span>
+              </div>
+            </div>
+
+            {/* Primary Keyword Card */}
+            <div className="bg-slate-900/90 border border-slate-800 rounded-2xl p-5 shadow-lg relative overflow-hidden">
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">Primary Keyword</span>
+                <span className="p-1.5 rounded-lg bg-purple-500/20 text-purple-400">
+                  <Target className="w-4 h-4" />
+                </span>
+              </div>
+              <p className="text-lg font-black text-white truncate" title={report.primaryKeyword.keyword}>
+                {report.primaryKeyword.keyword}
+              </p>
+              <div className="flex items-center gap-2 mt-1">
+                <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-purple-500/20 text-purple-300 border border-purple-500/30">
+                  {report.primaryKeyword.intent}
+                </span>
+                <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-800 text-slate-300">
+                  Rel: {report.primaryKeyword.relevance}%
+                </span>
+              </div>
+              <div className="mt-4 pt-3 border-t border-slate-800/80 text-[11px] text-slate-400 flex items-center justify-between">
+                <span>Competition: <strong className="text-amber-400">{report.primaryKeyword.estimatedCompetition}</strong></span>
+                <button 
+                  onClick={() => handleTrackKeyword(report.primaryKeyword.keyword)}
+                  className="text-indigo-400 hover:text-indigo-300 font-bold flex items-center gap-1"
+                >
+                  <BookmarkPlus className="w-3 h-3" /> Track
+                </button>
+              </div>
+            </div>
+
+            {/* Keyword Opportunity Score Card */}
+            <div className="bg-slate-900/90 border border-slate-800 rounded-2xl p-5 shadow-lg relative overflow-hidden">
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">Opportunity Score</span>
+                <span className="p-1.5 rounded-lg bg-emerald-500/20 text-emerald-400">
+                  <TrendingUp className="w-4 h-4" />
+                </span>
+              </div>
+              <div className="flex items-baseline gap-2">
+                <span className="text-3xl font-black text-emerald-400">{report.keywordOpportunityScore}</span>
+                <span className="text-xs text-slate-500 font-bold">/ 100</span>
+                <span className="ml-auto px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                  HIGH POTENTIAL
+                </span>
+              </div>
+              <p className="text-[11px] text-slate-400 mt-2 line-clamp-2">
+                {report.opportunityScoreExplanation.summary}
+              </p>
+            </div>
+
+            {/* Current vs Potential SEO Card */}
+            <div className="bg-slate-900/90 border border-slate-800 rounded-2xl p-5 shadow-lg relative overflow-hidden">
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">SEO Score Growth</span>
+                <span className="p-1.5 rounded-lg bg-blue-500/20 text-blue-400">
+                  <Sparkles className="w-4 h-4" />
+                </span>
+              </div>
+              <div className="flex items-center justify-between">
+                <div>
+                  <span className="text-xs text-slate-400 block">Current</span>
+                  <span className="text-2xl font-bold text-amber-400">{report.currentSeoScore}</span>
+                  <span className="text-xs text-slate-500">/100</span>
+                </div>
+                <ArrowRight className="w-5 h-5 text-slate-600" />
+                <div className="text-right">
+                  <span className="text-xs text-emerald-400 font-semibold block">Potential</span>
+                  <span className="text-2xl font-black text-emerald-400">{report.potentialSeoScore}</span>
+                  <span className="text-xs text-slate-500">/100</span>
+                </div>
+              </div>
+              <div className="mt-3 pt-3 border-t border-slate-800/80 text-[11px] text-emerald-400 font-medium">
+                +{report.potentialSeoScore - report.currentSeoScore} points projected post-optimization
+              </div>
+            </div>
+          </div>
+
+          {/* AI Inference & Rationale Breakdown Accordion */}
+          <div className="p-5 bg-indigo-950/20 border border-indigo-500/20 rounded-2xl text-xs space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="font-bold text-indigo-300 uppercase tracking-wider flex items-center gap-1.5">
+                <HelpCircle className="w-4 h-4 text-indigo-400" />
+                AI Business Understanding Rationale: Why Did the Agent Select These Targets?
+              </span>
+              <span className="text-[11px] text-slate-400">Generated from DOM tags &amp; entity graphs</span>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-slate-300">
+              <div className="p-3 bg-slate-900/60 rounded-xl border border-slate-800">
+                <strong className="text-white block mb-1">Industry &amp; Category Reason:</strong>
+                {report.businessUnderstanding.reasoningWhy.categoryReason}
+              </div>
+              <div className="p-3 bg-slate-900/60 rounded-xl border border-slate-800">
+                <strong className="text-white block mb-1">Audience Persona Reason:</strong>
+                {report.businessUnderstanding.reasoningWhy.audienceReason}
+              </div>
+              <div className="p-3 bg-slate-900/60 rounded-xl border border-slate-800">
+                <strong className="text-white block mb-1">Geographic Targeting Reason:</strong>
+                {report.businessUnderstanding.reasoningWhy.locationReason}
+              </div>
+            </div>
+          </div>
+
+          {/* Report Tab Navigation */}
+          <div className="flex border-b border-slate-800 space-x-1 overflow-x-auto">
+            <button
+              onClick={() => setActiveReportTab('keywords')}
+              className={`px-4 py-3 text-xs font-bold rounded-t-xl transition-all border-b-2 flex items-center gap-2 whitespace-nowrap ${
+                activeReportTab === 'keywords'
+                  ? 'border-indigo-500 text-indigo-300 bg-indigo-500/10'
+                  : 'border-transparent text-slate-400 hover:text-slate-200 hover:bg-slate-800/40'
+              }`}
+            >
+              <Target className="w-4 h-4" />
+              Keyword Strategy (Primary, Long-Tail, Local)
+            </button>
+
+            <button
+              onClick={() => setActiveReportTab('onpage')}
+              className={`px-4 py-3 text-xs font-bold rounded-t-xl transition-all border-b-2 flex items-center gap-2 whitespace-nowrap ${
+                activeReportTab === 'onpage'
+                  ? 'border-indigo-500 text-indigo-300 bg-indigo-500/10'
+                  : 'border-transparent text-slate-400 hover:text-slate-200 hover:bg-slate-800/40'
+              }`}
+            >
+              <FileText className="w-4 h-4" />
+              On-Page Metadata &amp; First Sentence Optimization
+            </button>
+
+            <button
+              onClick={() => setActiveReportTab('content-brief')}
+              className={`px-4 py-3 text-xs font-bold rounded-t-xl transition-all border-b-2 flex items-center gap-2 whitespace-nowrap ${
+                activeReportTab === 'content-brief'
+                  ? 'border-indigo-500 text-indigo-300 bg-indigo-500/10'
+                  : 'border-transparent text-slate-400 hover:text-slate-200 hover:bg-slate-800/40'
+              }`}
+            >
+              <Layers className="w-4 h-4" />
+              AI SEO Content Brief &amp; H2/H3 Structure
+            </button>
+
+            <button
+              onClick={() => setActiveReportTab('competitors-gaps')}
+              className={`px-4 py-3 text-xs font-bold rounded-t-xl transition-all border-b-2 flex items-center gap-2 whitespace-nowrap ${
+                activeReportTab === 'competitors-gaps'
+                  ? 'border-indigo-500 text-indigo-300 bg-indigo-500/10'
+                  : 'border-transparent text-slate-400 hover:text-slate-200 hover:bg-slate-800/40'
+              }`}
+            >
+              <Building2 className="w-4 h-4" />
+              Competitors Matrix &amp; Content Gaps
+            </button>
+
+            <button
+              onClick={() => setActiveReportTab('raw-json')}
+              className={`px-4 py-3 text-xs font-bold rounded-t-xl transition-all border-b-2 flex items-center gap-2 whitespace-nowrap ${
+                activeReportTab === 'raw-json'
+                  ? 'border-indigo-500 text-indigo-300 bg-indigo-500/10'
+                  : 'border-transparent text-slate-400 hover:text-slate-200 hover:bg-slate-800/40'
+              }`}
+            >
+              <Download className="w-4 h-4" />
+              Export &amp; Raw Report
+            </button>
+          </div>
+
+          {/* TAB 1: KEYWORD STRATEGY */}
+          {activeReportTab === 'keywords' && (
+            <div className="space-y-8 animate-fadeIn">
+              {/* Primary Keyword Deep-Dive */}
+              <div className="bg-slate-900/90 border border-purple-500/30 rounded-2xl p-6 shadow-xl relative overflow-hidden">
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4 pb-4 border-b border-slate-800">
+                  <div>
+                    <span className="text-xs font-bold text-purple-400 uppercase tracking-wider block">Single Highest-Leverage Target</span>
+                    <h3 className="text-2xl font-black text-white mt-1 flex items-center gap-3">
+                      {report.primaryKeyword.keyword}
+                      <button
+                        onClick={() => copyToClipboard(report.primaryKeyword.keyword, 'primary-kw')}
+                        className="text-slate-400 hover:text-white transition-colors"
+                        title="Copy Keyword"
+                      >
+                        {copiedKey === 'primary-kw' ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
+                      </button>
+                    </h3>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <button
+                      onClick={() => handleTrackKeyword(report.primaryKeyword.keyword)}
+                      className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold rounded-xl flex items-center gap-2 shadow-sm transition-all"
+                    >
+                      <BookmarkPlus className="w-3.5 h-3.5" />
+                      Add to SERP Tracker
+                    </button>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-4">
+                  <div className="p-3 bg-slate-950/80 rounded-xl border border-slate-800">
+                    <span className="text-[10px] uppercase font-bold text-slate-400 block">Search Intent</span>
+                    <span className="text-xs font-bold text-indigo-300">{report.primaryKeyword.intent}</span>
+                  </div>
+                  <div className="p-3 bg-slate-950/80 rounded-xl border border-slate-800">
+                    <span className="text-[10px] uppercase font-bold text-slate-400 block">Topical Relevance</span>
+                    <span className="text-xs font-bold text-emerald-400">{report.primaryKeyword.relevance}% Match</span>
+                  </div>
+                  <div className="p-3 bg-slate-950/80 rounded-xl border border-slate-800">
+                    <span className="text-[10px] uppercase font-bold text-slate-400 block">Estimated Competition</span>
+                    <span className="text-xs font-bold text-amber-400">{report.primaryKeyword.estimatedCompetition}</span>
+                  </div>
+                  <div className="p-3 bg-slate-950/80 rounded-xl border border-slate-800">
+                    <span className="text-[10px] uppercase font-bold text-slate-400 block">Commercial Value</span>
+                    <span className="text-xs font-bold text-purple-300">{report.primaryKeyword.businessValue}</span>
+                  </div>
+                </div>
+
+                <div className="p-4 bg-slate-950/60 rounded-xl border border-slate-800/80 text-xs text-slate-300 leading-relaxed">
+                  <strong className="text-white block mb-1">Agent Rationale for Selection:</strong>
+                  {report.primaryKeyword.reasonForSelection}
+                </div>
+              </div>
+
+              {/* Secondary & Supporting Keywords */}
+              <div className="bg-slate-900/90 border border-slate-800 rounded-2xl p-6 shadow-xl">
+                <div className="flex items-center justify-between mb-4">
+                  <div>
+                    <h3 className="text-base font-bold text-white flex items-center gap-2">
+                      <Target className="w-4 h-4 text-indigo-400" />
+                      Secondary Supporting Keywords (Semantic Variations)
+                    </h3>
+                    <p className="text-xs text-slate-400 mt-0.5">Naturally support the primary target across H2 subheadings and body paragraphs.</p>
+                  </div>
+                  <span className="text-xs text-slate-400 font-mono">{report.secondaryKeywords.length} terms</span>
+                </div>
+
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-xs">
+                    <thead>
+                      <tr className="border-b border-slate-800 text-slate-400 font-semibold uppercase tracking-wider text-[10px]">
+                        <th className="py-3 px-3">Keyword</th>
+                        <th className="py-3 px-3">Search Intent</th>
+                        <th className="py-3 px-3">Relevance</th>
+                        <th className="py-3 px-3">Competition</th>
+                        <th className="py-3 px-3">Suggested Placement</th>
+                        <th className="py-3 px-3 text-right">Action</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-800/60">
+                      {report.secondaryKeywords.map((k, i) => (
+                        <tr key={i} className="hover:bg-slate-800/30 transition-colors">
+                          <td className="py-3 px-3 font-semibold text-white font-mono flex items-center gap-2">
+                            {k.keyword}
+                            <button
+                              onClick={() => copyToClipboard(k.keyword, `sec-${i}`)}
+                              className="text-slate-500 hover:text-slate-300"
+                            >
+                              {copiedKey === `sec-${i}` ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
+                            </button>
+                          </td>
+                          <td className="py-3 px-3">
+                            <span className="px-2 py-0.5 rounded text-[10px] bg-indigo-500/10 text-indigo-300 border border-indigo-500/20">
+                              {k.intent}
+                            </span>
+                          </td>
+                          <td className="py-3 px-3 font-bold text-emerald-400">{k.relevanceScore}%</td>
+                          <td className="py-3 px-3 text-slate-300">{k.competition}</td>
+                          <td className="py-3 px-3 text-slate-400 max-w-xs truncate" title={k.suggestedPlacement}>
+                            {k.suggestedPlacement || 'H2 subheading'}
+                          </td>
+                          <td className="py-3 px-3 text-right">
+                            <button
+                              onClick={() => handleTrackKeyword(k.keyword)}
+                              className="text-indigo-400 hover:text-indigo-300 font-semibold text-[11px]"
+                            >
+                              + Track
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              {/* Long-Tail Keywords (3-5 words) */}
+              <div className="bg-slate-900/90 border border-slate-800 rounded-2xl p-6 shadow-xl">
+                <div className="flex items-center justify-between mb-4">
+                  <div>
+                    <h3 className="text-base font-bold text-white flex items-center gap-2">
+                      <Sparkles className="w-4 h-4 text-emerald-400" />
+                      Long-Tail Keywords (High Conversion, Low Difficulty)
+                    </h3>
+                    <p className="text-xs text-slate-400 mt-0.5">Specific user search queries with strong buyer intent and fast rank velocity.</p>
+                  </div>
+                  <span className="text-xs text-slate-400 font-mono">{report.longTailKeywords.length} terms</span>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  {report.longTailKeywords.map((k, i) => (
+                    <div key={i} className="p-4 bg-slate-950/70 border border-slate-800 rounded-xl hover:border-emerald-500/40 transition-all flex flex-col justify-between">
+                      <div>
+                        <div className="flex items-center justify-between gap-2 mb-1.5">
+                          <span className="text-xs font-bold text-emerald-300 font-mono">{k.keyword}</span>
+                          <span className="px-2 py-0.5 rounded text-[10px] bg-emerald-500/20 text-emerald-400 font-semibold">
+                            Comp: {k.competition}
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-slate-400 mb-2">
+                          Placement: <strong className="text-slate-300">{k.suggestedPlacement}</strong>
+                        </p>
+                      </div>
+                      <div className="pt-2 border-t border-slate-800/80 flex items-center justify-between text-[11px]">
+                        <span className="text-slate-500">Relevance: {k.relevanceScore}%</span>
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => copyToClipboard(k.keyword, `lt-${i}`)}
+                            className="text-slate-400 hover:text-white"
+                          >
+                            {copiedKey === `lt-${i}` ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                          </button>
+                          <button
+                            onClick={() => handleTrackKeyword(k.keyword)}
+                            className="text-indigo-400 hover:text-indigo-300 font-bold"
+                          >
+                            + Track
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Short-Tail Keywords with AI Realism Verdict */}
+              <div className="bg-slate-900/90 border border-slate-800 rounded-2xl p-6 shadow-xl">
+                <div className="mb-4">
+                  <h3 className="text-base font-bold text-white flex items-center gap-2">
+                    <AlertCircle className="w-4 h-4 text-amber-400" />
+                    Short-Tail Head Terms (AI Feasibility &amp; Ranking Verdict)
+                  </h3>
+                  <p className="text-xs text-slate-400 mt-0.5">High monthly search demand evaluated for realistic feasibility on a single service page.</p>
+                </div>
+
+                <div className="space-y-3">
+                  {report.shortTailKeywords.map((k, i) => (
+                    <div key={i} className="p-4 bg-slate-950/80 border border-slate-800 rounded-xl flex flex-col md:flex-row md:items-center justify-between gap-4">
+                      <div className="space-y-1 max-w-xl">
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-bold text-white font-mono">{k.keyword}</span>
+                          <span className="text-xs text-slate-400">({k.searchDemand})</span>
+                          <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                            k.isRealisticTarget 
+                              ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' 
+                              : 'bg-rose-500/20 text-rose-300 border border-rose-500/30'
+                          }`}>
+                            {k.isRealisticTarget ? 'Realistic Target' : 'Unrealistic for Single Page'}
+                          </span>
+                        </div>
+                        <p className="text-xs text-slate-400 leading-relaxed">
+                          <strong className="text-slate-300">AI Verdict:</strong> {k.aiVerdict}
+                        </p>
+                      </div>
+                      <div className="text-right shrink-0">
+                        <span className="text-xs font-bold text-slate-400 block">Competition</span>
+                        <span className="text-xs font-black text-rose-400">{k.competition}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Local & Question Keywords */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Local Variations */}
+                <div className="bg-slate-900/90 border border-slate-800 rounded-2xl p-6 shadow-xl">
+                  <h3 className="text-base font-bold text-white mb-1 flex items-center gap-2">
+                    <MapPin className="w-4 h-4 text-rose-400" />
+                    Local Search Patterns
+                  </h3>
+                  <p className="text-xs text-slate-400 mb-4">Captures localized search intent (City, Country, Near Me).</p>
+                  <div className="space-y-2.5">
+                    {report.localKeywords.map((lk, i) => (
+                      <div key={i} className="p-3 bg-slate-950 rounded-xl border border-slate-800 flex items-center justify-between">
+                        <div>
+                          <p className="text-xs font-bold text-white font-mono">{lk.keyword}</p>
+                          <span className="text-[10px] text-slate-500">{lk.patternType} • {lk.location}</span>
+                        </div>
+                        <button
+                          onClick={() => handleTrackKeyword(lk.keyword)}
+                          className="text-[11px] text-indigo-400 hover:text-indigo-300 font-bold"
+                        >
+                          + Track
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* FAQ & Voice Search Questions */}
+                <div className="bg-slate-900/90 border border-slate-800 rounded-2xl p-6 shadow-xl">
+                  <h3 className="text-base font-bold text-white mb-1 flex items-center gap-2">
+                    <HelpCircle className="w-4 h-4 text-cyan-400" />
+                    Question Queries (PAA &amp; Voice Search)
+                  </h3>
+                  <p className="text-xs text-slate-400 mb-4">Direct customer questions for Google People Also Ask accordions.</p>
+                  <div className="space-y-2.5">
+                    {report.questionKeywords.map((q, i) => (
+                      <div key={i} className="p-3 bg-slate-950 rounded-xl border border-slate-800 flex items-start justify-between gap-2">
+                        <p className="text-xs text-slate-300 leading-relaxed font-medium">"{q}"</p>
+                        <button
+                          onClick={() => copyToClipboard(q, `q-${i}`)}
+                          className="text-slate-500 hover:text-white shrink-0 mt-0.5"
+                        >
+                          {copiedKey === `q-${i}` ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* TAB 2: ON-PAGE METADATA & FIRST SENTENCE */}
+          {activeReportTab === 'onpage' && (
+            <div className="space-y-8 animate-fadeIn">
+              {/* FIRST SENTENCE OPTIMIZATION - User Highlighted Requirement */}
+              <div className="bg-slate-900/90 border-2 border-indigo-500/40 rounded-2xl p-6 shadow-2xl relative overflow-hidden">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-2.5">
+                    <span className="p-2 bg-indigo-500/20 rounded-xl text-indigo-400">
+                      <Sparkles className="w-5 h-5" />
+                    </span>
+                    <div>
+                      <h3 className="text-lg font-bold text-white">First Sentence Lead Optimization</h3>
+                      <p className="text-xs text-indigo-300">Front-loads primary keyword naturally within first 100 words with immediate value proposition.</p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => copyToClipboard(report.firstSentence.sentence, 'first-sentence')}
+                    className="px-3 py-1.5 bg-indigo-600/30 hover:bg-indigo-600/50 text-indigo-200 rounded-lg text-xs font-bold border border-indigo-500/30 flex items-center gap-1.5 transition-all"
+                  >
+                    {copiedKey === 'first-sentence' ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                    Copy First Sentence
+                  </button>
+                </div>
+
+                {/* The Sentence Block */}
+                <div className="p-5 bg-slate-950 rounded-xl border border-indigo-500/30 mb-6 text-sm sm:text-base text-white leading-relaxed font-medium">
+                  "{report.firstSentence.sentence}"
+                </div>
+
+                {/* 5-Point Verification Checklist */}
+                <div>
+                  <h4 className="text-xs font-bold text-slate-300 uppercase tracking-wider mb-3">
+                    Verification Checklist for First Sentence:
+                  </h4>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                    <div className="p-3 bg-slate-950/80 rounded-xl border border-slate-800 flex items-center gap-2.5">
+                      <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                      <span className="text-xs text-slate-200">Includes Exact Primary Keyword</span>
+                    </div>
+                    <div className="p-3 bg-slate-950/80 rounded-xl border border-slate-800 flex items-center gap-2.5">
+                      <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                      <span className="text-xs text-slate-200">Front-Loaded Naturally</span>
+                    </div>
+                    <div className="p-3 bg-slate-950/80 rounded-xl border border-slate-800 flex items-center gap-2.5">
+                      <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                      <span className="text-xs text-slate-200">Clearly Explains Value</span>
+                    </div>
+                    <div className="p-3 bg-slate-950/80 rounded-xl border border-slate-800 flex items-center gap-2.5">
+                      <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                      <span className="text-xs text-slate-200">Matches Search Intent</span>
+                    </div>
+                    <div className="p-3 bg-slate-950/80 rounded-xl border border-slate-800 flex items-center gap-2.5">
+                      <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                      <span className="text-xs text-slate-200">Zero Keyword Stuffing</span>
+                    </div>
+                    <div className="p-3 bg-slate-950/80 rounded-xl border border-slate-800 flex items-center gap-2.5">
+                      <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                      <span className="text-xs text-slate-200">Addresses User Problem</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* 3 Click-Optimized Title Options */}
+              <div className="bg-slate-900/90 border border-slate-800 rounded-2xl p-6 shadow-xl">
+                <div className="mb-4">
+                  <h3 className="text-base font-bold text-white flex items-center gap-2">
+                    <FileText className="w-4 h-4 text-indigo-400" />
+                    3 Click-Optimized SEO Title Options (50-60 Characters)
+                  </h3>
+                  <p className="text-xs text-slate-400 mt-0.5">Strict character count enforced to avoid SERP truncation on desktop and mobile.</p>
+                </div>
+
+                <div className="space-y-3">
+                  {report.titleOptions.map((opt, i) => (
+                    <div key={i} className="p-4 bg-slate-950 rounded-xl border border-slate-800 flex flex-col md:flex-row md:items-center justify-between gap-3">
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2">
+                          <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-indigo-500/20 text-indigo-300">
+                            Option {i + 1}
+                          </span>
+                          <span className="text-sm font-bold text-white font-mono">{opt.title}</span>
+                        </div>
+                        <div className="flex items-center gap-3 text-[11px] text-slate-400">
+                          <span className={opt.isWarning ? 'text-rose-400 font-bold' : 'text-emerald-400 font-semibold'}>
+                            {opt.charCount} characters {opt.isWarning ? '(Warning: >60 chars)' : '(Optimal 50-60)'}
+                          </span>
+                          <span>• CTR Potential: <strong className="text-slate-200">{opt.ctrPotential}</strong></span>
+                          <span>• SEO Quality: <strong className="text-indigo-400">{opt.seoScore}%</strong></span>
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => copyToClipboard(opt.title, `title-${i}`)}
+                        className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white rounded-lg text-xs font-semibold flex items-center gap-1.5 self-start md:self-auto"
+                      >
+                        {copiedKey === `title-${i}` ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                        Copy Title
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* 3 Meta Description Options */}
+              <div className="bg-slate-900/90 border border-slate-800 rounded-2xl p-6 shadow-xl">
+                <div className="mb-4">
+                  <h3 className="text-base font-bold text-white flex items-center gap-2">
+                    <FileText className="w-4 h-4 text-emerald-400" />
+                    3 Meta Description Options (140-160 Characters)
+                  </h3>
+                  <p className="text-xs text-slate-400 mt-0.5">Includes primary keyword, clear value proposition, and compelling call-to-action.</p>
+                </div>
+
+                <div className="space-y-3">
+                  {report.metaOptions.map((opt, i) => (
+                    <div key={i} className="p-4 bg-slate-950 rounded-xl border border-slate-800 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                      <div className="space-y-1.5 max-w-2xl">
+                        <div className="flex items-center gap-2">
+                          <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/20 text-emerald-300">
+                            Option {i + 1}
+                          </span>
+                          <span className="text-xs text-slate-400 font-mono">
+                            {opt.charCount} characters {opt.isRecommendedRange ? '(Ideal 140-160)' : ''}
+                          </span>
+                        </div>
+                        <p className="text-xs text-slate-200 leading-relaxed font-medium">"{opt.description}"</p>
+                      </div>
+                      <button
+                        onClick={() => copyToClipboard(opt.description, `meta-${i}`)}
+                        className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white rounded-lg text-xs font-semibold flex items-center gap-1.5 self-start md:self-auto shrink-0"
+                      >
+                        {copiedKey === `meta-${i}` ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                        Copy Meta
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* TAB 3: AI CONTENT BRIEF & OUTLINE */}
+          {activeReportTab === 'content-brief' && (
+            <div className="space-y-8 animate-fadeIn">
+              <div className="bg-slate-900/90 border border-slate-800 rounded-2xl p-6 shadow-xl">
+                <div className="flex items-center justify-between mb-6 pb-4 border-b border-slate-800">
+                  <div>
+                    <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                      <Layers className="w-5 h-5 text-indigo-400" />
+                      Comprehensive SEO Content Brief
+                    </h3>
+                    <p className="text-xs text-slate-400 mt-0.5">Editorial blueprint for content creators, copywriters, and developers.</p>
+                  </div>
+                  <button
+                    onClick={() => copyToClipboard(JSON.stringify(report.contentBrief, null, 2), 'brief-all')}
+                    className="px-3 py-1.5 bg-indigo-600/30 hover:bg-indigo-600/50 text-indigo-200 rounded-lg text-xs font-bold border border-indigo-500/30 flex items-center gap-1.5"
+                  >
+                    {copiedKey === 'brief-all' ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                    Copy Full Brief
+                  </button>
+                </div>
+
+                <div className="space-y-6 text-xs">
+                  {/* Recommended Headings */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="p-4 bg-slate-950 rounded-xl border border-slate-800">
+                      <span className="text-[10px] uppercase font-bold text-indigo-400 block mb-1">Recommended H1 Heading</span>
+                      <p className="text-sm font-bold text-white">{report.contentBrief.recommendedH1}</p>
+                    </div>
+                    <div className="p-4 bg-slate-950 rounded-xl border border-slate-800">
+                      <span className="text-[10px] uppercase font-bold text-emerald-400 block mb-1">Recommended URL Slug</span>
+                      <p className="text-sm font-mono text-emerald-300">/{report.contentBrief.urlSlug}</p>
+                    </div>
+                  </div>
+
+                  {/* Heading Structure Tree */}
+                  <div className="p-5 bg-slate-950 rounded-xl border border-slate-800">
+                    <h4 className="text-xs font-bold text-slate-300 uppercase tracking-wider mb-4">
+                      H2 &amp; H3 Hierarchy Structure:
+                    </h4>
+                    <div className="space-y-4">
+                      {report.contentBrief.h2Structure.map((h2, idx) => {
+                        const matchingH3s = report.contentBrief.h3Structure.find(item => item.h2Parent === h2)?.h3s || [];
+                        return (
+                          <div key={idx} className="p-3 bg-slate-900/60 rounded-lg border border-slate-800/80">
+                            <div className="flex items-center gap-2 font-bold text-white text-xs">
+                              <span className="px-1.5 py-0.5 rounded bg-indigo-500/20 text-indigo-400 text-[10px]">H2</span>
+                              <span>{h2}</span>
+                            </div>
+                            {matchingH3s.length > 0 && (
+                              <div className="mt-2.5 ml-6 space-y-1.5 border-l-2 border-slate-800 pl-3">
+                                {matchingH3s.map((h3, h3Idx) => (
+                                  <div key={h3Idx} className="flex items-center gap-2 text-slate-300 text-[11px]">
+                                    <span className="px-1 py-0.2 rounded bg-purple-500/20 text-purple-400 text-[9px]">H3</span>
+                                    <span>{h3}</span>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* FAQs Section */}
+                  <div className="p-5 bg-slate-950 rounded-xl border border-slate-800">
+                    <h4 className="text-xs font-bold text-slate-300 uppercase tracking-wider mb-4">
+                      Recommended FAQs &amp; Schema Responses:
+                    </h4>
+                    <div className="space-y-3">
+                      {report.contentBrief.faqs.map((faq, idx) => (
+                        <div key={idx} className="border border-slate-800 rounded-lg overflow-hidden">
+                          <button
+                            onClick={() => setExpandedFaq(expandedFaq === idx ? null : idx)}
+                            className="w-full p-3 bg-slate-900/80 flex items-center justify-between text-left font-semibold text-slate-200 hover:text-white"
+                          >
+                            <span>{faq.question}</span>
+                            {expandedFaq === idx ? <ChevronUp className="w-4 h-4 text-slate-400" /> : <ChevronDown className="w-4 h-4 text-slate-400" />}
+                          </button>
+                          {expandedFaq === idx && (
+                            <div className="p-3 bg-slate-950 text-slate-400 text-[11px] leading-relaxed border-t border-slate-800/80">
+                              {faq.answer}
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Internal Linking & CTA */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="p-4 bg-slate-950 rounded-xl border border-slate-800">
+                      <span className="text-[10px] uppercase font-bold text-slate-400 block mb-1">Recommended Call to Action (CTA)</span>
+                      <p className="text-xs font-semibold text-emerald-400">"{report.contentBrief.recommendedCta}"</p>
+                    </div>
+                    <div className="p-4 bg-slate-950 rounded-xl border border-slate-800">
+                      <span className="text-[10px] uppercase font-bold text-slate-400 block mb-1">Internal Link Targets</span>
+                      <div className="flex flex-wrap gap-1.5 mt-1">
+                        {report.contentBrief.internalLinks.map((link, i) => (
+                          <span key={i} className="px-2 py-0.5 rounded bg-slate-900 border border-slate-800 text-[10px] font-mono text-indigo-300">
+                            {link}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* TAB 4: COMPETITORS & CONTENT GAPS */}
+          {activeReportTab === 'competitors-gaps' && (
+            <div className="space-y-8 animate-fadeIn">
+              {/* Competitors Matrix */}
+              <div className="bg-slate-900/90 border border-slate-800 rounded-2xl p-6 shadow-xl">
+                <div className="mb-4">
+                  <h3 className="text-base font-bold text-white flex items-center gap-2">
+                    <Building2 className="w-4 h-4 text-indigo-400" />
+                    Rival Competitor Search Landscape
+                  </h3>
+                  <p className="text-xs text-slate-400 mt-0.5">Top-ranking rival pages analyzed for content depth, strengths, and vulnerabilities.</p>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                  {report.competitors.map((comp, idx) => (
+                    <div key={idx} className="p-5 bg-slate-950 rounded-xl border border-slate-800 space-y-3">
+                      <div className="flex items-center justify-between">
+                        <span className="px-2 py-0.5 rounded bg-indigo-500/20 text-indigo-300 text-[10px] font-bold">
+                          Competitor {idx + 1}
+                        </span>
+                        <a href={comp.url} target="_blank" rel="noopener noreferrer" className="text-slate-400 hover:text-white flex items-center gap-1 text-[10px]">
+                          {extractCleanHostname(comp.url)} <ExternalLink className="w-3 h-3" />
+                        </a>
+                      </div>
+
+                      <h4 className="text-sm font-bold text-white line-clamp-1">{comp.title}</h4>
+                      <p className="text-[11px] text-slate-400 font-mono">Main Target: <strong className="text-slate-200">{comp.mainKeyword}</strong></p>
+
+                      <div className="space-y-2 pt-2 border-t border-slate-800/80 text-[11px]">
+                        <div>
+                          <strong className="text-emerald-400 block">Identified Strengths:</strong>
+                          <ul className="list-disc list-inside text-slate-400 space-y-0.5 mt-0.5">
+                            {comp.contentStrengths.map((str, sIdx) => <li key={sIdx}>{str}</li>)}
+                          </ul>
+                        </div>
+                        <div>
+                          <strong className="text-rose-400 block">Identified Vulnerabilities:</strong>
+                          <ul className="list-disc list-inside text-slate-400 space-y-0.5 mt-0.5">
+                            {comp.contentWeaknesses.map((w, wIdx) => <li key={wIdx}>{w}</li>)}
+                          </ul>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Content Gaps to Outrank */}
+              <div className="bg-slate-900/90 border border-slate-800 rounded-2xl p-6 shadow-xl">
+                <div className="mb-4">
+                  <h3 className="text-base font-bold text-white flex items-center gap-2">
+                    <Target className="w-4 h-4 text-emerald-400" />
+                    Content Gaps &amp; Opportunity Playbook
+                  </h3>
+                  <p className="text-xs text-slate-400 mt-0.5">What competitor pages are missing that you can include to claim the #1 ranking.</p>
+                </div>
+
+                <div className="space-y-3">
+                  {report.contentGaps.map((gap, idx) => (
+                    <div key={idx} className="p-4 bg-slate-950 rounded-xl border border-slate-800 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-bold text-white">{gap.contentGap}</span>
+                        <span className="px-2 py-0.5 rounded bg-slate-800 text-[10px] font-bold text-slate-400">
+                          {gap.category}
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-slate-400 leading-relaxed">
+                        <strong className="text-slate-300">Why It Matters:</strong> {gap.whyItMatters}
+                      </p>
+                      <div className="p-2.5 bg-indigo-950/20 border border-indigo-500/20 rounded-lg text-[11px] text-indigo-300 font-medium">
+                        <strong>Recommended Action:</strong> {gap.recommendedAction}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* TAB 5: EXPORT & RAW REPORT */}
+          {activeReportTab === 'raw-json' && (
+            <div className="space-y-6 animate-fadeIn">
+              <div className="bg-slate-900/90 border border-slate-800 rounded-2xl p-6 shadow-xl">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
+                  <div>
+                    <h3 className="text-base font-bold text-white">Full AI Strategy JSON &amp; Raw Export</h3>
+                    <p className="text-xs text-slate-400 mt-0.5">Integrate this report with your headless CMS, CRM, or client deliverable pipelines.</p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={handleExportJson}
+                      className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white rounded-lg text-xs font-bold border border-slate-700 flex items-center gap-1.5"
+                    >
+                      <Download className="w-3.5 h-3.5" />
+                      Download JSON
+                    </button>
+                    <button
+                      onClick={handleExportCsv}
+                      className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-bold flex items-center gap-1.5 shadow-sm"
+                    >
+                      <Download className="w-3.5 h-3.5" />
+                      Download CSV
+                    </button>
+                  </div>
+                </div>
+
+                <pre className="p-4 bg-slate-950 rounded-xl border border-slate-800 text-[11px] font-mono text-slate-300 max-h-96 overflow-y-auto leading-relaxed">
+                  {JSON.stringify(report, null, 2)}
+                </pre>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* "Apply Recommendations" 1-Click Modal */}
+      {showApplyModal && report && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-fadeIn">
+          <div className="bg-slate-900 border border-indigo-500/40 rounded-2xl p-6 max-w-xl w-full shadow-2xl space-y-5">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-800">
+              <div className="flex items-center gap-2">
+                <Wand2 className="w-5 h-5 text-indigo-400" />
+                <h3 className="text-base font-bold text-white">Apply SEO Recommendations</h3>
+              </div>
+              <button onClick={() => setShowApplyModal(false)} className="text-slate-400 hover:text-white">✕</button>
+            </div>
+
+            <p className="text-xs text-slate-300">
+              Select your CMS platform to generate the exact code snippet, meta tags, and schema to push these optimizations live immediately.
+            </p>
+
+            <div className="grid grid-cols-3 gap-3">
+              <button
+                onClick={() => setApplyCms('wordpress')}
+                className={`p-3 rounded-xl border text-xs font-bold text-center transition-all ${
+                  applyCms === 'wordpress'
+                    ? 'bg-indigo-600/30 border-indigo-500 text-white'
+                    : 'bg-slate-950 border-slate-800 text-slate-400 hover:text-slate-200'
+                }`}
+              >
+                WordPress / Yoast
+              </button>
+              <button
+                onClick={() => setApplyCms('shopify')}
+                className={`p-3 rounded-xl border text-xs font-bold text-center transition-all ${
+                  applyCms === 'shopify'
+                    ? 'bg-indigo-600/30 border-indigo-500 text-white'
+                    : 'bg-slate-950 border-slate-800 text-slate-400 hover:text-slate-200'
+                }`}
+              >
+                Shopify / Liquid
+              </button>
+              <button
+                onClick={() => setApplyCms('custom')}
+                className={`p-3 rounded-xl border text-xs font-bold text-center transition-all ${
+                  applyCms === 'custom'
+                    ? 'bg-indigo-600/30 border-indigo-500 text-white'
+                    : 'bg-slate-950 border-slate-800 text-slate-400 hover:text-slate-200'
+                }`}
+              >
+                Custom HTML Head
+              </button>
+            </div>
+
+            <div className="p-4 bg-slate-950 rounded-xl border border-slate-800 text-[11px] font-mono text-slate-300 max-h-52 overflow-y-auto">
+              {applyCms === 'wordpress' && (
+                <div>
+                  <p className="text-slate-500 mb-1">// WordPress Yoast/RankMath Values:</p>
+                  <p className="text-indigo-300">SEO Title: {report.titleOptions[0].title}</p>
+                  <p className="text-emerald-300 mt-1">Focus Keyphrase: {report.primaryKeyword.keyword}</p>
+                  <p className="text-slate-300 mt-1">Meta Description: {report.metaOptions[0].description}</p>
+                  <p className="text-amber-300 mt-1">Slug: {report.contentBrief.urlSlug}</p>
+                </div>
+              )}
+              {applyCms === 'shopify' && (
+                <div>
+                  <p className="text-slate-500 mb-1">&lt;!-- Shopify Liquid Meta Injection --&gt;</p>
+                  <p className="text-slate-300">&lt;title&gt;{report.titleOptions[0].title}&lt;/title&gt;</p>
+                  <p className="text-slate-300">&lt;meta name="description" content="{report.metaOptions[0].description}"&gt;</p>
+                </div>
+              )}
+              {applyCms === 'custom' && (
+                <div>
+                  <p className="text-slate-500 mb-1">&lt;!-- Standard HTML &lt;head&gt; tags --&gt;</p>
+                  <p className="text-slate-300">&lt;title&gt;{report.titleOptions[0].title}&lt;/title&gt;</p>
+                  <p className="text-slate-300">&lt;meta name="description" content="{report.metaOptions[0].description}"&gt;</p>
+                  <p className="text-slate-300">&lt;meta name="keywords" content="{[report.primaryKeyword.keyword, ...report.secondaryKeywords.map(s => s.keyword)].join(', ')}"&gt;</p>
+                </div>
+              )}
+            </div>
+
+            <div className="flex items-center justify-end gap-3 pt-2">
+              <button
+                onClick={() => setShowApplyModal(false)}
+                className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-semibold"
+              >
+                Close
+              </button>
+              <button
+                onClick={() => {
+                  copyToClipboard(report.titleOptions[0].title, 'applied-code');
+                  setAppliedNotification('Copied optimized title & meta tags to clipboard!');
+                  setShowApplyModal(false);
+                }}
+                className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold flex items-center gap-1.5"
+              >
+                <Copy className="w-3.5 h-3.5" />
+                Copy Implementation Code
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};

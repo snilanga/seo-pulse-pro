@@ -14,6 +14,7 @@ import { TrendingKeywords } from './components/keywords/TrendingKeywords';
 import { ClientCodeInjector } from './components/keywords/ClientCodeInjector';
 import { SerpPageInspector } from './components/serp/SerpPageInspector';
 import { InstantDomainAudit } from './components/audit/InstantDomainAudit';
+import { AiSeoResearchAgent } from './components/research/AiSeoResearchAgent';
 import { BacklinkGenerator } from './components/backlinks/BacklinkGenerator';
 import { AdminDashboard } from './components/admin/AdminDashboard';
 import { LoginModal } from './components/auth/LoginModal';
@@ -192,6 +193,13 @@ export function App() {
                   onEnterFullDashboard={() => setActiveTab('dashboard')}
                   onRunAiAgentSprint={() => setActiveTab('ai-agent')}
                   onAddTrackedKeyword={handleAddTrackedKeyword}
+                />
+              )}
+
+              {activeTab === 'research-agent' && (
+                <AiSeoResearchAgent
+                  client={selectedClient}
+                  onAddKeyword={handleAddTrackedKeyword}
                 />
               )}
 
