@@ -680,9 +680,12 @@ export const AiSeoResearchAgent: React.FC<AiSeoResearchAgentProps> = ({
                   className="fixed inset-0 z-20" 
                   onClick={() => setShowBusinessDropdown(false)}
                 ></div>
-                <div className="absolute left-0 right-0 top-full mt-1 z-30 bg-slate-900 border border-indigo-500/30 rounded-xl shadow-2xl max-h-64 overflow-y-auto divide-y divide-slate-800 backdrop-blur-xl animate-fadeIn">
-                  <div className="p-2 bg-slate-950/80 sticky top-0 text-[11px] font-semibold text-slate-400 uppercase tracking-wider flex items-center justify-between">
-                    <span>Industries & Niches ({filteredBusinessTypes.length})</span>
+                <div className="absolute left-0 right-0 top-full mt-1 z-30 bg-slate-900 border border-indigo-500/30 rounded-xl shadow-2xl max-h-72 overflow-y-auto divide-y divide-slate-800 backdrop-blur-xl animate-fadeIn">
+                  <div className="p-2.5 bg-slate-950/90 sticky top-0 z-10 text-[11px] font-semibold text-slate-400 uppercase tracking-wider flex items-center justify-between border-b border-slate-800">
+                    <span className="flex items-center gap-1.5 text-indigo-300">
+                      <Sparkles className="w-3.5 h-3.5" />
+                      Pick Industry or Type Custom ({filteredBusinessTypes.length})
+                    </span>
                     <button 
                       onClick={() => {
                         setBusinessType('');
@@ -694,32 +697,42 @@ export const AiSeoResearchAgent: React.FC<AiSeoResearchAgentProps> = ({
                     </button>
                   </div>
                   {filteredBusinessTypes.length > 0 ? (
-                    filteredBusinessTypes.map((bType, i) => (
-                      <button
-                        key={i}
-                        type="button"
-                        onClick={() => handleSelectBusinessType(bType)}
-                        className={`w-full px-3.5 py-2.5 text-left text-xs flex items-center justify-between transition-colors ${
-                          businessType.toLowerCase() === bType.toLowerCase()
-                            ? 'bg-indigo-600/30 text-white font-bold'
-                            : 'text-slate-300 hover:bg-slate-800/80 hover:text-white'
-                        }`}
-                      >
-                        <div className="flex items-center gap-2">
-                          <Building2 className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
-                          <span className="truncate">{bType}</span>
-                        </div>
-                      </button>
-                    ))
+                    filteredBusinessTypes.map((bType, i) => {
+                      const isMainCategory = BUSINESS_TYPES_AND_AUDIENCES.some(b => b.category === bType);
+                      return (
+                        <button
+                          key={i}
+                          type="button"
+                          onClick={() => handleSelectBusinessType(bType)}
+                          className={`w-full px-3.5 py-2 text-left text-xs flex items-center justify-between transition-colors ${
+                            businessType.toLowerCase() === bType.toLowerCase()
+                              ? 'bg-indigo-600/30 text-white font-bold'
+                              : isMainCategory
+                              ? 'text-white font-semibold hover:bg-slate-800/80 bg-slate-900/50'
+                              : 'text-slate-300 hover:bg-slate-800/80 pl-6'
+                          }`}
+                        >
+                          <div className="flex items-center gap-2 min-w-0">
+                            <Building2 className={`w-3.5 h-3.5 shrink-0 ${isMainCategory ? 'text-indigo-400' : 'text-slate-500'}`} />
+                            <span className="truncate">{bType}</span>
+                          </div>
+                          {isMainCategory && (
+                            <span className="text-[9px] px-1.5 py-0.5 rounded bg-indigo-500/20 text-indigo-300 font-mono shrink-0">
+                              Industry
+                            </span>
+                          )}
+                        </button>
+                      );
+                    })
                   ) : (
-                    <div className="p-3 text-center text-xs text-slate-500">
-                      No matching industries. (Custom typed category will be used)
+                    <div className="p-3 text-center text-xs text-slate-400">
+                      Using custom industry: <span className="text-white font-semibold">"{businessType}"</span>
                     </div>
                   )}
                 </div>
               </>
             )}
-            <p className="text-[11px] text-slate-400 mt-1.5">Leave empty to auto-infer from webpage.</p>
+            <p className="text-[11px] text-slate-400 mt-1.5">Pick from 40 verified industries, type custom, or leave blank to auto-detect.</p>
           </div>
 
           {/* Target Audience / ICP Input & Dropdown */}
@@ -787,22 +800,24 @@ export const AiSeoResearchAgent: React.FC<AiSeoResearchAgentProps> = ({
                             : 'text-slate-300 hover:bg-slate-800/80 hover:text-white'
                         }`}
                       >
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 min-w-0">
                           <Target className="w-3.5 h-3.5 text-purple-400 shrink-0" />
                           <span className="truncate">{aud}</span>
                         </div>
                       </button>
                     ))
                   ) : (
-                    <div className="p-3 text-center text-xs text-slate-500">
-                      No matching personas found. (Custom typed persona will be used)
+                    <div className="p-3 text-center text-xs text-slate-400">
+                      Using custom target persona: <span className="text-white font-semibold">"{targetAudience}"</span>
                     </div>
                   )}
                 </div>
               </>
             )}
             <p className="text-[11px] text-slate-400 mt-1.5">
-              {selectedBusinessObj ? `Suggested for ${selectedBusinessObj.category}` : 'Defines ideal customer profile & search intent.'}
+              {selectedBusinessObj 
+                ? `Auto-filtered for ${selectedBusinessObj.category} (or type custom).` 
+                : 'Pick ideal customer persona, type custom, or leave blank to auto-infer.'}
             </p>
           </div>
 
