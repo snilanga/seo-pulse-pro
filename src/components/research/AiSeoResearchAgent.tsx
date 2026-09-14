@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+
 import { 
   Bot, 
   Sparkles, 
@@ -22,8 +23,11 @@ import {
   ChevronDown,
   ChevronUp,
   SlidersHorizontal,
-  BookmarkPlus
+  BookmarkPlus,
+  Clock,
+  Trash2
 } from 'lucide-react';
+
 import type { 
   ResearchAgentInput, 
   AiSeoResearchReport, 
@@ -195,6 +199,31 @@ export const AiSeoResearchAgent: React.FC<AiSeoResearchAgentProps> = ({
   const [stepMessage, setStepMessage] = useState<string>('');
   const [completedSteps, setCompletedSteps] = useState<number[]>([]);
   const [report, setReport] = useState<AiSeoResearchReport | null>(null);
+  const [savedReportsHistory, setSavedReportsHistory] = useState<AiSeoResearchReport[]>([]);
+
+  // Load saved research reports from dbService on mount
+  useEffect(() => {
+    setSavedReportsHistory(dbService.getSavedResearchReports());
+  }, []);
+
+  const handleSelectHistoryReport = (item: AiSeoResearchReport) => {
+    setReport(item);
+    setInputUrl(item.input.url);
+    if (item.input.targetCountry) setTargetCountry(item.input.targetCountry);
+    if (item.input.targetCity) setTargetCity(item.input.targetCity);
+    if (item.input.businessType) setBusinessType(item.input.businessType);
+    if (item.input.targetAudience) setTargetAudience(item.input.targetAudience);
+  };
+
+  const handleDeleteHistoryReport = (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    dbService.deleteResearchReport(id);
+    const updated = dbService.getSavedResearchReports();
+    setSavedReportsHistory(updated);
+    if (report?.id === id) {
+      setReport(null);
+    }
+  };
 
   // Active view tab inside the report
   type ReportTab = 'keywords' | 'onpage' | 'content-brief' | 'competitors-gaps' | 'raw-json';
@@ -206,6 +235,7 @@ export const AiSeoResearchAgent: React.FC<AiSeoResearchAgentProps> = ({
   const [showApplyModal, setShowApplyModal] = useState<boolean>(false);
   const [applyCms, setApplyCms] = useState<'rankmath' | 'yoast' | 'aioseo' | 'shopify' | 'custom'>('rankmath');
   const [appliedNotification, setAppliedNotification] = useState<string | null>(null);
+
 
   // Manual Local / City Keyword Input State
   const [manualKeywordInput, setManualKeywordInput] = useState<string>('');
@@ -440,7 +470,41 @@ export const AiSeoResearchAgent: React.FC<AiSeoResearchAgentProps> = ({
             </button>
           ))}
         </div>
+
+        {/* Saved Past Reports History */}
+        {savedReportsHistory.length > 0 && (
+          <div className="mt-3 pt-3 border-t border-slate-800/60 flex items-center space-x-2 overflow-x-auto pb-1 text-xs">
+            <span className="text-slate-400 font-semibold shrink-0 flex items-center space-x-1">
+              <Clock className="w-3.5 h-3.5 text-pink-400" />
+              <span>Past Saved Reports ({savedReportsHistory.length}):</span>
+            </span>
+            {savedReportsHistory.map((item) => (
+              <div
+                key={item.id}
+                onClick={() => handleSelectHistoryReport(item)}
+                className={`group flex items-center space-x-2 px-3 py-1.5 rounded-xl text-xs cursor-pointer border transition shrink-0 ${
+                  report?.id === item.id
+                    ? 'bg-pink-500/20 text-pink-300 border-pink-500/50 font-bold'
+                    : 'bg-slate-800/80 text-slate-300 border-slate-700 hover:border-slate-600'
+                }`}
+              >
+                <span className="truncate max-w-xs">{extractCleanHostname(item.input.url)}</span>
+                <span className="text-[10px] px-1.5 py-0.2 rounded bg-pink-500/20 text-pink-300 font-mono">
+                  {item.primaryKeyword.keyword}
+                </span>
+                <button
+                  onClick={(e) => handleDeleteHistoryReport(item.id, e)}
+                  title="Remove from history"
+                  className="opacity-0 group-hover:opacity-100 hover:text-rose-400 p-0.5 rounded transition"
+                >
+                  <Trash2 className="w-3 h-3" />
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
+
 
       {/* Main Input Form */}
       <div className="bg-slate-900/90 rounded-2xl p-6 border border-slate-800 shadow-xl backdrop-blur-md">

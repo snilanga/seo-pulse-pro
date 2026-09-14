@@ -8,8 +8,13 @@ import {
   ArrowUpRight, 
   Zap, 
   Layers, 
-  Sparkles
+  Sparkles,
+  Database,
+  MapPin
 } from 'lucide-react';
+
+import { dbService } from '../../services/dbService';
+
 import { 
   AreaChart, 
   Area, 
@@ -42,7 +47,14 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
   const criticalCount = audit.issues.filter(i => i.severity === 'critical').length;
   const warningCount = audit.issues.filter(i => i.severity === 'warning').length;
 
+  // Retrieve persistent database items
+  const savedReports = dbService.getSavedResearchReports();
+  const savedMaps = dbService.getSavedLocalBusinessReports();
+  const savedAudits = dbService.getSavedSiteAudits();
+  const savedBacklinks = dbService.getSavedBacklinks();
+
   // Chart data: Ranking distribution
+
   const rankDistributionData = [
     { name: 'Top 3 (#1-#3)', count: top3Count, fill: '#10b981' },
     { name: 'Top 10 (Page 1)', count: page1Count, fill: '#3b82f6' },
@@ -337,6 +349,168 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
         </div>
 
       </div>
+
+      {/* SAVED DATABASE & PAST SEARCH HISTORY PANEL */}
+      <div className="glass-panel p-6 rounded-3xl border border-indigo-500/30 bg-gradient-to-r from-indigo-950/20 via-slate-900 to-slate-900 shadow-xl space-y-6">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-slate-800 pb-4">
+          <div className="flex items-center space-x-3">
+            <div className="p-2.5 bg-gradient-to-tr from-indigo-600 to-purple-600 rounded-2xl text-white shadow-lg shadow-indigo-600/20">
+              <Database className="w-5 h-5" />
+            </div>
+            <div>
+              <div className="flex items-center space-x-2">
+                <h3 className="text-base font-bold text-white">Saved SEO Database & Past Activity History</h3>
+                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
+                  PERSISTENT STORAGE
+                </span>
+              </div>
+              <p className="text-xs text-slate-400">
+                Instantly review, reopen, or inspect previously scanned reports, local business maps audits, and high-DA backlinks
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center space-x-2 text-xs">
+            <span className="px-3 py-1.5 rounded-xl bg-slate-800 text-slate-300 font-semibold border border-slate-700">
+              Total Saved Items: {savedReports.length + savedMaps.length + savedAudits.length + savedBacklinks.length}
+            </span>
+          </div>
+        </div>
+
+        {/* 3 Columns: Past AI Research Reports, Past Google Maps Checks, and Past Technical Audits */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          
+          {/* Column 1: AI Keyword & SEO Research Reports */}
+          <div className="bg-slate-950/60 p-4 rounded-2xl border border-slate-800 space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-pink-400 uppercase tracking-wider flex items-center space-x-1.5">
+                <Sparkles className="w-3.5 h-3.5" />
+                <span>AI Research Reports ({savedReports.length})</span>
+              </span>
+              <button
+                onClick={() => onNavigateTab('research-agent')}
+                className="text-[11px] text-indigo-400 hover:underline flex items-center space-x-1"
+              >
+                <span>Open Tool</span>
+                <ArrowUpRight className="w-3 h-3" />
+              </button>
+            </div>
+
+            {savedReports.length === 0 ? (
+              <p className="text-xs text-slate-500 py-3 italic text-center">No research reports saved yet.</p>
+            ) : (
+              <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
+                {savedReports.slice(0, 5).map((r) => (
+                  <div
+                    key={r.id}
+                    onClick={() => onNavigateTab('research-agent')}
+                    className="p-2.5 rounded-xl bg-slate-900 border border-slate-800/80 hover:border-pink-500/40 cursor-pointer transition text-xs space-y-1"
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="font-bold text-white truncate max-w-[170px]">{r.input.url.replace(/^https?:\/\//, '')}</span>
+                      <span className="text-[10px] text-slate-500">{r.generatedAt.split('T')[0]}</span>
+                    </div>
+                    <div className="flex items-center justify-between text-[11px]">
+                      <span className="text-pink-300 font-medium">"{r.primaryKeyword.keyword}"</span>
+                      <span className="px-1.5 py-0.5 rounded bg-pink-500/20 text-pink-400 font-mono text-[10px] font-bold">
+                        {r.potentialSeoScore}/100
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Column 2: Google Maps & Local Business Checks */}
+          <div className="bg-slate-950/60 p-4 rounded-2xl border border-slate-800 space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-emerald-400 uppercase tracking-wider flex items-center space-x-1.5">
+                <MapPin className="w-3.5 h-3.5" />
+                <span>Maps & Reviews Checks ({savedMaps.length})</span>
+              </span>
+              <button
+                onClick={() => onNavigateTab('maps-checker')}
+                className="text-[11px] text-emerald-400 hover:underline flex items-center space-x-1"
+              >
+                <span>Open Tool</span>
+                <ArrowUpRight className="w-3 h-3" />
+              </button>
+            </div>
+
+            {savedMaps.length === 0 ? (
+              <p className="text-xs text-slate-500 py-3 italic text-center">No maps scans saved yet.</p>
+            ) : (
+              <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
+                {savedMaps.slice(0, 5).map((m) => (
+                  <div
+                    key={m.id}
+                    onClick={() => onNavigateTab('maps-checker')}
+                    className="p-2.5 rounded-xl bg-slate-900 border border-slate-800/80 hover:border-emerald-500/40 cursor-pointer transition text-xs space-y-1"
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="font-bold text-white truncate max-w-[170px]">{m.businessName}</span>
+                      <span className="text-[10px] text-amber-400 font-bold">{m.rating} ★ ({m.totalReviews})</span>
+                    </div>
+                    <div className="flex items-center justify-between text-[11px]">
+                      <span className="text-slate-400 truncate max-w-[180px]">{m.city}, {m.country}</span>
+                      <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${
+                        m.isLocalPack ? 'bg-emerald-500/20 text-emerald-300' : 'bg-slate-800 text-slate-400'
+                      }`}>
+                        {m.isLocalPack ? 'Local 3-Pack' : `Page ${m.googlePageNumber}`}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Column 3: Site Technical Audits */}
+          <div className="bg-slate-950/60 p-4 rounded-2xl border border-slate-800 space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-indigo-400 uppercase tracking-wider flex items-center space-x-1.5">
+                <Search className="w-3.5 h-3.5" />
+                <span>Site Audits ({savedAudits.length})</span>
+              </span>
+              <button
+                onClick={() => onNavigateTab('audit')}
+                className="text-[11px] text-indigo-400 hover:underline flex items-center space-x-1"
+              >
+                <span>Open Tool</span>
+                <ArrowUpRight className="w-3 h-3" />
+              </button>
+            </div>
+
+            {savedAudits.length === 0 ? (
+              <p className="text-xs text-slate-500 py-3 italic text-center">No site audits saved yet.</p>
+            ) : (
+              <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
+                {savedAudits.slice(0, 5).map((a) => (
+                  <div
+                    key={a.id}
+                    onClick={() => onNavigateTab('audit')}
+                    className="p-2.5 rounded-xl bg-slate-900 border border-slate-800/80 hover:border-indigo-500/40 cursor-pointer transition text-xs space-y-1"
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="font-bold text-white truncate max-w-[170px]">{a.url.replace(/^https?:\/\//, '')}</span>
+                      <span className="text-[10px] text-slate-500">{a.scannedAt.split('T')[0]}</span>
+                    </div>
+                    <div className="flex items-center justify-between text-[11px]">
+                      <span className="text-slate-400">{a.issues.filter(i => !i.fixed).length} open fixes</span>
+                      <span className="px-1.5 py-0.5 rounded bg-indigo-500/20 text-indigo-300 font-mono text-[10px] font-bold">
+                        Score: {a.overallScore}%
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+        </div>
+      </div>
+
 
     </div>
   );
