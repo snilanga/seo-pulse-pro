@@ -1,4 +1,4 @@
-import type { AiSeoResearchReport, LocalBusinessReport, SiteAuditReport, ClientProject, TrackedKeyword, BacklinkItem, AuditScanLog } from '../types/seo';
+import type { AiSeoResearchReport, LocalBusinessReport, SiteAuditReport, ClientProject, TrackedKeyword, BacklinkItem, AuditScanLog, AiAgentActionLog } from '../types/seo';
 
 export interface AppDatabaseExport {
   version: number;
@@ -8,6 +8,7 @@ export interface AppDatabaseExport {
   mapsReports: LocalBusinessReport[];
   siteAudits: SiteAuditReport[];
   auditScanLogs?: AuditScanLog[];
+  agentActionLogs?: AiAgentActionLog[];
   trackedKeywords: TrackedKeyword[];
   backlinks?: BacklinkItem[];
 }
@@ -138,6 +139,43 @@ class DatabaseService {
     this.saveToLocal('audit_scan_logs', remaining);
   }
 
+  // --- AI SEO Agent Action Logs ---
+  public saveAgentActionLog(log: AiAgentActionLog): void {
+    const list = this.getAgentActionLogs();
+    const updated = [log, ...list.filter(l => l.id !== log.id)].slice(0, 150);
+    this.saveToLocal('agent_action_logs', updated);
+  }
+
+  public saveMultipleAgentActionLogs(logs: AiAgentActionLog[]): void {
+    const list = this.getAgentActionLogs();
+    const logIds = new Set(logs.map(l => l.id));
+    const updated = [...logs, ...list.filter(l => !logIds.has(l.id))].slice(0, 150);
+    this.saveToLocal('agent_action_logs', updated);
+  }
+
+  public getAgentActionLogs(clientIdOrDomain?: string): AiAgentActionLog[] {
+    const all = this.getFromLocal<AiAgentActionLog[]>('agent_action_logs', []);
+    if (!clientIdOrDomain) return all;
+    const cleanFilter = clientIdOrDomain.toLowerCase().replace(/^(https?:\/\/)?(www\.)?/, '').replace(/\/$/, '');
+    return all.filter(l => 
+      l.clientId === clientIdOrDomain || 
+      (l.clientDomain && l.clientDomain.toLowerCase().includes(cleanFilter))
+    );
+  }
+
+  public clearAgentActionLogs(clientIdOrDomain?: string): void {
+    if (!clientIdOrDomain) {
+      this.saveToLocal('agent_action_logs', []);
+      return;
+    }
+    const cleanFilter = clientIdOrDomain.toLowerCase().replace(/^(https?:\/\/)?(www\.)?/, '').replace(/\/$/, '');
+    const remaining = this.getAgentActionLogs().filter(l => 
+      l.clientId !== clientIdOrDomain && 
+      (!l.clientDomain || !l.clientDomain.toLowerCase().includes(cleanFilter))
+    );
+    this.saveToLocal('agent_action_logs', remaining);
+  }
+
   // --- Backlinks Storage ---
   public saveBacklink(item: BacklinkItem): void {
     const list = this.getSavedBacklinks();
@@ -175,6 +213,7 @@ class DatabaseService {
       mapsReports: this.getSavedLocalBusinessReports(),
       siteAudits: this.getSavedSiteAudits(),
       auditScanLogs: this.getAuditLogs(),
+      agentActionLogs: this.getAgentActionLogs(),
       trackedKeywords,
       backlinks: this.getSavedBacklinks()
     };
@@ -210,6 +249,9 @@ class DatabaseService {
       if (Array.isArray(data.auditScanLogs)) {
         this.saveToLocal('audit_scan_logs', data.auditScanLogs);
       }
+      if (Array.isArray(data.agentActionLogs)) {
+        this.saveToLocal('agent_action_logs', data.agentActionLogs);
+      }
       if (Array.isArray(data.backlinks)) {
         this.saveToLocal('backlinks', data.backlinks);
       }
@@ -222,7 +264,7 @@ class DatabaseService {
 
   public clearAllDatabase(): void {
     if (!this.isStorageAvailable()) return;
-    const keysToRemove = ['rpp_research_reports', 'rpp_maps_reports', 'rpp_site_audits', 'rpp_audit_scan_logs', 'rpp_backlinks'];
+    const keysToRemove = ['rpp_research_reports', 'rpp_maps_reports', 'rpp_site_audits', 'rpp_audit_scan_logs', 'rpp_agent_action_logs', 'rpp_backlinks'];
     keysToRemove.forEach(k => localStorage.removeItem(k));
   }
 }

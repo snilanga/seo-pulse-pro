@@ -136,6 +136,7 @@ export interface ClientReportConfig {
 
 export interface AiAgentActionLog {
   id: string;
+  clientId?: string;
   timestamp: string;
   type: 'meta_optimization' | 'keyword_ingestion' | 'schema_generation' | 'alt_remediation' | 'audit_fix';
   clientDomain: string;
