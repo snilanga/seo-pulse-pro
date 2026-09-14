@@ -81,6 +81,25 @@ export interface SiteAuditReport {
   issues: AuditIssue[];
 }
 
+export interface AuditScanLog {
+  id: string;
+  clientId: string;
+  domain: string;
+  url: string;
+  timestamp: string; // ISO string e.g. "2026-09-14T11:30:00.000Z"
+  formattedTime: string; // e.g. "Sep 14, 2026, 04:58 PM"
+  overallScore: number;
+  seoScore: number;
+  performanceScore: number;
+  loadTimeMs: number;
+  pageSizeKb: number;
+  googleRank: { page: number; position: number; keyword?: string };
+  bingRank: { page: number; position: number; keyword?: string };
+  issuesCount: { critical: number; warning: number; passed: number };
+  status: 'passed' | 'warning' | 'critical';
+  auditSnapshot?: SiteAuditReport;
+}
+
 export interface CompetitorData {
   id: string;
   clientId: string;

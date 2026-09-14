@@ -249,20 +249,51 @@ function getDomainName(urlStr: string): string {
   }
 }
 
-// AI Keyword Analysis Engine: Primary, Long-Tail, Short-Tail, Best ROI
-export function analyzeDomainKeywords(domain: string, clientId: string): import('../types/seo').AiKeywordCategorization {
-  const cleanDomain = getDomainName(domain).toLowerCase();
+export function extractDomainBrandAndIndustry(domain: string, fallbackIndustry?: string): { brandName: string; industryTag: string } {
+  const cleanDomain = getDomainName(domain).toLowerCase().replace(/\.(com|org|net|io|shop|co|app|ai|dev|store|info|biz|tech|us|uk|ca)$/, '');
   
-  let primaryName = 'Virtual Doctor Care';
-  let industryTag = 'Healthcare';
-  
-  if (cleanDomain.includes('nexus') || cleanDomain.includes('cloud') || cleanDomain.includes('tech')) {
-    primaryName = 'Cloud Security SaaS';
-    industryTag = 'Cybersecurity';
-  } else if (cleanDomain.includes('urban') || cleanDomain.includes('craft') || cleanDomain.includes('shop')) {
-    primaryName = 'Minimalist Home Decor';
-    industryTag = 'E-Commerce';
+  const words = cleanDomain.split(/[-_.]+/).filter(Boolean);
+  const brandName = words.map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ') || 'Digital Enterprise';
+
+  if (fallbackIndustry && fallbackIndustry.trim()) {
+    return { brandName, industryTag: fallbackIndustry.trim() };
   }
+
+  const fullText = cleanDomain.toLowerCase();
+  let industryTag = 'Professional Services';
+  
+  if (/apex|health|doctor|care|clinic|med|rx|hospital|telehealth|dental|pharma/.test(fullText)) {
+    industryTag = 'Healthcare & Telehealth';
+  } else if (/nexus|cloud|sec|cyber|saas|soft|tech|dev|code|data|host/.test(fullText)) {
+    industryTag = 'Cloud Security & SaaS';
+  } else if (/urban|craft|decor|furnitur|home|living|design|shop|store|boutique|cloth|apparel/.test(fullText)) {
+    industryTag = 'Home Decor & E-Commerce';
+  } else if (/law|legal|attorney|lawyer|justice/.test(fullText)) {
+    industryTag = 'Legal Services';
+  } else if (/real|estate|property|realty|realtor|homes/.test(fullText)) {
+    industryTag = 'Real Estate & Property';
+  } else if (/bank|finance|invest|wealth|capital|fund|trade/.test(fullText)) {
+    industryTag = 'Finance & Investment';
+  } else if (/food|cafe|restaurant|dining|pizza|kitchen|bake/.test(fullText)) {
+    industryTag = 'Restaurants & Food';
+  } else if (/hotel|travel|tour|resort|vacation|trip/.test(fullText)) {
+    industryTag = 'Travel & Hospitality';
+  } else if (/auto|car|motor|garage|drive/.test(fullText)) {
+    industryTag = 'Automotive';
+  } else if (/clean|roof|plumb|electric|pest|hvac|construct|build/.test(fullText)) {
+    industryTag = 'Home & Facility Services';
+  } else if (/market|ad|brand|seo|media|agency|creative/.test(fullText)) {
+    industryTag = 'Digital Marketing & Creative';
+  }
+
+  return { brandName, industryTag };
+}
+
+// AI Keyword Analysis Engine: Primary, Long-Tail, Short-Tail, Best ROI
+export function analyzeDomainKeywords(domain: string, clientId: string, clientIndustry?: string): import('../types/seo').AiKeywordCategorization {
+  const cleanDomain = getDomainName(domain).toLowerCase();
+  const { brandName, industryTag } = extractDomainBrandAndIndustry(domain, clientIndustry);
+  const primaryName = brandName;
 
   const primary: import('../types/seo').TrackedKeyword[] = [
     {

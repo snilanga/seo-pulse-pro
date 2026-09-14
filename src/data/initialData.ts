@@ -1,4 +1,4 @@
-import type { ClientProject, TrackedKeyword, SiteAuditReport, CompetitorData, ClientReportConfig } from '../types/seo';
+import type { ClientProject, TrackedKeyword, SiteAuditReport, CompetitorData, ClientReportConfig, AuditScanLog } from '../types/seo';
 
 export const INITIAL_CLIENTS: ClientProject[] = [
   {
@@ -412,85 +412,346 @@ export const INITIAL_KEYWORDS: TrackedKeyword[] = [
   }
 ];
 
-export const INITIAL_AUDIT_REPORT: SiteAuditReport = {
-  id: 'audit-1',
-  clientId: 'client-1',
-  url: 'https://apexhealthsolutions.com',
-  scannedAt: '2026-09-03 09:30 AM',
-  overallScore: 88,
-  performanceScore: 91,
-  seoScore: 89,
-  accessibilityScore: 94,
-  bestPracticesScore: 90,
-  title: 'Apex Health Solutions | 24/7 Virtual Doctor & Telehealth Clinic',
-  metaDescription: 'Access certified doctors 24/7 with Apex Health Solutions. Fast online prescription renewals, same-day appointments, and comprehensive virtual care.',
-  canonicalUrl: 'https://apexhealthsolutions.com/',
-  h1Count: 1,
-  h2Count: 8,
-  imagesWithoutAlt: 2,
-  totalImages: 18,
-  loadTimeMs: 840,
-  pageSizeKb: 1240,
-  issues: [
-    {
-      id: 'issue-1',
-      category: 'Meta Tags',
-      title: 'Meta Description Optimal Length',
-      description: 'Your meta description is 152 characters long, fitting perfectly inside Google & Bing snippet limits (150-160 chars).',
-      severity: 'passed',
-      affectedUrls: ['https://apexhealthsolutions.com'],
-      impactScore: 10,
-      recommendation: 'Keep maintaining rich target keywords inside meta descriptions for high Click-Through Rate (CTR).',
-      fixed: true
-    },
-    {
-      id: 'issue-2',
-      category: 'Content & Headings',
-      title: '2 Product Images Missing ALT Text',
-      description: 'Search engine bots (Googlebot & Bingbot) rely on ALT attributes to understand image contents and index them in Image Search.',
-      severity: 'warning',
-      affectedUrls: ['/assets/doctor-banner.jpg', '/assets/telehealth-app-screen.png'],
-      impactScore: 7,
-      recommendation: 'Add descriptive ALT attributes containing primary target keywords such as alt="Board-certified telehealth doctor consultation".',
-      codeSnippet: '<img src="/assets/doctor-banner.jpg" alt="Board certified telehealth doctor in consultation" />',
-      fixed: false
-    },
-    {
-      id: 'issue-3',
-      category: 'Security & Tech',
-      title: 'Schema.org MedicalWebPage Structured Data Implemented',
-      description: 'MedicalWebPage JSON-LD schema detected. Helps Google & Bing display rich snippets and trust badges on Page 1.',
-      severity: 'passed',
-      affectedUrls: ['https://apexhealthsolutions.com'],
-      impactScore: 9,
-      recommendation: 'Maintain JSON-LD schema accuracy during future content updates.',
-      fixed: true
-    },
-    {
-      id: 'issue-4',
-      category: 'Performance & Speed',
-      title: 'Unused CSS / Render Blocking Scripts on Mobile',
-      description: 'Mobile render blocking delayed Largest Contentful Paint (LCP) by 240ms on simulated 4G mobile devices.',
-      severity: 'critical',
-      affectedUrls: ['https://apexhealthsolutions.com/assets/styles.css'],
-      impactScore: 9,
-      recommendation: 'Inline critical CSS, add async or defer attributes to non-essential JavaScript tags.',
-      codeSnippet: '<script src="/assets/analytics.js" defer></script>',
-      fixed: false
-    },
-    {
-      id: 'issue-5',
-      category: 'Mobile & UX',
-      title: 'Viewport Tag Configured Properly',
-      description: 'Mobile viewports fit seamlessly across iOS, Android, and Desktop display sizes.',
-      severity: 'passed',
-      affectedUrls: ['https://apexhealthsolutions.com'],
-      impactScore: 8,
-      recommendation: 'No action required.',
-      fixed: true
-    }
-  ]
+export const CLIENT_AUDIT_REPORTS: Record<string, SiteAuditReport> = {
+  'client-1': {
+    id: 'audit-client-1',
+    clientId: 'client-1',
+    url: 'https://apexhealthsolutions.com',
+    scannedAt: 'Sep 14, 2026, 09:30 AM',
+    overallScore: 88,
+    performanceScore: 91,
+    seoScore: 89,
+    accessibilityScore: 94,
+    bestPracticesScore: 90,
+    title: 'Apex Health Solutions | 24/7 Virtual Doctor & Telehealth Clinic',
+    metaDescription: 'Access certified doctors 24/7 with Apex Health Solutions. Fast online prescription renewals, same-day appointments, and comprehensive virtual care.',
+    canonicalUrl: 'https://apexhealthsolutions.com/',
+    h1Count: 1,
+    h2Count: 8,
+    imagesWithoutAlt: 2,
+    totalImages: 18,
+    loadTimeMs: 840,
+    pageSizeKb: 1240,
+    issues: [
+      {
+        id: 'issue-1',
+        category: 'Meta Tags',
+        title: 'Meta Description Optimal Length',
+        description: 'Your meta description is 152 characters long, fitting perfectly inside Google & Bing snippet limits (150-160 chars).',
+        severity: 'passed',
+        affectedUrls: ['https://apexhealthsolutions.com'],
+        impactScore: 10,
+        recommendation: 'Keep maintaining rich target keywords inside meta descriptions for high Click-Through Rate (CTR).',
+        fixed: true
+      },
+      {
+        id: 'issue-2',
+        category: 'Content & Headings',
+        title: '2 Product Images Missing ALT Text',
+        description: 'Search engine bots (Googlebot & Bingbot) rely on ALT attributes to understand image contents and index them in Image Search.',
+        severity: 'warning',
+        affectedUrls: ['/assets/doctor-banner.jpg', '/assets/telehealth-app-screen.png'],
+        impactScore: 7,
+        recommendation: 'Add descriptive ALT attributes containing primary target keywords such as alt="Board-certified telehealth doctor consultation".',
+        codeSnippet: '<img src="/assets/doctor-banner.jpg" alt="Board certified telehealth doctor in consultation" />',
+        fixed: false
+      },
+      {
+        id: 'issue-3',
+        category: 'Security & Tech',
+        title: 'Schema.org MedicalWebPage Structured Data Implemented',
+        description: 'MedicalWebPage JSON-LD schema detected. Helps Google & Bing display rich snippets and trust badges on Page 1.',
+        severity: 'passed',
+        affectedUrls: ['https://apexhealthsolutions.com'],
+        impactScore: 9,
+        recommendation: 'Maintain JSON-LD schema accuracy during future content updates.',
+        fixed: true
+      },
+      {
+        id: 'issue-4',
+        category: 'Performance & Speed',
+        title: 'Unused CSS / Render Blocking Scripts on Mobile',
+        description: 'Mobile render blocking delayed Largest Contentful Paint (LCP) by 240ms on simulated 4G mobile devices.',
+        severity: 'critical',
+        affectedUrls: ['https://apexhealthsolutions.com/assets/styles.css'],
+        impactScore: 9,
+        recommendation: 'Inline critical CSS, add async or defer attributes to non-essential JavaScript tags.',
+        codeSnippet: '<script src="/assets/analytics.js" defer></script>',
+        fixed: false
+      },
+      {
+        id: 'issue-5',
+        category: 'Mobile & UX',
+        title: 'Viewport Tag Configured Properly',
+        description: 'Mobile viewports fit seamlessly across iOS, Android, and Desktop display sizes.',
+        severity: 'passed',
+        affectedUrls: ['https://apexhealthsolutions.com'],
+        impactScore: 8,
+        recommendation: 'No action required.',
+        fixed: true
+      }
+    ]
+  },
+  'client-2': {
+    id: 'audit-client-2',
+    clientId: 'client-2',
+    url: 'https://nexuscloudtech.io',
+    scannedAt: 'Sep 14, 2026, 11:15 AM',
+    overallScore: 74,
+    performanceScore: 78,
+    seoScore: 75,
+    accessibilityScore: 88,
+    bestPracticesScore: 82,
+    title: 'Nexus Cloud Tech | Zero Trust Cloud Security & Threat Intelligence SaaS',
+    metaDescription: 'Secure multi-cloud infrastructure with Nexus Cloud Tech. Automated zero trust enforcement, IAM compliance, and continuous threat mitigation.',
+    canonicalUrl: 'https://nexuscloudtech.io/',
+    h1Count: 1,
+    h2Count: 6,
+    imagesWithoutAlt: 4,
+    totalImages: 14,
+    loadTimeMs: 1120,
+    pageSizeKb: 1680,
+    issues: [
+      {
+        id: 'issue-nexus-1',
+        category: 'Meta Tags',
+        title: 'Title Tag Optimal Length',
+        description: 'Title tag is 68 characters, targeting enterprise cloud security and zero trust keywords.',
+        severity: 'passed',
+        affectedUrls: ['https://nexuscloudtech.io'],
+        impactScore: 10,
+        recommendation: 'Maintain focus on zero trust cloud security positioning.',
+        fixed: true
+      },
+      {
+        id: 'issue-nexus-2',
+        category: 'Security & Tech',
+        title: 'Content-Security-Policy (CSP) Header Missing',
+        description: 'No HTTP Content-Security-Policy header detected. Enterprise clients and search engine scanners require strict CSP policies.',
+        severity: 'critical',
+        affectedUrls: ['https://nexuscloudtech.io'],
+        impactScore: 9,
+        recommendation: 'Deploy standard CSP headers on reverse proxy or CDN edge.',
+        codeSnippet: 'Content-Security-Policy: default-src \'self\'; script-src \'self\' https://trustedscripts.com;',
+        fixed: false
+      },
+      {
+        id: 'issue-nexus-3',
+        category: 'Content & Headings',
+        title: '4 Product Diagram Images Missing ALT Text',
+        description: 'Cloud architecture diagrams lack descriptive ALT text, preventing bot indexation.',
+        severity: 'warning',
+        affectedUrls: ['/images/zero-trust-architecture.svg', '/images/iam-flow.png'],
+        impactScore: 7,
+        recommendation: 'Add descriptive alt text to all technical architecture diagrams.',
+        codeSnippet: '<img src="/images/zero-trust-architecture.svg" alt="Nexus Zero Trust Cloud Security Architecture Diagram" />',
+        fixed: false
+      },
+      {
+        id: 'issue-nexus-4',
+        category: 'Security & Tech',
+        title: 'Schema.org SoftwareApplication JSON-LD Valid',
+        description: 'SoftwareApplication JSON-LD schema correctly communicates SaaS capabilities and pricing tiers to Google.',
+        severity: 'passed',
+        affectedUrls: ['https://nexuscloudtech.io'],
+        impactScore: 8,
+        recommendation: 'Keep SaaS release version and pricing details synchronized.',
+        fixed: true
+      }
+    ]
+  },
+  'client-3': {
+    id: 'audit-client-3',
+    clientId: 'client-3',
+    url: 'https://urbancraftliving.shop',
+    scannedAt: 'Sep 14, 2026, 02:45 PM',
+    overallScore: 92,
+    performanceScore: 94,
+    seoScore: 91,
+    accessibilityScore: 96,
+    bestPracticesScore: 95,
+    title: 'UrbanCraft Living | Modern Minimalist Home Decor & Handcrafted Furniture',
+    metaDescription: 'Transform your living space with UrbanCraft Living. Shop artisan wooden furniture, ceramic vases, and Scandinavian-inspired minimalist interior decor.',
+    canonicalUrl: 'https://urbancraftliving.shop/',
+    h1Count: 1,
+    h2Count: 12,
+    imagesWithoutAlt: 1,
+    totalImages: 32,
+    loadTimeMs: 640,
+    pageSizeKb: 920,
+    issues: [
+      {
+        id: 'issue-urban-1',
+        category: 'Meta Tags',
+        title: 'SEO Title & Meta Description Snippets Perfect',
+        description: 'Title (67 chars) and Meta Description (154 chars) achieve 100% SERP display coverage on desktop and mobile.',
+        severity: 'passed',
+        affectedUrls: ['https://urbancraftliving.shop'],
+        impactScore: 10,
+        recommendation: 'Continue updating seasonal collection keywords.',
+        fixed: true
+      },
+      {
+        id: 'issue-urban-2',
+        category: 'Performance & Speed',
+        title: 'Catalog Images Missing WebP / AVIF Modern Formats',
+        description: 'Product photo thumbnails are served in legacy JPEG format instead of modern next-gen WebP or AVIF.',
+        severity: 'warning',
+        affectedUrls: ['/catalog/dining-table.jpg', '/catalog/lounge-chair.jpg'],
+        impactScore: 6,
+        recommendation: 'Serve next-generation image formats via CDN image optimization.',
+        codeSnippet: '<picture><source srcset="/catalog/dining-table.webp" type="image/webp"><img src="/catalog/dining-table.jpg" alt="Minimalist Walnut Dining Table" /></picture>',
+        fixed: false
+      },
+      {
+        id: 'issue-urban-3',
+        category: 'Security & Tech',
+        title: 'Schema.org Product & Organization JSON-LD Implemented',
+        description: 'Rich snippet review stars ($price, inStock) successfully recognized by Googlebot.',
+        severity: 'passed',
+        affectedUrls: ['https://urbancraftliving.shop/products/walnut-table'],
+        impactScore: 9,
+        recommendation: 'Ensure stock levels and customer star ratings remain synchronized.',
+        fixed: true
+      },
+      {
+        id: 'issue-urban-4',
+        category: 'Security & Tech',
+        title: 'Full HTTPS Security & HSTS Header Active',
+        description: 'Encrypted SSL connection verified with Strict-Transport-Security (HSTS).',
+        severity: 'passed',
+        affectedUrls: ['https://urbancraftliving.shop'],
+        impactScore: 10,
+        recommendation: 'Maintain automated SSL renewal on Cloudflare edge.',
+        fixed: true
+      }
+    ]
+  }
 };
+
+export function getClientAuditReport(client: ClientProject): SiteAuditReport {
+  if (CLIENT_AUDIT_REPORTS[client.id]) {
+    return CLIENT_AUDIT_REPORTS[client.id];
+  }
+  // Generate a dynamic fallback matching the client domain and industry
+  const domain = client.domain.toLowerCase().replace(/^(https?:\/\/)?(www\.)?/, '').replace(/\/$/, '');
+  const cleanUrl = `https://${domain}`;
+  return {
+    id: `audit-${client.id}`,
+    clientId: client.id,
+    url: cleanUrl,
+    scannedAt: new Date().toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' }),
+    overallScore: client.healthScore || 82,
+    performanceScore: Math.min(95, (client.healthScore || 82) + 4),
+    seoScore: client.healthScore || 82,
+    accessibilityScore: 90,
+    bestPracticesScore: 88,
+    title: `${client.name} | Official Website & Services`,
+    metaDescription: `Discover premier ${client.industry || 'services and solutions'} with ${client.name}. Contact us today to explore our full offerings.`,
+    canonicalUrl: `${cleanUrl}/`,
+    h1Count: 1,
+    h2Count: 6,
+    imagesWithoutAlt: 2,
+    totalImages: 16,
+    loadTimeMs: 780,
+    pageSizeKb: 1100,
+    issues: [
+      {
+        id: `issue-${client.id}-1`,
+        category: 'Meta Tags',
+        title: 'Title Tag Configured',
+        description: 'Page title tag is active and reflects brand identity.',
+        severity: 'passed',
+        affectedUrls: [cleanUrl],
+        impactScore: 9,
+        recommendation: 'Optimize targeted primary keywords in title tag.',
+        fixed: true
+      },
+      {
+        id: `issue-${client.id}-2`,
+        category: 'Content & Headings',
+        title: 'Images Missing ALT Attributes',
+        description: '2 images on page lack ALT attributes for search engine accessibility.',
+        severity: 'warning',
+        affectedUrls: [`${cleanUrl}/banner.png`],
+        impactScore: 7,
+        recommendation: 'Add descriptive ALT tags for search bots and screen readers.',
+        codeSnippet: `<img src="/banner.png" alt="${client.name} official banner" />`,
+        fixed: false
+      },
+      {
+        id: `issue-${client.id}-3`,
+        category: 'Security & Tech',
+        title: 'SSL / HTTPS Active',
+        description: 'Connection is secure with valid SSL certificate.',
+        severity: 'passed',
+        affectedUrls: [cleanUrl],
+        impactScore: 10,
+        recommendation: 'Ensure HTTPS redirection is strictly enforced.',
+        fixed: true
+      }
+    ]
+  };
+}
+
+export const INITIAL_AUDIT_REPORT: SiteAuditReport = CLIENT_AUDIT_REPORTS['client-1'];
+
+export const INITIAL_AUDIT_SCAN_LOGS: AuditScanLog[] = [
+  {
+    id: 'scan-log-1',
+    clientId: 'client-1',
+    domain: 'apexhealthsolutions.com',
+    url: 'https://apexhealthsolutions.com',
+    timestamp: '2026-09-14T09:30:00.000Z',
+    formattedTime: 'Sep 14, 2026, 09:30 AM',
+    overallScore: 88,
+    seoScore: 89,
+    performanceScore: 91,
+    loadTimeMs: 840,
+    pageSizeKb: 1240,
+    googleRank: { page: 1, position: 2, keyword: 'same day telehealth appointment near me' },
+    bingRank: { page: 1, position: 1, keyword: 'same day telehealth appointment near me' },
+    issuesCount: { critical: 1, warning: 1, passed: 3 },
+    status: 'warning',
+    auditSnapshot: CLIENT_AUDIT_REPORTS['client-1']
+  },
+  {
+    id: 'scan-log-2',
+    clientId: 'client-2',
+    domain: 'nexuscloudtech.io',
+    url: 'https://nexuscloudtech.io',
+    timestamp: '2026-09-14T11:15:00.000Z',
+    formattedTime: 'Sep 14, 2026, 11:15 AM',
+    overallScore: 74,
+    seoScore: 75,
+    performanceScore: 78,
+    loadTimeMs: 1120,
+    pageSizeKb: 1680,
+    googleRank: { page: 1, position: 4, keyword: 'zero trust cloud security platform' },
+    bingRank: { page: 1, position: 3, keyword: 'zero trust cloud security platform' },
+    issuesCount: { critical: 1, warning: 1, passed: 2 },
+    status: 'warning',
+    auditSnapshot: CLIENT_AUDIT_REPORTS['client-2']
+  },
+  {
+    id: 'scan-log-3',
+    clientId: 'client-3',
+    domain: 'urbancraftliving.shop',
+    url: 'https://urbancraftliving.shop',
+    timestamp: '2026-09-14T14:45:00.000Z',
+    formattedTime: 'Sep 14, 2026, 02:45 PM',
+    overallScore: 92,
+    seoScore: 91,
+    performanceScore: 94,
+    loadTimeMs: 640,
+    pageSizeKb: 920,
+    googleRank: { page: 1, position: 1, keyword: 'modern minimalist home decor shop' },
+    bingRank: { page: 1, position: 2, keyword: 'modern minimalist home decor shop' },
+    issuesCount: { critical: 0, warning: 1, passed: 3 },
+    status: 'passed',
+    auditSnapshot: CLIENT_AUDIT_REPORTS['client-3']
+  }
+];
 
 export const INITIAL_COMPETITOR_DATA: CompetitorData[] = [
   {

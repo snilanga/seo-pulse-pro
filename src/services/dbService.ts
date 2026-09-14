@@ -1,5 +1,4 @@
-import type { AiSeoResearchReport, LocalBusinessReport, SiteAuditReport, ClientProject, TrackedKeyword, BacklinkItem } from '../types/seo';
-
+import type { AiSeoResearchReport, LocalBusinessReport, SiteAuditReport, ClientProject, TrackedKeyword, BacklinkItem, AuditScanLog } from '../types/seo';
 
 export interface AppDatabaseExport {
   version: number;
@@ -8,6 +7,7 @@ export interface AppDatabaseExport {
   researchReports: AiSeoResearchReport[];
   mapsReports: LocalBusinessReport[];
   siteAudits: SiteAuditReport[];
+  auditScanLogs?: AuditScanLog[];
   trackedKeywords: TrackedKeyword[];
   backlinks?: BacklinkItem[];
 }
@@ -100,6 +100,44 @@ class DatabaseService {
     return this.getFromLocal<SiteAuditReport[]>('site_audits', []);
   }
 
+  // --- Audit Scan History & Time Logging ---
+  public saveAuditLog(log: AuditScanLog): void {
+    const list = this.getAuditLogs();
+    // Prepend new log
+    const updated = [log, ...list.filter(l => l.id !== log.id)].slice(0, 100);
+    this.saveToLocal('audit_scan_logs', updated);
+  }
+
+  public getAuditLogs(domainOrClientId?: string): AuditScanLog[] {
+    const all = this.getFromLocal<AuditScanLog[]>('audit_scan_logs', []);
+    if (!domainOrClientId) return all;
+    const cleanFilter = domainOrClientId.toLowerCase().replace(/^(https?:\/\/)?(www\.)?/, '').replace(/\/$/, '');
+    return all.filter(l => 
+      l.clientId === domainOrClientId || 
+      l.domain.toLowerCase().includes(cleanFilter) || 
+      l.url.toLowerCase().includes(cleanFilter)
+    );
+  }
+
+  public deleteAuditLog(id: string): void {
+    const list = this.getAuditLogs();
+    this.saveToLocal('audit_scan_logs', list.filter(l => l.id !== id));
+  }
+
+  public clearAuditLogs(domainOrClientId?: string): void {
+    if (!domainOrClientId) {
+      this.saveToLocal('audit_scan_logs', []);
+      return;
+    }
+    const cleanFilter = domainOrClientId.toLowerCase().replace(/^(https?:\/\/)?(www\.)?/, '').replace(/\/$/, '');
+    const remaining = this.getAuditLogs().filter(l => 
+      l.clientId !== domainOrClientId && 
+      !l.domain.toLowerCase().includes(cleanFilter) && 
+      !l.url.toLowerCase().includes(cleanFilter)
+    );
+    this.saveToLocal('audit_scan_logs', remaining);
+  }
+
   // --- Backlinks Storage ---
   public saveBacklink(item: BacklinkItem): void {
     const list = this.getSavedBacklinks();
@@ -136,6 +174,7 @@ class DatabaseService {
       researchReports: this.getSavedResearchReports(),
       mapsReports: this.getSavedLocalBusinessReports(),
       siteAudits: this.getSavedSiteAudits(),
+      auditScanLogs: this.getAuditLogs(),
       trackedKeywords,
       backlinks: this.getSavedBacklinks()
     };
@@ -168,6 +207,9 @@ class DatabaseService {
       if (Array.isArray(data.siteAudits)) {
         this.saveToLocal('site_audits', data.siteAudits);
       }
+      if (Array.isArray(data.auditScanLogs)) {
+        this.saveToLocal('audit_scan_logs', data.auditScanLogs);
+      }
       if (Array.isArray(data.backlinks)) {
         this.saveToLocal('backlinks', data.backlinks);
       }
@@ -180,7 +222,7 @@ class DatabaseService {
 
   public clearAllDatabase(): void {
     if (!this.isStorageAvailable()) return;
-    const keysToRemove = ['rpp_research_reports', 'rpp_maps_reports', 'rpp_site_audits', 'rpp_backlinks'];
+    const keysToRemove = ['rpp_research_reports', 'rpp_maps_reports', 'rpp_site_audits', 'rpp_audit_scan_logs', 'rpp_backlinks'];
     keysToRemove.forEach(k => localStorage.removeItem(k));
   }
 }

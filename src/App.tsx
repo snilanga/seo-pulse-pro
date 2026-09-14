@@ -26,6 +26,7 @@ import {
   INITIAL_CLIENTS, 
   INITIAL_KEYWORDS, 
   INITIAL_AUDIT_REPORT, 
+  getClientAuditReport,
   INITIAL_COMPETITOR_DATA, 
   INITIAL_REPORT_CONFIG,
   INITIAL_BACKLINKS,
@@ -34,6 +35,7 @@ import {
 } from './data/initialData';
 import type { ClientProject, TrackedKeyword, SiteAuditReport, ClientReportConfig, BacklinkItem, OutreachOpportunity, UserAccount, UserRole } from './types/seo';
 import { runLiveSiteAudit } from './services/seoEngine';
+import { dbService } from './services/dbService';
 
 export function App() {
   const [clients, setClients] = useState<ClientProject[]>(INITIAL_CLIENTS);
@@ -90,13 +92,23 @@ export function App() {
       clientId: client.id,
       clientName: client.name
     });
+
+    // Retrieve or generate accurate client audit report
+    const savedAudits = dbService.getSavedSiteAudits();
+    const existingAudit = savedAudits.find(a => a.clientId === client.id || a.url.includes(client.domain));
+    if (existingAudit) {
+      setAuditReport(existingAudit);
+    } else {
+      setAuditReport(getClientAuditReport(client));
+    }
   };
 
   // Run Quick Audit from Navbar
   const handleRunQuickAudit = async (url: string) => {
-    setActiveTab('audit');
+    setActiveTab('domain-checker');
     const newAudit = await runLiveSiteAudit({ url, clientId: selectedClient.id });
     setAuditReport(newAudit);
+    dbService.saveSiteAudit(newAudit);
   };
 
   // Add new client modal action
@@ -124,8 +136,11 @@ export function App() {
       status: 'active'
     };
 
+    const newAudit = getClientAuditReport(newClient);
     setClients([newClient, ...clients]);
     setSelectedClient(newClient);
+    setAuditReport(newAudit);
+    dbService.saveSiteAudit(newAudit);
   };
 
   const handleAddTrackedKeyword = (newKw: TrackedKeyword) => {
@@ -200,6 +215,7 @@ export function App() {
                 <InstantDomainAudit
                   currentClient={selectedClient}
                   currentAudit={auditReport}
+                  clientKeywords={currentKeywords}
                   onUpdateAudit={setAuditReport}
                   onEnterFullDashboard={() => setActiveTab('dashboard')}
                   onRunAiAgentSprint={() => setActiveTab('ai-agent')}
