@@ -35,7 +35,12 @@ import {
   RESEARCH_AGENT_STEPS, 
   extractCleanHostname 
 } from '../../services/aiResearchEngine';
-import { COUNTRIES_AND_CITIES } from '../../data/geoData';
+import { 
+  COUNTRIES_AND_CITIES, 
+  BUSINESS_TYPES_AND_AUDIENCES, 
+  ALL_BUSINESS_TYPES, 
+  ALL_TARGET_AUDIENCES 
+} from '../../data/geoData';
 
 interface AiSeoResearchAgentProps {
   client: ClientProject;
@@ -90,12 +95,12 @@ export const AiSeoResearchAgent: React.FC<AiSeoResearchAgentProps> = ({
   client,
   onAddKeyword
 }) => {
-  // Input form state
-  const [inputUrl, setInputUrl] = useState<string>('https://webcorexa.com/services/web-design');
-  const [targetCountry, setTargetCountry] = useState<string>('Sri Lanka');
-  const [targetCity, setTargetCity] = useState<string>('Colombo');
-  const [businessType, setBusinessType] = useState<string>('Web Design Agency');
-  const [targetAudience, setTargetAudience] = useState<string>('Small Businesses & Startups');
+  // Input form state - starts empty by default to prevent old data bleed
+  const [inputUrl, setInputUrl] = useState<string>('');
+  const [targetCountry, setTargetCountry] = useState<string>('');
+  const [targetCity, setTargetCity] = useState<string>('');
+  const [businessType, setBusinessType] = useState<string>('');
+  const [targetAudience, setTargetAudience] = useState<string>('');
 
   // Country & City Dropdown / Auto-suggest State
   const [showCountryDropdown, setShowCountryDropdown] = useState<boolean>(false);
@@ -138,6 +143,50 @@ export const AiSeoResearchAgent: React.FC<AiSeoResearchAgentProps> = ({
     setShowCityDropdown(false);
   };
 
+  // Business Type & Target Audience Dropdown / Auto-suggest State
+  const [showBusinessDropdown, setShowBusinessDropdown] = useState<boolean>(false);
+  const [showAudienceDropdown, setShowAudienceDropdown] = useState<boolean>(false);
+
+  // Selected Business Category to get contextual audiences
+  const selectedBusinessObj = BUSINESS_TYPES_AND_AUDIENCES.find(
+    b => b.category.toLowerCase() === businessType.trim().toLowerCase() ||
+         b.subcategories.some(sub => sub.toLowerCase() === businessType.trim().toLowerCase())
+  );
+
+  // Filtered Business Types based on user input
+  const filteredBusinessTypes = ALL_BUSINESS_TYPES.filter(b => 
+    b.toLowerCase().includes(businessType.toLowerCase())
+  );
+
+  // Available Audiences based on chosen business category or full pool
+  const availableAudiences: string[] = selectedBusinessObj
+    ? selectedBusinessObj.suggestedAudiences
+    : ALL_TARGET_AUDIENCES;
+
+  const filteredAudiences = availableAudiences.filter(a => 
+    a.toLowerCase().includes(targetAudience.toLowerCase())
+  );
+
+  const handleSelectBusinessType = (selectedType: string) => {
+    setBusinessType(selectedType);
+    setShowBusinessDropdown(false);
+    // Find matching category to suggest best-fit audience
+    const match = BUSINESS_TYPES_AND_AUDIENCES.find(
+      b => b.category.toLowerCase() === selectedType.toLowerCase() ||
+           b.subcategories.some(sub => sub.toLowerCase() === selectedType.toLowerCase())
+    );
+    if (match && match.suggestedAudiences.length > 0) {
+      if (!match.suggestedAudiences.some(aud => aud.toLowerCase() === targetAudience.toLowerCase())) {
+        setTargetAudience(match.suggestedAudiences[0]);
+      }
+    }
+  };
+
+  const handleSelectAudience = (selectedAud: string) => {
+    setTargetAudience(selectedAud);
+    setShowAudienceDropdown(false);
+  };
+
   // Agent execution state
   const [isRunning, setIsRunning] = useState<boolean>(false);
   const [currentStep, setCurrentStep] = useState<number>(0);
@@ -163,11 +212,31 @@ export const AiSeoResearchAgent: React.FC<AiSeoResearchAgentProps> = ({
   };
 
   const handleApplyPreset = (preset: typeof DEMO_PRESETS[0]) => {
+    setReport(null);
     setInputUrl(preset.input.url);
     setTargetCountry(preset.input.targetCountry || '');
     setTargetCity(preset.input.targetCity || '');
     setBusinessType(preset.input.businessType || '');
     setTargetAudience(preset.input.targetAudience || '');
+  };
+
+  const handleResetForm = () => {
+    setInputUrl('');
+    setTargetCountry('');
+    setTargetCity('');
+    setBusinessType('');
+    setTargetAudience('');
+    setReport(null);
+    setCompletedSteps([]);
+    setCurrentStep(0);
+  };
+
+  const handleUrlChange = (newUrl: string) => {
+    setInputUrl(newUrl);
+    // Clear old report when the user enters or alters the URL so old analysis doesn't persist
+    if (report) {
+      setReport(null);
+    }
   };
 
   const handleStartResearch = async () => {
@@ -344,21 +413,32 @@ export const AiSeoResearchAgent: React.FC<AiSeoResearchAgentProps> = ({
       <div className="bg-slate-900/90 rounded-2xl p-6 border border-slate-800 shadow-xl backdrop-blur-md">
         <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
           <div className="md:col-span-6">
-            <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">
-              Website / Target Page URL <span className="text-rose-400">*</span>
-            </label>
+            <div className="flex items-center justify-between mb-2">
+              <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider">
+                Website / Target Page URL <span className="text-rose-400">*</span>
+              </label>
+              {(inputUrl || report) && (
+                <button
+                  type="button"
+                  onClick={handleResetForm}
+                  className="text-xs text-rose-400 hover:text-rose-300 hover:underline flex items-center gap-1 font-medium transition-colors"
+                >
+                  Clear / New URL
+                </button>
+              )}
+            </div>
             <div className="relative">
               <Globe className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5" />
               <input
                 type="text"
                 value={inputUrl}
-                onChange={(e) => setInputUrl(e.target.value)}
+                onChange={(e) => handleUrlChange(e.target.value)}
                 placeholder="https://example.com/services/web-design"
                 className="w-full bg-slate-950 border border-slate-700/80 rounded-xl pl-10 pr-4 py-3 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all font-mono"
               />
             </div>
             <p className="text-[11px] text-slate-400 mt-1.5">
-              Target page will be inspected for headings, existing tags, and services.
+              Enter any new website or page. The AI agent inspects DOM, headings, entities &amp; generates fresh data.
             </p>
           </div>
 
@@ -534,36 +614,168 @@ export const AiSeoResearchAgent: React.FC<AiSeoResearchAgentProps> = ({
             </p>
           </div>
 
-          <div className="md:col-span-4">
-            <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">
-              Business Type / Industry (Optional)
-            </label>
+          {/* Business Type / Industry Input & Dropdown */}
+          <div className="md:col-span-4 relative">
+            <div className="flex items-center justify-between mb-2">
+              <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider">
+                Business Type / Industry (Optional)
+              </label>
+              <span className="text-[10px] text-indigo-400 font-medium">Type or Select</span>
+            </div>
             <div className="relative">
               <Building2 className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5" />
               <input
                 type="text"
                 value={businessType}
-                onChange={(e) => setBusinessType(e.target.value)}
-                placeholder="e.g. Web Design Agency"
-                className="w-full bg-slate-950 border border-slate-700/80 rounded-xl pl-10 pr-4 py-3 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 transition-all"
+                onChange={(e) => {
+                  setBusinessType(e.target.value);
+                  setShowBusinessDropdown(true);
+                }}
+                onFocus={() => setShowBusinessDropdown(true)}
+                placeholder="e.g. Web Design Agency (or Auto-infer)"
+                className="w-full bg-slate-950 border border-slate-700/80 rounded-xl pl-10 pr-9 py-3 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all font-medium"
               />
+              <button
+                type="button"
+                onClick={() => setShowBusinessDropdown(!showBusinessDropdown)}
+                className="absolute right-3 top-3.5 text-slate-400 hover:text-white transition-colors"
+                title="Toggle Business Type Dropdown"
+              >
+                <ChevronDown className={`w-4 h-4 transition-transform ${showBusinessDropdown ? 'rotate-180' : ''}`} />
+              </button>
             </div>
+
+            {/* Business Type Suggestions Dropdown Popup */}
+            {showBusinessDropdown && (
+              <>
+                <div 
+                  className="fixed inset-0 z-20" 
+                  onClick={() => setShowBusinessDropdown(false)}
+                ></div>
+                <div className="absolute left-0 right-0 top-full mt-1 z-30 bg-slate-900 border border-indigo-500/30 rounded-xl shadow-2xl max-h-64 overflow-y-auto divide-y divide-slate-800 backdrop-blur-xl animate-fadeIn">
+                  <div className="p-2 bg-slate-950/80 sticky top-0 text-[11px] font-semibold text-slate-400 uppercase tracking-wider flex items-center justify-between">
+                    <span>Industries & Niches ({filteredBusinessTypes.length})</span>
+                    <button 
+                      onClick={() => {
+                        setBusinessType('');
+                        setShowBusinessDropdown(false);
+                      }}
+                      className="text-xs text-rose-400 hover:underline capitalize font-normal"
+                    >
+                      Clear
+                    </button>
+                  </div>
+                  {filteredBusinessTypes.length > 0 ? (
+                    filteredBusinessTypes.map((bType, i) => (
+                      <button
+                        key={i}
+                        type="button"
+                        onClick={() => handleSelectBusinessType(bType)}
+                        className={`w-full px-3.5 py-2.5 text-left text-xs flex items-center justify-between transition-colors ${
+                          businessType.toLowerCase() === bType.toLowerCase()
+                            ? 'bg-indigo-600/30 text-white font-bold'
+                            : 'text-slate-300 hover:bg-slate-800/80 hover:text-white'
+                        }`}
+                      >
+                        <div className="flex items-center gap-2">
+                          <Building2 className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
+                          <span className="truncate">{bType}</span>
+                        </div>
+                      </button>
+                    ))
+                  ) : (
+                    <div className="p-3 text-center text-xs text-slate-500">
+                      No matching industries. (Custom typed category will be used)
+                    </div>
+                  )}
+                </div>
+              </>
+            )}
+            <p className="text-[11px] text-slate-400 mt-1.5">Leave empty to auto-infer from webpage.</p>
           </div>
 
-          <div className="md:col-span-5">
-            <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">
-              Target Audience / ICP (Optional)
-            </label>
+          {/* Target Audience / ICP Input & Dropdown */}
+          <div className="md:col-span-5 relative">
+            <div className="flex items-center justify-between mb-2">
+              <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider">
+                Target Audience / ICP (Optional)
+              </label>
+              <span className="text-[10px] text-indigo-400 font-medium">Auto-suggests</span>
+            </div>
             <div className="relative">
               <Target className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5" />
               <input
                 type="text"
                 value={targetAudience}
-                onChange={(e) => setTargetAudience(e.target.value)}
-                placeholder="e.g. Local Business Owners, Healthcare seekers"
-                className="w-full bg-slate-950 border border-slate-700/80 rounded-xl pl-10 pr-4 py-3 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 transition-all"
+                onChange={(e) => {
+                  setTargetAudience(e.target.value);
+                  setShowAudienceDropdown(true);
+                }}
+                onFocus={() => setShowAudienceDropdown(true)}
+                placeholder="e.g. Small & Medium Businesses (or Auto-infer)"
+                className="w-full bg-slate-950 border border-slate-700/80 rounded-xl pl-10 pr-9 py-3 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all font-medium"
               />
+              <button
+                type="button"
+                onClick={() => setShowAudienceDropdown(!showAudienceDropdown)}
+                className="absolute right-3 top-3.5 text-slate-400 hover:text-white transition-colors"
+                title="Toggle Audience Dropdown"
+              >
+                <ChevronDown className={`w-4 h-4 transition-transform ${showAudienceDropdown ? 'rotate-180' : ''}`} />
+              </button>
             </div>
+
+            {/* Target Audience Suggestions Dropdown Popup */}
+            {showAudienceDropdown && (
+              <>
+                <div 
+                  className="fixed inset-0 z-20" 
+                  onClick={() => setShowAudienceDropdown(false)}
+                ></div>
+                <div className="absolute left-0 right-0 top-full mt-1 z-30 bg-slate-900 border border-indigo-500/30 rounded-xl shadow-2xl max-h-64 overflow-y-auto divide-y divide-slate-800 backdrop-blur-xl animate-fadeIn">
+                  <div className="p-2 bg-slate-950/80 sticky top-0 text-[11px] font-semibold text-slate-400 uppercase tracking-wider flex items-center justify-between">
+                    <span>
+                      {selectedBusinessObj ? `${selectedBusinessObj.category} ICPs` : 'Customer Personas'} ({filteredAudiences.length})
+                    </span>
+                    <button 
+                      onClick={() => {
+                        setTargetAudience('');
+                        setShowAudienceDropdown(false);
+                      }}
+                      className="text-xs text-rose-400 hover:underline capitalize font-normal"
+                    >
+                      Clear
+                    </button>
+                  </div>
+                  {filteredAudiences.length > 0 ? (
+                    filteredAudiences.map((aud, i) => (
+                      <button
+                        key={i}
+                        type="button"
+                        onClick={() => handleSelectAudience(aud)}
+                        className={`w-full px-3.5 py-2.5 text-left text-xs flex items-center justify-between transition-colors ${
+                          targetAudience.toLowerCase() === aud.toLowerCase()
+                            ? 'bg-indigo-600/30 text-white font-bold'
+                            : 'text-slate-300 hover:bg-slate-800/80 hover:text-white'
+                        }`}
+                      >
+                        <div className="flex items-center gap-2">
+                          <Target className="w-3.5 h-3.5 text-purple-400 shrink-0" />
+                          <span className="truncate">{aud}</span>
+                        </div>
+                      </button>
+                    ))
+                  ) : (
+                    <div className="p-3 text-center text-xs text-slate-500">
+                      No matching personas found. (Custom typed persona will be used)
+                    </div>
+                  )}
+                </div>
+              </>
+            )}
+            <p className="text-[11px] text-slate-400 mt-1.5">
+              {selectedBusinessObj ? `Suggested for ${selectedBusinessObj.category}` : 'Defines ideal customer profile & search intent.'}
+            </p>
           </div>
 
           <div className="md:col-span-3 flex items-end">

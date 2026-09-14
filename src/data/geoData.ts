@@ -325,3 +325,202 @@ export const COUNTRIES_AND_CITIES: CountryLocation[] = [
     ]
   }
 ];
+
+export interface BusinessCategoryOption {
+  category: string;
+  subcategories: string[];
+  suggestedAudiences: string[];
+}
+
+export const BUSINESS_TYPES_AND_AUDIENCES: BusinessCategoryOption[] = [
+  {
+    category: 'Web Design Agency',
+    subcategories: [
+      'Web Design & Development',
+      'WordPress & Custom CMS Agency',
+      'UI/UX Design Studio',
+      'E-Commerce Development (Shopify/WooCommerce)',
+      'Digital Marketing & SEO Agency',
+      'Mobile App Development Studio'
+    ],
+    suggestedAudiences: [
+      'Small & Medium Businesses (SMEs)',
+      'Startups & Tech Founders',
+      'E-Commerce Store Owners',
+      'Local Service Providers & Contractors',
+      'Corporate & Enterprise Marketing Teams',
+      'B2B Companies & Professional Services'
+    ]
+  },
+  {
+    category: 'Healthcare & Telemedicine Clinic',
+    subcategories: [
+      'Virtual Doctor Consultation & Telehealth',
+      'Dental Clinic & Cosmetic Dentistry',
+      'Mental Health & Online Therapy',
+      'Pediatric Care & Family Medicine',
+      'Physiotherapy & Rehabilitation Clinic',
+      'Diagnostic Lab & Health Screening'
+    ],
+    suggestedAudiences: [
+      'Patients Seeking Same-Day Consultations',
+      'Busy Working Professionals & Remote Workers',
+      'Families & Parents Seeking Pediatric Care',
+      'Chronic Illness Patients Needing Rx Refills',
+      'Senior Citizens & Caregivers',
+      'Health-Conscious Individuals'
+    ]
+  },
+  {
+    category: 'B2B SaaS & Cyber Security Platform',
+    subcategories: [
+      'Zero Trust Cloud Security & Compliance',
+      'CRM & Sales Pipeline Software',
+      'HR Tech & Payroll Automation',
+      'DevOps & Infrastructure Monitoring',
+      'Fintech & Payment Gateway Solutions',
+      'AI & Machine Learning Developer Tools'
+    ],
+    suggestedAudiences: [
+      'CISOs & Chief Information Security Officers',
+      'DevOps Engineers & Solution Architects',
+      'VP of Engineering & CTOs',
+      'Enterprise Procurement Directors',
+      'Growth Stage Startup Founders',
+      'Product Managers & Scrum Leaders'
+    ]
+  },
+  {
+    category: 'Home Decor & Furniture E-Commerce',
+    subcategories: [
+      'Handcrafted Wooden Furniture',
+      'Modern Minimalist Living Room Decor',
+      'Kitchenware & Ceramic Artisan Products',
+      'Luxury Lighting & Home Fixtures',
+      'Bedding & Organic Textile Goods',
+      'Outdoor Patio & Garden Furniture'
+    ],
+    suggestedAudiences: [
+      'Modern Homeowners & New Buyers',
+      'Interior Designers & Home Stagers',
+      'Eco-Conscious Consumers & Minimalists',
+      'Luxury Lifestyle Shoppers',
+      'Apartment & Condo Renters',
+      'DIY & Home Improvement Enthusiasts'
+    ]
+  },
+  {
+    category: 'Real Estate Agency & Brokerage',
+    subcategories: [
+      'Residential Property Sales & Rentals',
+      'Luxury Real Estate & Beachfront Villas',
+      'Commercial Real Estate & Office Leasing',
+      'Property Management & Maintenance',
+      'Land & Investment Development'
+    ],
+    suggestedAudiences: [
+      'First-Time Home Buyers',
+      'Real Estate Investors & Flippers',
+      'High-Net-Worth Individuals (HNWI)',
+      'Commercial Tenants & Retail Brands',
+      'Expatriates & International Investors'
+    ]
+  },
+  {
+    category: 'Legal Services & Law Firm',
+    subcategories: [
+      'Corporate & Business Law',
+      'Personal Injury Lawyers',
+      'Immigration & Visa Advisory',
+      'Intellectual Property & Patents',
+      'Family Law & Estate Planning',
+      'Criminal Defense Legal Counsel'
+    ],
+    suggestedAudiences: [
+      'Business Owners & Corporate Clients',
+      'Accident Victims Seeking Compensation',
+      'Immigrants & International Students',
+      'Families Planning Estates & Wills',
+      'Entrepreneurs Protecting Trademarks'
+    ]
+  },
+  {
+    category: 'Financial Services & Accounting Firm',
+    subcategories: [
+      'Certified Public Accountants (CPA)',
+      'Tax Planning & Preparation',
+      'Wealth Management & Investment Advisory',
+      'Business Bookkeeping & Payroll',
+      'Mortgage Broker & Loan Advisory'
+    ],
+    suggestedAudiences: [
+      'High-Income Professionals & Doctors',
+      'Small Business Owners & Freelancers',
+      'Individuals Seeking Retirement Planning',
+      'Real Estate Investors Needing Tax Shelters',
+      'Corporations Needing Audit Compliance'
+    ]
+  },
+  {
+    category: 'Fitness, Gym & Wellness Studio',
+    subcategories: [
+      'Personal Training & Fitness Coaching',
+      'Yoga & Pilates Studio',
+      'CrossFit & High-Intensity Gym',
+      'Holistic Nutrition & Diet Counseling',
+      'Spa, Massage & Wellness Retreat'
+    ],
+    suggestedAudiences: [
+      'Fitness Enthusiasts & Weight Loss Seekers',
+      'Busy Professionals Seeking Stress Relief',
+      'Athletes & Marathon Runners',
+      'Seniors Looking for Mobility & Balance',
+      'Postpartum Mothers Seeking Gentle Recovery'
+    ]
+  },
+  {
+    category: 'Education & Online Learning Academy',
+    subcategories: [
+      'Coding Bootcamp & Tech Skills Training',
+      'Language School & IELTS Preparation',
+      'K-12 Private Tutoring & Exam Prep',
+      'Corporate Professional Certification',
+      'Creative Arts & Music Classes'
+    ],
+    suggestedAudiences: [
+      'Career Changers & Job Seekers',
+      'University Students & Graduates',
+      'Parents Investing in Children’s Education',
+      'Professionals Seeking Upskilling Certifications',
+      'Lifelong Hobbyists & Enthusiasts'
+    ]
+  },
+  {
+    category: 'Automotive & Car Dealership / Repair',
+    subcategories: [
+      'Auto Repair & Mechanic Workshop',
+      'Car Detailing & Ceramic Coating',
+      'New & Used Car Dealership',
+      'Tire & Wheel Alignment Services',
+      'EV Charging & Hybrid Specialists'
+    ],
+    suggestedAudiences: [
+      'Car Owners Needing Urgent Maintenance',
+      'Luxury Vehicle Enthusiasts',
+      'First-Time Car Buyers',
+      'Commercial Fleet Managers',
+      'Commuters & Rideshare Drivers'
+    ]
+  }
+];
+
+// Flat lists for general typing/filtering
+export const ALL_BUSINESS_TYPES: string[] = [
+  ...BUSINESS_TYPES_AND_AUDIENCES.map(b => b.category),
+  ...BUSINESS_TYPES_AND_AUDIENCES.flatMap(b => b.subcategories)
+];
+
+export const ALL_TARGET_AUDIENCES: string[] = Array.from(
+  new Set(BUSINESS_TYPES_AND_AUDIENCES.flatMap(b => b.suggestedAudiences))
+);
+
