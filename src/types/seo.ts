@@ -352,6 +352,48 @@ export interface SeoContentBrief {
   contentGapsToAddress: string[];
 }
 
+export interface HomePageSeoRating {
+  overallScore: number; // 0-100
+  grade: 'A+' | 'A' | 'B' | 'C' | 'D';
+  status: 'Excellent' | 'Good - Needs Optimization' | 'Poor - Critical Fixes Needed';
+  technicalScore: number;
+  contentScore: number;
+  onPageScore: number;
+  mobileUxScore: number;
+  homePageTitle: string;
+  metaDescriptionPresent: boolean;
+  h1TagStatus: 'Optimal' | 'Multiple Found' | 'Missing';
+  coreWebVitalsGrade: 'Passed (Good)' | 'Needs Improvement' | 'Failed';
+  sslSecured: boolean;
+  schemaMarkupDetected: boolean;
+  ratingExecutiveSummary: string;
+}
+
+export interface GoogleIndexationStatus {
+  isIndexed: boolean;
+  indexationLabel: 'Fully Indexed & Crawled' | 'Partially Indexed' | 'Noindex / Blocked' | 'Pending Discovery';
+  googleCacheStatus: 'Active & Cached Recently' | 'Not Cached' | 'Pending';
+  mobileFirstIndexing: boolean;
+  robotsTxtStatus: 'Allowed (Robots.txt Valid)' | 'Blocked (Disallow)' | 'Missing Robots.txt';
+  sitemapDetected: boolean;
+  sitemapUrl?: string;
+  canonicalCompliant: boolean;
+  inspectionVerdict: string;
+}
+
+export interface BusinessRankingTrend {
+  direction: 'UP' | 'DOWN' | 'STABLE';
+  trendPercentage: number; // e.g. +18.4% or -6.8%
+  periodLabel: string; // e.g. "Past 30 Days"
+  visibilityIndex: number; // e.g. 74/100
+  momentumStatus: 'Strong Upward Momentum' | 'Accelerating Growth' | 'Slight Decline' | 'Critical Downturn';
+  positionsGained: number;
+  positionsLost: number;
+  page1KeywordsCount: number;
+  projectedPage1Positions: number;
+  businessImpactSummary: string;
+}
+
 export interface AiSeoResearchReport {
   id: string;
   generatedAt: string;
@@ -389,6 +431,11 @@ export interface AiSeoResearchReport {
   competitors: CompetitorResearchItem[];
   contentGaps: ContentGapItem[];
   contentBrief: SeoContentBrief;
+
+  // Real-Time Home Page SEO & Google Indexation Rating + Business Trend
+  homePageSeo: HomePageSeoRating;
+  googleIndexation: GoogleIndexationStatus;
+  businessTrend: BusinessRankingTrend;
 }
 
 export interface LocalCompetitorBusiness {
