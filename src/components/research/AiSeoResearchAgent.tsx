@@ -1499,12 +1499,30 @@ export const AiSeoResearchAgent: React.FC<AiSeoResearchAgentProps> = ({
 
               {/* 3 Click-Optimized Title Options */}
               <div className="bg-slate-900/90 border border-slate-800 rounded-2xl p-6 shadow-xl">
-                <div className="mb-4">
-                  <h3 className="text-base font-bold text-white flex items-center gap-2">
-                    <FileText className="w-4 h-4 text-indigo-400" />
-                    3 Click-Optimized SEO Title Options (50-60 Characters)
-                  </h3>
-                  <p className="text-xs text-slate-400 mt-0.5">Strict character count enforced to avoid SERP truncation on desktop and mobile.</p>
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-4">
+                  <div>
+                    <h3 className="text-base font-bold text-white flex items-center gap-2">
+                      <FileText className="w-4 h-4 text-indigo-400" />
+                      Google &amp; Bing Page 1 SEO Title Tags (50-60 Characters)
+                    </h3>
+                    <p className="text-xs text-slate-400 mt-0.5">Strict character count enforced to avoid SERP truncation on desktop, mobile, and Bing Copilot.</p>
+                  </div>
+                  <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 self-start md:self-auto">
+                    Rank Formula: [Keyword] + [Value Hook] + [Brand]
+                  </span>
+                </div>
+
+                {/* Google & Bing Page 1 Best Practices Alert */}
+                <div className="mb-4 p-3.5 bg-indigo-950/40 border border-indigo-500/30 rounded-xl text-xs text-slate-300 space-y-1">
+                  <div className="font-bold text-white flex items-center gap-1.5">
+                    <Sparkles className="w-3.5 h-3.5 text-indigo-400" />
+                    How to Win Google Page 1 &amp; Bing Page 1:
+                  </div>
+                  <ul className="list-disc list-inside space-y-0.5 text-slate-300 text-[11px] ml-1">
+                    <li><strong className="text-white">Front-load exact keyword:</strong> Place the primary keyword within the first 3-5 words of the title.</li>
+                    <li><strong className="text-white">Stay under 60 characters:</strong> Prevents Google and Bing from truncating with ellipsis (<code className="text-indigo-300">...</code>).</li>
+                    <li><strong className="text-white">Include high-CTR commercial modifiers:</strong> Words like <em>Top Rated, Best, Free Quote, Fast, Guaranteed</em> increase click-through rates by up to 34%.</li>
+                  </ul>
                 </div>
 
                 <div className="space-y-3">

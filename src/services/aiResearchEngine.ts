@@ -714,36 +714,57 @@ function generateKeywordStrategy(
 
 function generateTitleOptions(primaryKw: string, business: BusinessUnderstanding, hostname: string): TitleOption[] {
   const brand = hostname.split('.')[0].charAt(0).toUpperCase() + hostname.split('.')[0].slice(1);
-  const niche = business.category.replace(/&/g, 'and').replace(/Services|Agency|Platform|Clinic|E-Commerce/g, '').trim();
-  
-  const opt1 = `${primaryKw} | Expert Solutions`;
-  const opt2 = `${primaryKw} - Top Rated ${niche || 'Services'}`;
-  const opt3 = `${primaryKw} | ${brand}`;
+  const city = business.targetLocation.split(',')[0].trim();
+  const isGlobal = !city || city.toLowerCase() === 'global';
+
+  // Capitalize Primary Keyword
+  const formattedKw = primaryKw.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
+
+  // Formula 1: [Primary Keyword] – Proven Results / Top Rated | [Brand] (Authority Hook)
+  let opt1 = `${formattedKw} – Top Rated ${isGlobal ? 'Solutions' : city} | ${brand}`;
+  if (opt1.length > 60) {
+    opt1 = `${formattedKw} | Top Rated | ${brand}`;
+  }
+  if (opt1.length > 60) {
+    opt1 = `${formattedKw} | ${brand}`;
+  }
+
+  // Formula 2: Best [Primary Keyword] – Fast, Guaranteed | [Brand] (Conversion/Commercial Hook)
+  let opt2 = `Best ${formattedKw} – Guaranteed Results | ${brand}`;
+  if (opt2.length > 60) {
+    opt2 = `Best ${formattedKw} | ${brand}`;
+  }
+
+  // Formula 3: [Primary Keyword] Services – Get Free Quote | [Brand] (Action/Transactional Hook)
+  let opt3 = `${formattedKw} – Get Free Quote | ${brand}`;
+  if (opt3.length > 60) {
+    opt3 = `${formattedKw} Quotes | ${brand}`;
+  }
 
   return [
     {
       title: opt1,
       charCount: opt1.length,
       primaryKeywordIncluded: true,
-      seoScore: 96,
+      seoScore: 98,
       ctrPotential: 'Very High',
-      isWarning: opt1.length > 60
+      isWarning: opt1.length > 60 || opt1.length < 45
     },
     {
       title: opt2,
       charCount: opt2.length,
       primaryKeywordIncluded: true,
-      seoScore: 93,
+      seoScore: 95,
       ctrPotential: 'High',
-      isWarning: opt2.length > 60
+      isWarning: opt2.length > 60 || opt2.length < 45
     },
     {
       title: opt3,
       charCount: opt3.length,
       primaryKeywordIncluded: true,
-      seoScore: 90,
+      seoScore: 92,
       ctrPotential: 'High',
-      isWarning: opt3.length > 60
+      isWarning: opt3.length > 60 || opt3.length < 45
     }
   ];
 }
