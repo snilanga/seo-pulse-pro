@@ -205,6 +205,34 @@ export const AiSeoResearchAgent: React.FC<AiSeoResearchAgentProps> = ({
   const [applyCms, setApplyCms] = useState<'wordpress' | 'shopify' | 'custom'>('wordpress');
   const [appliedNotification, setAppliedNotification] = useState<string | null>(null);
 
+  // Manual Local / City Keyword Input State
+  const [manualKeywordInput, setManualKeywordInput] = useState<string>('');
+  const [manualCityInput, setManualCityInput] = useState<string>('');
+  const [customLocalKeywords, setCustomLocalKeywords] = useState<{
+    keyword: string;
+    patternType: 'Service + City' | 'Service + Country' | 'Service + Near Me' | 'Service + Area';
+    location: string;
+    localIntentScore: number;
+  }[]>([]);
+
+  const handleAddManualKeyword = (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (!manualKeywordInput.trim()) return;
+
+    const loc = manualCityInput.trim() || targetCity.trim() || targetCountry.trim() || 'Custom Location';
+    const newKwItem = {
+      keyword: manualKeywordInput.trim(),
+      patternType: 'Service + City' as const,
+      location: loc,
+      localIntentScore: 95
+    };
+
+    setCustomLocalKeywords(prev => [newKwItem, ...prev]);
+    setAppliedNotification(`Custom Keyword "${manualKeywordInput.trim()}" added to Local Strategy!`);
+    setManualKeywordInput('');
+    setTimeout(() => setAppliedNotification(null), 3000);
+  };
+
   const copyToClipboard = (text: string, key: string) => {
     navigator.clipboard.writeText(text);
     setCopiedKey(key);
@@ -1280,12 +1308,75 @@ export const AiSeoResearchAgent: React.FC<AiSeoResearchAgentProps> = ({
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* Local Variations */}
                 <div className="bg-slate-900/90 border border-slate-800 rounded-2xl p-6 shadow-xl">
-                  <h3 className="text-base font-bold text-white mb-1 flex items-center gap-2">
-                    <MapPin className="w-4 h-4 text-rose-400" />
-                    Local Search Patterns
-                  </h3>
-                  <p className="text-xs text-slate-400 mb-4">Captures localized search intent (City, Country, Near Me).</p>
-                  <div className="space-y-2.5">
+                  <div className="flex items-center justify-between mb-1">
+                    <h3 className="text-base font-bold text-white flex items-center gap-2">
+                      <MapPin className="w-4 h-4 text-rose-400" />
+                      Local Search Patterns &amp; City Keywords
+                    </h3>
+                    <span className="text-[11px] font-mono px-2 py-0.5 rounded bg-slate-800 text-slate-300">
+                      Auto + Manual
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-400 mb-4">Captures localized search intent (City, Country, Near Me) or add your own target terms.</p>
+
+                  {/* Manual Keyword & City Add Form */}
+                  <form onSubmit={handleAddManualKeyword} className="mb-4 p-3 bg-slate-950/80 rounded-xl border border-indigo-500/20 space-y-2">
+                    <div className="text-[11px] font-semibold text-indigo-300 flex items-center gap-1.5">
+                      <Sparkles className="w-3.5 h-3.5" />
+                      Manually Add Custom Local/City Keyword:
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-12 gap-2">
+                      <div className="sm:col-span-6">
+                        <input
+                          type="text"
+                          value={manualKeywordInput}
+                          onChange={(e) => setManualKeywordInput(e.target.value)}
+                          placeholder="e.g. emergency dentist downtown"
+                          className="w-full bg-slate-900 border border-slate-700/80 rounded-lg px-3 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500"
+                        />
+                      </div>
+                      <div className="sm:col-span-4">
+                        <input
+                          type="text"
+                          value={manualCityInput}
+                          onChange={(e) => setManualCityInput(e.target.value)}
+                          placeholder={targetCity || targetCountry || 'City / Area'}
+                          className="w-full bg-slate-900 border border-slate-700/80 rounded-lg px-3 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500"
+                        />
+                      </div>
+                      <div className="sm:col-span-2">
+                        <button
+                          type="submit"
+                          className="w-full py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-lg text-xs transition-colors shadow-sm"
+                        >
+                          + Add
+                        </button>
+                      </div>
+                    </div>
+                  </form>
+
+                  {/* Combined Auto + Manual Local Keywords List */}
+                  <div className="space-y-2.5 max-h-72 overflow-y-auto pr-1">
+                    {/* Custom Manually Added Keywords */}
+                    {customLocalKeywords.map((ck, i) => (
+                      <div key={`custom-${i}`} className="p-3 bg-indigo-950/30 rounded-xl border border-indigo-500/40 flex items-center justify-between">
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <p className="text-xs font-bold text-white font-mono">{ck.keyword}</p>
+                            <span className="px-1.5 py-0.2 rounded bg-indigo-500/20 text-indigo-300 text-[9px] font-bold">Manual</span>
+                          </div>
+                          <span className="text-[10px] text-slate-400">{ck.patternType} • {ck.location}</span>
+                        </div>
+                        <button
+                          onClick={() => handleTrackKeyword(ck.keyword)}
+                          className="text-[11px] text-indigo-400 hover:text-indigo-300 font-bold"
+                        >
+                          + Track
+                        </button>
+                      </div>
+                    ))}
+
+                    {/* Auto Generated Local Keywords */}
                     {report.localKeywords.map((lk, i) => (
                       <div key={i} className="p-3 bg-slate-950 rounded-xl border border-slate-800 flex items-center justify-between">
                         <div>
