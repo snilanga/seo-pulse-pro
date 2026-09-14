@@ -15,9 +15,12 @@ import { ClientCodeInjector } from './components/keywords/ClientCodeInjector';
 import { SerpPageInspector } from './components/serp/SerpPageInspector';
 import { InstantDomainAudit } from './components/audit/InstantDomainAudit';
 import { AiSeoResearchAgent } from './components/research/AiSeoResearchAgent';
+import { GoogleMapsLocalRanker } from './components/maps/GoogleMapsLocalRanker';
+import { DatabaseModal } from './components/database/DatabaseModal';
 import { BacklinkGenerator } from './components/backlinks/BacklinkGenerator';
 import { AdminDashboard } from './components/admin/AdminDashboard';
 import { LoginModal } from './components/auth/LoginModal';
+
 
 import { 
   INITIAL_CLIENTS, 
@@ -42,6 +45,7 @@ export function App() {
   const [users, setUsers] = useState<UserAccount[]>(INITIAL_USERS);
   const [currentUser, setCurrentUser] = useState<UserAccount>(INITIAL_USERS[0]);
   const [showLoginModal, setShowLoginModal] = useState<boolean>(false);
+  const [showDatabaseModal, setShowDatabaseModal] = useState<boolean>(false);
 
   // Client Specific Data State
   const [keywords, setKeywords] = useState<TrackedKeyword[]>(INITIAL_KEYWORDS);
@@ -154,7 +158,9 @@ export function App() {
         onAddNewClient={handleAddNewClient}
         onOpenLoginModal={() => setShowLoginModal(true)}
         onOpenAdminDashboard={() => setActiveTab('admin')}
+        onOpenDatabaseModal={() => setShowDatabaseModal(true)}
       />
+
 
       {/* Main Body */}
       <div className="flex-1 flex flex-col md:flex-row">
@@ -203,7 +209,16 @@ export function App() {
                 />
               )}
 
+              {activeTab === 'maps-checker' && (
+                <GoogleMapsLocalRanker
+                  initialBusinessName={selectedClient.name}
+                  initialDomain={selectedClient.domain}
+                  initialCity={selectedClient.targetRegion?.split(' ')[0] || 'Colombo'}
+                />
+              )}
+
               {activeTab === 'dashboard' && (
+
                 <OverviewDashboard
                   client={selectedClient}
                   keywords={currentKeywords}
@@ -311,6 +326,14 @@ export function App() {
         </main>
       </div>
 
+      {/* Central Database Storage Modal */}
+      <DatabaseModal
+        isOpen={showDatabaseModal}
+        onClose={() => setShowDatabaseModal(false)}
+        clients={clients}
+        keywords={keywords}
+      />
+
       {/* Login / Auth Switch Modal */}
       {showLoginModal && (
         <LoginModal
@@ -320,6 +343,7 @@ export function App() {
           onClose={() => setShowLoginModal(false)}
         />
       )}
+
 
     </div>
   );

@@ -41,6 +41,8 @@ import {
   ALL_BUSINESS_TYPES, 
   ALL_TARGET_AUDIENCES 
 } from '../../data/geoData';
+import { dbService } from '../../services/dbService';
+
 
 interface AiSeoResearchAgentProps {
   client: ClientProject;
@@ -290,12 +292,15 @@ export const AiSeoResearchAgent: React.FC<AiSeoResearchAgentProps> = ({
       });
 
       setReport(result);
+      // Auto-save to persistent database
+      dbService.saveResearchReport(result);
     } catch (err) {
       console.error('Research error:', err);
     } finally {
       setIsRunning(false);
     }
   };
+
 
   const handleExportJson = () => {
     if (!report) return;

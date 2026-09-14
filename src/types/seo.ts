@@ -370,3 +370,75 @@ export interface AiSeoResearchReport {
   contentGaps: ContentGapItem[];
   contentBrief: SeoContentBrief;
 }
+
+export interface LocalCompetitorBusiness {
+  name: string;
+  address: string;
+  rating: number;
+  reviewCount: number;
+  mapRank: number;
+  googlePageNumber: number;
+  website: string;
+}
+
+export interface LocalBusinessReport {
+  id: string;
+  businessName: string;
+  targetKeyword: string;
+  city: string;
+  country: string;
+  formattedAddress: string;
+  latitude: number;
+  longitude: number;
+  phone: string;
+  websiteUrl: string;
+  hasSsl: boolean;
+  
+  // Google Reviews & Ratings
+  rating: number; // e.g. 4.8
+  totalReviews: number;
+  reviewSentiment: {
+    positivePercent: number;
+    neutralPercent: number;
+    negativePercent: number;
+  };
+  sampleReviews: {
+    author: string;
+    rating: number;
+    timeAgo: string;
+    text: string;
+  }[];
+
+  // Google Ranking Position
+  googleMapsPosition: number; // 1, 2, 3...
+  isLocalPack: boolean; // Top 3 local pack
+  googleOrganicPosition: number; // #1 - #100
+  googlePageNumber: number; // 1 for 1-10, 2 for 11-20, etc.
+  bingPosition: number;
+
+  // Google Business Profile (GBP) Audit
+  gbpScore: number; // 0-100
+  gbpStatus: {
+    isClaimed: boolean;
+    hasHours: boolean;
+    hasPhotos: boolean;
+    photoCount: number;
+    hasCategory: boolean;
+    primaryCategory: string;
+    hasQnA: boolean;
+    regularPosts: boolean;
+  };
+
+  competitorGap: {
+    topCompetitors: LocalCompetitorBusiness[];
+    reviewsNeededForTop3: number;
+  };
+
+  actionPlan: {
+    priority: 'high' | 'medium' | 'low';
+    action: string;
+    expectedImpact: string;
+  }[];
+  checkedAt: string;
+}
+

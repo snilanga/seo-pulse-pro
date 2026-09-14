@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import type { ClientProject, SiteAuditReport, TrackedKeyword } from '../../types/seo';
 import { runLiveSiteAudit, analyzeDomainKeywords, generateDomainVerification, verifyServerHtmlFile } from '../../services/seoEngine';
+import { dbService } from '../../services/dbService';
 import { 
   Globe, 
   Sparkles, 
@@ -54,6 +55,7 @@ export const InstantDomainAudit: React.FC<InstantDomainAuditProps> = ({
     try {
       const newAudit = await runLiveSiteAudit({ url: inputDomain.trim(), clientId: currentClient.id });
       onUpdateAudit(newAudit);
+      dbService.saveSiteAudit(newAudit);
 
       // Re-run AI Keyword Intelligence & Verification generator for new domain
       const newAiKw = analyzeDomainKeywords(inputDomain.trim(), currentClient.id);

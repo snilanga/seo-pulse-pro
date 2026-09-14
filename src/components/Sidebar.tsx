@@ -13,10 +13,11 @@ import {
   ExternalLink,
   Sparkles,
   Link2,
-  ShieldCheck
+  ShieldCheck,
+  MapPin
 } from 'lucide-react';
 
-export type TabType = 'domain-checker' | 'research-agent' | 'dashboard' | 'audit' | 'serp' | 'keywords' | 'competitors' | 'reports' | 'ai-agent' | 'trending-keywords' | 'code-injector' | 'page-inspector' | 'backlinks' | 'admin';
+export type TabType = 'domain-checker' | 'research-agent' | 'maps-checker' | 'dashboard' | 'audit' | 'serp' | 'keywords' | 'competitors' | 'reports' | 'ai-agent' | 'trending-keywords' | 'code-injector' | 'page-inspector' | 'backlinks' | 'admin';
 
 interface SidebarProps {
   activeTab: TabType;
@@ -51,11 +52,19 @@ export const Sidebar: React.FC<SidebarProps> = ({
       badgeColor: 'bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 text-white border-pink-400 animate-pulse'
     },
     {
+      id: 'maps-checker' as TabType,
+      label: 'Google Maps & Local Rank',
+      icon: MapPin,
+      badge: '📍 Maps & Reviews',
+      badgeColor: 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white border-emerald-400'
+    },
+    {
       id: 'dashboard' as TabType,
       label: 'Executive Overview',
       icon: LayoutDashboard,
       badge: null
     },
+
     {
       id: 'ai-agent' as TabType,
       label: 'Autonomous AI Agent',

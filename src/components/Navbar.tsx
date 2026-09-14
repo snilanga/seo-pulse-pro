@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import type { ClientProject, UserAccount } from '../types/seo';
-import { Globe, ChevronDown, Search, ShieldCheck, UserCheck, Plus, Sparkles, User, Shield } from 'lucide-react';
+import { Globe, ChevronDown, Search, ShieldCheck, UserCheck, Plus, Sparkles, User, Shield, Database } from 'lucide-react';
 
 interface NavbarProps {
   clients: ClientProject[];
@@ -13,7 +13,9 @@ interface NavbarProps {
   onAddNewClient: () => void;
   onOpenLoginModal: () => void;
   onOpenAdminDashboard: () => void;
+  onOpenDatabaseModal?: () => void;
 }
+
 
 export const Navbar: React.FC<NavbarProps> = ({
   clients,
@@ -25,8 +27,10 @@ export const Navbar: React.FC<NavbarProps> = ({
   onRunQuickAudit,
   onAddNewClient,
   onOpenLoginModal,
-  onOpenAdminDashboard
+  onOpenAdminDashboard,
+  onOpenDatabaseModal
 }) => {
+
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [quickAuditUrl, setQuickAuditUrl] = useState('');
 
@@ -160,6 +164,18 @@ export const Navbar: React.FC<NavbarProps> = ({
             )}
           </div>
 
+          {/* Central Database Storage Button */}
+          {onOpenDatabaseModal && (
+            <button
+              onClick={onOpenDatabaseModal}
+              className="flex items-center space-x-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-indigo-300 rounded-xl text-xs font-semibold border border-indigo-500/30 transition cursor-pointer"
+              title="Database & Storage"
+            >
+              <Database className="w-3.5 h-3.5 text-indigo-400" />
+              <span>Database</span>
+            </button>
+          )}
+
           {/* Admin Control Panel Button (Only visible for Super Admins) */}
           {currentUser.role === 'super_admin' && (
             <button
@@ -171,6 +187,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               <span>Admin Panel</span>
             </button>
           )}
+
 
           {/* Toggle View Mode Button (Agency vs Client View) */}
           <button
