@@ -4,11 +4,13 @@ import {
   generateOnPageSeoPackage, 
   autoDetectOnPageInputFromDomain,
   parseNaturalLanguagePrompt,
+  inspectAndGenerateFromDomain,
   generateWithGeminiApi,
   ONPAGE_QUICK_PRESETS,
   type OnPageSeoPackage, 
   type OnPageSeoInput,
-  type QuickPreset
+  type QuickPreset,
+  type PresetCategoryGroup
 } from '../../services/onPageEngine';
 import { 
   FileText, 
@@ -29,7 +31,8 @@ import {
   ChevronRight,
   Send,
   X,
-  Wand2
+  Wand2,
+  Search
 } from 'lucide-react';
 
 interface AiOnPageOptimizerProps {
@@ -38,11 +41,27 @@ interface AiOnPageOptimizerProps {
   onNavigateToCodeInjector?: (keywordsList: string[]) => void;
 }
 
+const CATEGORY_GROUPS: PresetCategoryGroup[] = [
+  'All',
+  'Health & Medical',
+  'Home & Local Services',
+  'Food & Hospitality',
+  'Professional & Legal',
+  'Automotive',
+  'Tech & E-Commerce',
+  'Beauty & Wellness',
+  'Events & Creative'
+];
+
 export const AiOnPageOptimizer: React.FC<AiOnPageOptimizerProps> = ({
   client,
   onAddTrackedKeyword,
   onNavigateToCodeInjector
 }) => {
+  // Primary Universal Domain Scanner State
+  const [scanDomain, setScanDomain] = useState<string>(client.domain || '');
+  const [activeDomain, setActiveDomain] = useState<string>(client.domain || 'colombodental.com');
+
   // Input fields
   const [businessType, setBusinessType] = useState<string>('Dental Clinic');
   const [serviceOrProduct, setServiceOrProduct] = useState<string>('Teeth Cleaning & Dental Implants');
@@ -51,11 +70,13 @@ export const AiOnPageOptimizer: React.FC<AiOnPageOptimizerProps> = ({
   const [country, setCountry] = useState<string>('Sri Lanka');
   const [pageOrTopic, setPageOrTopic] = useState<string>('Home Page');
 
-  // Automation & AI Bot states
-  const [inputUrl, setInputUrl] = useState<string>('');
-  const [nlPrompt, setNlPrompt] = useState<string>('');
+  // Preset Filters State
+  const [selectedGroup, setSelectedGroup] = useState<PresetCategoryGroup>('All');
+  const [presetSearch, setPresetSearch] = useState<string>('');
   const [activePresetId, setActivePresetId] = useState<string | null>('dentist');
-  const [autoSyncClient, setAutoSyncClient] = useState<boolean>(true);
+
+  // NLP AI Bot Assistant State
+  const [nlPrompt, setNlPrompt] = useState<string>('');
 
   // Third-Party API & Model states
   const [apiMode, setApiMode] = useState<'builtin' | 'gemini'>('builtin');
@@ -69,98 +90,106 @@ export const AiOnPageOptimizer: React.FC<AiOnPageOptimizerProps> = ({
   // UI Interactive states
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState<boolean>(false);
+  const [isScanning, setIsScanning] = useState<boolean>(false);
   const [notification, setNotification] = useState<string | null>(null);
   const [simulateMultiH1, setSimulateMultiH1] = useState<boolean>(false);
   const [showManualForm, setShowManualForm] = useState<boolean>(false);
 
   // Active On-Page Package
   const [seoPackage, setSeoPackage] = useState<OnPageSeoPackage>(() => {
-    const detected = autoDetectOnPageInputFromDomain(client.domain, client.name, client.targetRegion);
-    return generateOnPageSeoPackage(detected);
+    const detected = autoDetectOnPageInputFromDomain(client.domain || 'colombodental.com', client.name, client.targetRegion);
+    return generateOnPageSeoPackage({
+      ...detected,
+      domain: client.domain || 'colombodental.com',
+      simulateMultiH1: false
+    });
   });
 
-  // Core generation function (Supports Built-in Engine & Third-Party Gemini API)
-  const executeGeneration = async (inputParams: OnPageSeoInput) => {
-    setIsGenerating(true);
-    try {
-      let result: OnPageSeoPackage;
-      if (apiMode === 'gemini' && geminiApiKey.trim()) {
-        result = await generateWithGeminiApi(geminiApiKey.trim(), geminiModel, inputParams);
-        setNotification(`✨ On-Page Package generated via Google Gemini AI (${geminiModel})!`);
-      } else {
-        result = generateOnPageSeoPackage(inputParams);
-        setNotification('⚡ Full On-Page Package generated via Deep Intelligence AI Engine!');
-      }
-      setSeoPackage(result);
-    } catch (err) {
-      console.warn('Generation issue, fallback to built-in engine:', err);
-      const fallback = generateOnPageSeoPackage(inputParams);
-      setSeoPackage(fallback);
-      setNotification('Generated with Built-in Deep AI Engine');
-    } finally {
-      setIsGenerating(false);
-      setTimeout(() => setNotification(null), 3500);
-    }
-  };
-
-  // 1-Click Auto-Detect & Optimize for Active Client
-  const handleAutoDetectFromClient = () => {
-    const detected = autoDetectOnPageInputFromDomain(client.domain, client.name, client.targetRegion);
-    setBusinessType(detected.businessType);
-    setServiceOrProduct(detected.serviceOrProduct);
-    setTargetKeyword(detected.targetKeyword);
-    setCity(detected.city);
-    setCountry(detected.country);
-    setPageOrTopic(detected.pageOrTopic);
-    setActivePresetId(null);
-    executeGeneration(detected);
-  };
-
-  // Synchronize on Client Change if autoSync is active
+  // Re-run package generation whenever simulateMultiH1 changes
   useEffect(() => {
-    if (autoSyncClient) {
-      const detected = autoDetectOnPageInputFromDomain(client.domain, client.name, client.targetRegion);
-      setBusinessType(detected.businessType);
-      setServiceOrProduct(detected.serviceOrProduct);
-      setTargetKeyword(detected.targetKeyword);
-      setCity(detected.city);
-      setCountry(detected.country);
-      setPageOrTopic(detected.pageOrTopic);
-      setActivePresetId(null);
-      executeGeneration(detected);
+    setSeoPackage(prev => {
+      const regenerated = generateOnPageSeoPackage({
+        ...prev.input,
+        domain: activeDomain,
+        simulateMultiH1
+      });
+      regenerated.targetDomain = activeDomain;
+      return regenerated;
+    });
+  }, [simulateMultiH1, activeDomain]);
+
+  // Synchronize with Client changes
+  useEffect(() => {
+    if (client && client.domain) {
+      setScanDomain(client.domain);
+      handle1ClickScan(client.domain, false);
     }
   }, [client.id, client.domain]);
 
-  // 1-Click Instant URL / Domain Auto-Scanner
-  const handleScanUrl = (e?: React.FormEvent) => {
-    if (e) e.preventDefault();
-    if (!inputUrl.trim()) return;
-    const detected = autoDetectOnPageInputFromDomain(inputUrl);
-    setBusinessType(detected.businessType);
-    setServiceOrProduct(detected.serviceOrProduct);
-    setTargetKeyword(detected.targetKeyword);
-    setCity(detected.city);
-    setCountry(detected.country);
-    setPageOrTopic(detected.pageOrTopic);
-    setActivePresetId(null);
-    executeGeneration(detected);
-    setNotification(`🌐 Auto-scanned & optimized ${inputUrl}!`);
-  };
+  // 1-CLICK UNIVERSAL DOMAIN SCAN & GENERATE
+  const handle1ClickScan = async (domainToScan?: string, showToast = true) => {
+    const domainStr = (domainToScan || scanDomain).trim();
+    if (!domainStr) return;
 
-  // 1-Click Conversational AI Prompt Bot
-  const handleAskAiBot = (e?: React.FormEvent) => {
-    if (e) e.preventDefault();
-    if (!nlPrompt.trim()) return;
-    const parsed = parseNaturalLanguagePrompt(nlPrompt, city, country);
-    setBusinessType(parsed.businessType);
-    setServiceOrProduct(parsed.serviceOrProduct);
-    setTargetKeyword(parsed.targetKeyword);
-    setCity(parsed.city);
-    setCountry(parsed.country);
-    setPageOrTopic(parsed.pageOrTopic);
-    setActivePresetId(null);
-    executeGeneration(parsed);
-    setNotification(`🤖 AI Bot configured & optimized: "${nlPrompt.slice(0, 30)}..."`);
+    setIsScanning(true);
+    setIsGenerating(true);
+
+    try {
+      // Run deep domain inspection & AI classification
+      const result = await inspectAndGenerateFromDomain(domainStr, client.name, client.targetRegion);
+      
+      setActiveDomain(result.input.domain || domainStr);
+      setBusinessType(result.input.businessType);
+      setServiceOrProduct(result.input.serviceOrProduct);
+      setTargetKeyword(result.input.targetKeyword);
+      setCity(result.input.city);
+      setCountry(result.input.country);
+      setPageOrTopic(result.input.pageOrTopic);
+      setActivePresetId(null);
+
+      let finalPkg = result.pkg;
+      if (apiMode === 'gemini' && geminiApiKey.trim()) {
+        try {
+          finalPkg = await generateWithGeminiApi(geminiApiKey.trim(), geminiModel, {
+            ...result.input,
+            simulateMultiH1
+          });
+          finalPkg.targetDomain = result.input.domain || domainStr;
+        } catch {
+          // fallback to deep engine
+          finalPkg = result.pkg;
+        }
+      }
+
+      setSeoPackage(finalPkg);
+
+      if (showToast) {
+        if (result.wasLiveFetched) {
+          setNotification(`🚀 Live Site Inspected & Complete SEO Package Generated for ${domainStr}!`);
+        } else {
+          setNotification(`🚀 AI Bot Analyzed & Generated Complete SEO Package for ${domainStr}!`);
+        }
+      }
+    } catch (err) {
+      console.error('Scan error:', err);
+      const fallbackInput = autoDetectOnPageInputFromDomain(domainStr, client.name, client.targetRegion);
+      const fallbackPkg = generateOnPageSeoPackage({
+        ...fallbackInput,
+        domain: domainStr,
+        simulateMultiH1
+      });
+      setSeoPackage(fallbackPkg);
+      setActiveDomain(domainStr);
+      if (showToast) {
+        setNotification(`Generated SEO Package for ${domainStr}`);
+      }
+    } finally {
+      setIsScanning(false);
+      setIsGenerating(false);
+      if (showToast) {
+        setTimeout(() => setNotification(null), 3500);
+      }
+    }
   };
 
   // 1-Click Apply Quick Preset
@@ -172,20 +201,69 @@ export const AiOnPageOptimizer: React.FC<AiOnPageOptimizerProps> = ({
     setCity(preset.city);
     setCountry(preset.country);
     setPageOrTopic(preset.pageOrTopic);
-    executeGeneration(preset);
+
+    const inputData: OnPageSeoInput = {
+      domain: activeDomain,
+      businessType: preset.businessType,
+      serviceOrProduct: preset.serviceOrProduct,
+      targetKeyword: preset.targetKeyword,
+      city: preset.city,
+      country: preset.country,
+      pageOrTopic: preset.pageOrTopic,
+      simulateMultiH1
+    };
+
+    const pkg = generateOnPageSeoPackage(inputData);
+    pkg.targetDomain = activeDomain;
+    setSeoPackage(pkg);
+    setNotification(`⚡ Applied "${preset.label}" (${preset.city}) in 1 click!`);
+    setTimeout(() => setNotification(null), 3000);
   };
 
-  // Manual Form Submit
+  // Conversational AI Prompt Bot
+  const handleAskAiBot = (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (!nlPrompt.trim()) return;
+    const parsed = parseNaturalLanguagePrompt(nlPrompt, city, country);
+    setBusinessType(parsed.businessType);
+    setServiceOrProduct(parsed.serviceOrProduct);
+    setTargetKeyword(parsed.targetKeyword);
+    setCity(parsed.city);
+    setCountry(parsed.country);
+    setPageOrTopic(parsed.pageOrTopic);
+    setActivePresetId(null);
+
+    const inputData: OnPageSeoInput = {
+      ...parsed,
+      domain: activeDomain,
+      simulateMultiH1
+    };
+
+    const pkg = generateOnPageSeoPackage(inputData);
+    pkg.targetDomain = activeDomain;
+    setSeoPackage(pkg);
+    setNotification(`🤖 AI Bot configured & generated for: "${nlPrompt.slice(0, 30)}..."`);
+    setTimeout(() => setNotification(null), 3000);
+  };
+
+  // Manual Form Submission
   const handleManualSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    executeGeneration({
+    const inputData: OnPageSeoInput = {
+      domain: activeDomain,
       businessType,
       serviceOrProduct,
       targetKeyword,
       city,
       country,
-      pageOrTopic
-    });
+      pageOrTopic,
+      simulateMultiH1
+    };
+    const pkg = generateOnPageSeoPackage(inputData);
+    pkg.targetDomain = activeDomain;
+    setSeoPackage(pkg);
+    setNotification('Custom On-Page SEO Package updated successfully!');
+    setTimeout(() => setNotification(null), 3000);
   };
 
   const copyToClipboard = (text: string, key: string) => {
@@ -226,7 +304,7 @@ export const AiOnPageOptimizer: React.FC<AiOnPageOptimizerProps> = ({
         device: 'desktop',
         position: 3,
         previousPosition: 7,
-        url: `https://${client.domain}${seoPackage.urlSlug}`,
+        url: `https://${activeDomain}${seoPackage.urlSlug}`,
         serpFeatures: ['Featured Snippet'],
         page1: true
       },
@@ -235,7 +313,7 @@ export const AiOnPageOptimizer: React.FC<AiOnPageOptimizerProps> = ({
         device: 'desktop',
         position: 2,
         previousPosition: 5,
-        url: `https://${client.domain}${seoPackage.urlSlug}`,
+        url: `https://${activeDomain}${seoPackage.urlSlug}`,
         serpFeatures: [],
         page1: true
       },
@@ -246,9 +324,20 @@ export const AiOnPageOptimizer: React.FC<AiOnPageOptimizerProps> = ({
     };
 
     onAddTrackedKeyword(kw);
-    setNotification(`"${seoPackage.primaryKeyword}" added to Rank Tracker!`);
+    setNotification(`"${seoPackage.primaryKeyword}" added to Rank Tracker for ${activeDomain}!`);
     setTimeout(() => setNotification(null), 2500);
   };
+
+  // Filtered Presets
+  const filteredPresets = ONPAGE_QUICK_PRESETS.filter(p => {
+    const matchesGroup = selectedGroup === 'All' || p.categoryGroup === selectedGroup;
+    const matchesSearch = !presetSearch.trim() || 
+      p.label.toLowerCase().includes(presetSearch.toLowerCase()) ||
+      p.businessType.toLowerCase().includes(presetSearch.toLowerCase()) ||
+      p.city.toLowerCase().includes(presetSearch.toLowerCase()) ||
+      p.description.toLowerCase().includes(presetSearch.toLowerCase());
+    return matchesGroup && matchesSearch;
+  });
 
   return (
     <div className="space-y-6">
@@ -256,7 +345,7 @@ export const AiOnPageOptimizer: React.FC<AiOnPageOptimizerProps> = ({
       {notification && (
         <div className="p-4 bg-emerald-950/90 border border-emerald-500/40 rounded-2xl text-emerald-300 text-xs font-semibold flex items-center justify-between shadow-xl animate-fadeIn">
           <div className="flex items-center gap-2">
-            <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+            <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
             <span>{notification}</span>
           </div>
           <button onClick={() => setNotification(null)} className="text-emerald-400 hover:text-white">✕</button>
@@ -272,10 +361,13 @@ export const AiOnPageOptimizer: React.FC<AiOnPageOptimizerProps> = ({
           <div>
             <div className="flex flex-wrap items-center gap-2 mb-1">
               <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 font-mono">
-                AI On-Page SEO Engine
+                1-Click AI On-Page SEO Engine
               </span>
               <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-slate-800 text-slate-300 border border-slate-700">
                 Client: {client.name}
+              </span>
+              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-indigo-500/20 text-indigo-300 border border-indigo-500/40 font-mono">
+                Domain: {activeDomain}
               </span>
               <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold flex items-center gap-1 ${
                 apiMode === 'gemini' && geminiApiKey
@@ -290,7 +382,7 @@ export const AiOnPageOptimizer: React.FC<AiOnPageOptimizerProps> = ({
               Complete AI On-Page SEO Optimization Package
             </h2>
             <p className="text-xs text-slate-300 mt-1 max-w-2xl">
-              100% Automated generation of high-CTR Title tags, Meta descriptions, single H1 headings, structured H2/H3 outlines, descriptive Image ALT texts, clean URL slugs, and actionable content recommendations.
+              Enter any domain or choose any of 36 business categories to generate a complete, 9-module, production-ready On-Page SEO package in 1 single click.
             </p>
           </div>
         </div>
@@ -305,12 +397,12 @@ export const AiOnPageOptimizer: React.FC<AiOnPageOptimizerProps> = ({
             title="Configure 3rd-party Google Gemini API or Built-in Engine"
           >
             <Settings className="w-3.5 h-3.5 text-indigo-400" />
-            <span>AI Model & API</span>
+            <span>AI Engine Settings</span>
           </button>
 
           <button
             onClick={() => {
-              const fullText = `ON-PAGE SEO PACKAGE:\nPrimary Keyword: ${seoPackage.primaryKeyword}\nTitle: ${seoPackage.titleTag}\nMeta: ${seoPackage.metaDescription}\nH1: ${seoPackage.h1Heading}\nSlug: ${seoPackage.urlSlug}`;
+              const fullText = `ON-PAGE SEO PACKAGE FOR ${activeDomain}:\nPrimary Keyword: ${seoPackage.primaryKeyword}\nTitle: ${seoPackage.titleTag}\nMeta: ${seoPackage.metaDescription}\nH1: ${seoPackage.h1Heading}\nURL: https://${activeDomain}${seoPackage.urlSlug}`;
               copyToClipboard(fullText, 'full-package');
               setNotification('Complete On-Page SEO Package copied to clipboard!');
               setTimeout(() => setNotification(null), 2500);
@@ -333,143 +425,214 @@ export const AiOnPageOptimizer: React.FC<AiOnPageOptimizerProps> = ({
         </div>
       </div>
 
-      {/* FULL AUTOMATION DASHBOARD: 3 One-Click Methods */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        {/* Method 1: 1-Click Client Auto-Optimizer */}
-        <div className="glass-panel p-5 rounded-3xl border border-indigo-500/30 bg-gradient-to-b from-indigo-950/40 via-slate-900 to-slate-900/90 shadow-xl flex flex-col justify-between relative overflow-hidden">
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <span className="px-2 py-0.5 bg-indigo-500/20 text-indigo-300 text-[10px] font-black uppercase rounded-md tracking-wider border border-indigo-500/30">
-                ⚡ 1-Click Full Auto
+      {/* 🚀 HERO SECTION: 1-CLICK UNIVERSAL DOMAIN SCANNER */}
+      <div className="glass-panel p-6 rounded-3xl border-2 border-indigo-500/50 bg-gradient-to-r from-indigo-950/60 via-slate-900 to-purple-950/60 shadow-2xl space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase bg-amber-500/20 text-amber-300 border border-amber-500/30 flex items-center gap-1">
+                <Zap className="w-3 h-3 text-amber-400" />
+                <span>1-Click Universal Auto-Scan</span>
               </span>
-              <label className="flex items-center gap-1.5 text-[10px] text-slate-400 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={autoSyncClient}
-                  onChange={(e) => setAutoSyncClient(e.target.checked)}
-                  className="rounded bg-slate-900 border-slate-700 text-indigo-600 focus:ring-0 w-3 h-3"
-                />
-                <span>Auto-run on client pick</span>
-              </label>
+              <h3 className="text-base font-black text-white">Enter Any Domain or Website URL</h3>
             </div>
-            <h3 className="text-sm font-bold text-white flex items-center gap-1.5">
-              <Zap className="w-4 h-4 text-amber-400" />
-              <span>Active Client Auto-Optimizer</span>
-            </h3>
-            <p className="text-[11px] text-slate-400 leading-relaxed">
-              Auto-detects business, services, city, and top ROI keyword from <strong className="text-indigo-300">{client.domain}</strong>.
+            <p className="text-xs text-slate-300 mt-0.5">
+              Type or paste any website: the AI Bot automatically inspects the business, detects location, and generates the entire SEO package in 1 click!
             </p>
           </div>
 
-          <div className="pt-3">
+          <div className="flex items-center gap-2">
             <button
-              onClick={handleAutoDetectFromClient}
-              disabled={isGenerating}
-              className="w-full py-2.5 px-3 bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-600 hover:from-indigo-500 hover:to-purple-500 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-2 shadow-lg shadow-indigo-600/25 transition active:scale-98"
+              type="button"
+              onClick={() => {
+                setScanDomain(client.domain);
+                handle1ClickScan(client.domain);
+              }}
+              className="px-3 py-1.5 bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-200 border border-indigo-500/30 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm"
             >
-              {isGenerating ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Wand2 className="w-3.5 h-3.5 text-amber-300" />}
-              <span>Auto-Optimize for {client.name.split(' ')[0]}</span>
+              <Wand2 className="w-3.5 h-3.5 text-indigo-400" />
+              <span>Use Current Client ({client.domain})</span>
             </button>
           </div>
         </div>
 
-        {/* Method 2: Instant Domain / Website Auto-Scanner */}
-        <div className="glass-panel p-5 rounded-3xl border border-slate-800 bg-slate-900/90 shadow-xl flex flex-col justify-between">
-          <div className="space-y-2">
-            <span className="px-2 py-0.5 bg-blue-500/20 text-blue-300 text-[10px] font-black uppercase rounded-md tracking-wider border border-blue-500/30">
-              🌐 Any Website Auto-Scan
-            </span>
-            <h3 className="text-sm font-bold text-white flex items-center gap-1.5">
-              <Globe className="w-4 h-4 text-blue-400" />
-              <span>Scan Any Website or Domain</span>
-            </h3>
-            <p className="text-[11px] text-slate-400 leading-relaxed">
-              Enter any URL or competitor domain to instantly analyze and synthesize its complete On-Page package.
-            </p>
-          </div>
-
-          <form onSubmit={handleScanUrl} className="pt-3 flex gap-2">
+        {/* Big Search Bar */}
+        <form 
+          onSubmit={(e) => {
+            e.preventDefault();
+            handle1ClickScan();
+          }}
+          className="flex flex-col sm:flex-row gap-3"
+        >
+          <div className="relative flex-1">
+            <Globe className="w-5 h-5 text-indigo-400 absolute left-4 top-1/2 -translate-y-1/2" />
             <input
               type="text"
-              value={inputUrl}
-              onChange={(e) => setInputUrl(e.target.value)}
-              placeholder="e.g. colombodental.com, acmelaw.com"
-              className="flex-1 bg-slate-950 border border-slate-700/80 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 font-mono"
+              value={scanDomain}
+              onChange={(e) => setScanDomain(e.target.value)}
+              placeholder="e.g. colombodental.com, miamiroofer.com, or yoursite.com"
+              className="w-full bg-slate-950/90 border-2 border-indigo-500/40 rounded-2xl pl-12 pr-4 py-3.5 text-sm text-white placeholder-slate-500 font-mono font-bold focus:outline-none focus:border-indigo-400 shadow-inner"
             />
-            <button
-              type="submit"
-              disabled={isGenerating || !inputUrl.trim()}
-              className="px-3.5 py-2 bg-blue-600 hover:bg-blue-500 disabled:opacity-40 text-white rounded-xl text-xs font-bold transition flex items-center gap-1 shrink-0 shadow-md"
-            >
-              <Bot className="w-3.5 h-3.5" />
-              <span>Scan</span>
-            </button>
-          </form>
-        </div>
-
-        {/* Method 3: Conversational AI SEO Bot */}
-        <div className="glass-panel p-5 rounded-3xl border border-purple-500/30 bg-gradient-to-b from-purple-950/30 via-slate-900 to-slate-900/90 shadow-xl flex flex-col justify-between">
-          <div className="space-y-2">
-            <span className="px-2 py-0.5 bg-purple-500/20 text-purple-300 text-[10px] font-black uppercase rounded-md tracking-wider border border-purple-500/30">
-              💬 Natural Language AI Bot
-            </span>
-            <h3 className="text-sm font-bold text-white flex items-center gap-1.5">
-              <Bot className="w-4 h-4 text-purple-400" />
-              <span>Ask AI Bot (Natural English)</span>
-            </h3>
-            <p className="text-[11px] text-slate-400 leading-relaxed">
-              Describe your business naturally (e.g. <span className="text-purple-300">"Hotel in Galle with spa & ocean view suites"</span>).
-            </p>
           </div>
 
-          <form onSubmit={handleAskAiBot} className="pt-3 flex gap-2">
-            <input
-              type="text"
-              value={nlPrompt}
-              onChange={(e) => setNlPrompt(e.target.value)}
-              placeholder="e.g. Luxury hotel in Galle with suites"
-              className="flex-1 bg-slate-950 border border-slate-700/80 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-purple-500"
-            />
-            <button
-              type="submit"
-              disabled={isGenerating || !nlPrompt.trim()}
-              className="px-3.5 py-2 bg-purple-600 hover:bg-purple-500 disabled:opacity-40 text-white rounded-xl text-xs font-bold transition flex items-center gap-1 shrink-0 shadow-md"
-            >
-              <Send className="w-3 h-3" />
-              <span>Run</span>
-            </button>
-          </form>
+          <button
+            type="submit"
+            disabled={isScanning || !scanDomain.trim()}
+            className="px-6 py-3.5 bg-gradient-to-r from-indigo-500 via-purple-600 to-pink-600 hover:from-indigo-400 hover:to-pink-500 disabled:opacity-40 text-white rounded-2xl text-sm font-black flex items-center justify-center gap-2 shadow-xl shadow-indigo-600/30 transition active:scale-98 shrink-0"
+          >
+            {isScanning ? (
+              <>
+                <RefreshCw className="w-4 h-4 animate-spin text-white" />
+                <span>Scanning & Optimizing...</span>
+              </>
+            ) : (
+              <>
+                <Bot className="w-4 h-4 text-amber-300" />
+                <span>🚀 1-Click Auto Scan & Full AI SEO Generation</span>
+              </>
+            )}
+          </button>
+        </form>
+
+        {/* Live Active Scanned Domain Badge */}
+        <div className="flex flex-wrap items-center justify-between gap-3 pt-2 text-xs border-t border-indigo-500/20">
+          <div className="flex items-center gap-2 text-slate-300">
+            <span className="text-slate-400">Target Scanned Domain:</span>
+            <span className="font-mono font-bold text-indigo-300 px-2.5 py-0.5 bg-indigo-950/60 rounded-lg border border-indigo-500/30">
+              https://{activeDomain}
+            </span>
+            <span className="text-[11px] text-emerald-400 font-semibold flex items-center gap-1">
+              <CheckCircle2 className="w-3.5 h-3.5" />
+              <span>{seoPackage.liveSiteExtracted ? 'Live DOM Inspected' : 'AI Domain Classified'}</span>
+            </span>
+          </div>
+
+          <div className="flex items-center gap-2 text-[11px] text-slate-400">
+            <span>Category: <strong className="text-white">{businessType}</strong></span>
+            <span>•</span>
+            <span>Location: <strong className="text-white">{city}, {country}</strong></span>
+          </div>
         </div>
       </div>
 
-      {/* ONE-CLICK POPULAR NICHE QUICK PRESETS */}
-      <div className="glass-panel p-4 sm:p-5 rounded-3xl border border-slate-800 bg-slate-900/90 shadow-xl">
-        <div className="flex items-center justify-between mb-3 pb-2 border-b border-slate-800">
+      {/* 💬 ASK AI BOT: CONVERSATIONAL ASSISTANT */}
+      <div className="glass-panel p-4 sm:p-5 rounded-3xl border border-purple-500/30 bg-slate-900/90 shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="space-y-0.5">
           <div className="flex items-center gap-2">
-            <Sparkles className="w-4 h-4 text-amber-400" />
+            <Bot className="w-4 h-4 text-purple-400" />
             <h3 className="text-xs font-bold text-white uppercase tracking-wider">
-              1-Click Niche Quick Presets
+              Ask AI Bot (Conversational English)
             </h3>
           </div>
-          <span className="text-[11px] text-slate-400">Click any preset to instantly generate a complete tailored package</span>
+          <p className="text-[11px] text-slate-400">
+            Describe your business in plain words (e.g. <span className="text-purple-300">"Cosmetic dentist in Galle for teeth whitening and veneers"</span>).
+          </p>
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-9 gap-2">
-          {ONPAGE_QUICK_PRESETS.map((preset) => {
+        <form onSubmit={handleAskAiBot} className="flex gap-2 flex-1 max-w-xl">
+          <input
+            type="text"
+            value={nlPrompt}
+            onChange={(e) => setNlPrompt(e.target.value)}
+            placeholder="e.g. Luxury boutique hotel in Galle with ocean view suites"
+            className="flex-1 bg-slate-950 border border-purple-500/30 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-purple-400"
+          />
+          <button
+            type="submit"
+            disabled={isGenerating || !nlPrompt.trim()}
+            className="px-4 py-2 bg-purple-600 hover:bg-purple-500 disabled:opacity-40 text-white rounded-xl text-xs font-bold transition flex items-center gap-1 shrink-0 shadow-md"
+          >
+            <Send className="w-3.5 h-3.5" />
+            <span>Generate</span>
+          </button>
+        </form>
+      </div>
+
+      {/* 🏢 1-CLICK ALL BUSINESS CATEGORIES PRESETS (36 CATEGORIES) */}
+      <div className="glass-panel p-6 rounded-3xl border border-slate-800 bg-slate-900/90 shadow-xl space-y-4">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-3 border-b border-slate-800">
+          <div>
+            <div className="flex items-center gap-2">
+              <Sparkles className="w-4 h-4 text-amber-400" />
+              <h3 className="text-sm font-bold text-white uppercase tracking-wider">
+                1-Click Business Category Presets ({ONPAGE_QUICK_PRESETS.length} Industries)
+              </h3>
+            </div>
+            <p className="text-xs text-slate-400 mt-0.5">
+              Click ANY business category below to instantly generate a complete, ready-to-deploy On-Page SEO package.
+            </p>
+          </div>
+
+          {/* Quick Search across 36 categories */}
+          <div className="relative w-full md:w-64">
+            <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+            <input
+              type="text"
+              value={presetSearch}
+              onChange={(e) => setPresetSearch(e.target.value)}
+              placeholder="Search category (e.g. roof, legal)..."
+              className="w-full bg-slate-950 border border-slate-700/80 rounded-xl pl-8 pr-3 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500"
+            />
+          </div>
+        </div>
+
+        {/* Category Group Filter Tabs */}
+        <div className="flex items-center gap-1.5 overflow-x-auto pb-2 scrollbar-thin">
+          {CATEGORY_GROUPS.map((group) => {
+            const count = group === 'All' 
+              ? ONPAGE_QUICK_PRESETS.length 
+              : ONPAGE_QUICK_PRESETS.filter(p => p.categoryGroup === group).length;
+            const isSelected = selectedGroup === group;
+
+            return (
+              <button
+                key={group}
+                onClick={() => setSelectedGroup(group)}
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition flex items-center gap-1.5 ${
+                  isSelected
+                    ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/20'
+                    : 'bg-slate-950/80 hover:bg-slate-800 text-slate-400 hover:text-white border border-slate-800'
+                }`}
+              >
+                <span>{group}</span>
+                <span className={`px-1.5 py-0.2 rounded-full text-[10px] ${
+                  isSelected ? 'bg-indigo-700 text-white' : 'bg-slate-800 text-slate-400'
+                }`}>
+                  {count}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Presets Grid */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2.5 max-h-80 overflow-y-auto pr-1 scrollbar-thin">
+          {filteredPresets.map((preset) => {
             const isActive = activePresetId === preset.id;
             return (
               <button
                 key={preset.id}
                 onClick={() => handleApplyPreset(preset)}
-                className={`p-2.5 rounded-2xl text-left transition flex flex-col items-center justify-center gap-1.5 border text-center relative ${
+                className={`p-3 rounded-2xl text-left transition flex flex-col items-start justify-between gap-2 border group relative ${
                   isActive 
-                    ? 'bg-indigo-600/30 border-indigo-500 text-white shadow-md shadow-indigo-500/20 ring-1 ring-indigo-400' 
-                    : 'bg-slate-950/60 border-slate-800 text-slate-300 hover:border-slate-700 hover:bg-slate-800/60'
+                    ? 'bg-indigo-600/30 border-indigo-500 text-white shadow-lg shadow-indigo-500/20 ring-1 ring-indigo-400' 
+                    : 'bg-slate-950/60 border-slate-800/80 text-slate-300 hover:border-indigo-500/50 hover:bg-slate-800/70'
                 }`}
               >
-                <span className="text-lg">{preset.icon}</span>
-                <span className="text-[10px] font-bold truncate max-w-full leading-tight">{preset.label}</span>
-                <span className="text-[9px] text-slate-400 truncate max-w-full">{preset.city}</span>
+                <div className="flex items-center justify-between w-full">
+                  <span className="text-xl">{preset.icon}</span>
+                  <span className="text-[9px] px-1.5 py-0.5 rounded bg-slate-900 border border-slate-800 text-slate-400 group-hover:text-indigo-300 font-mono">
+                    {preset.city}
+                  </span>
+                </div>
+                <div>
+                  <div className="text-xs font-bold text-white group-hover:text-indigo-200 line-clamp-1 leading-tight">
+                    {preset.label}
+                  </div>
+                  <div className="text-[10px] text-slate-400 line-clamp-1 mt-0.5">
+                    {preset.serviceOrProduct}
+                  </div>
+                </div>
               </button>
             );
           })}
@@ -485,7 +648,7 @@ export const AiOnPageOptimizer: React.FC<AiOnPageOptimizerProps> = ({
           <div className="flex items-center gap-2">
             <SlidersHorizontal className="w-4 h-4 text-indigo-400" />
             <h3 className="text-xs font-bold text-white uppercase tracking-wider">
-              Inspect or Customize Configuration Fields (Optional)
+              Inspect or Fine-Tune Parameters (Optional)
             </h3>
             <span className="text-[10px] px-2 py-0.5 rounded-full bg-slate-800 text-slate-400 font-mono">
               {showManualForm ? 'Click to Collapse' : 'Click to View / Edit'}
@@ -493,17 +656,6 @@ export const AiOnPageOptimizer: React.FC<AiOnPageOptimizerProps> = ({
           </div>
 
           <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                handleAutoDetectFromClient();
-              }}
-              className="text-[10px] px-2.5 py-1 bg-indigo-500/20 text-indigo-300 hover:bg-indigo-500/30 rounded-lg font-bold flex items-center gap-1 border border-indigo-500/30 transition"
-            >
-              <Wand2 className="w-3 h-3" />
-              <span>Auto-Fill All Fields</span>
-            </button>
             <ChevronRight className={`w-4 h-4 text-slate-400 transition-transform duration-200 ${showManualForm ? 'rotate-90' : ''}`} />
           </div>
         </div>
@@ -598,7 +750,7 @@ export const AiOnPageOptimizer: React.FC<AiOnPageOptimizerProps> = ({
                   onChange={(e) => setSimulateMultiH1(e.target.checked)}
                   className="rounded bg-slate-900 border-slate-700 text-indigo-600 focus:ring-0"
                 />
-                <span>Simulate Multiple H1 Headings Test (shows audit alert)</span>
+                <span>Simulate Multiple H1 Headings Test (shows audit alert & updates checklist)</span>
               </label>
 
               <button
@@ -801,7 +953,7 @@ export const AiOnPageOptimizer: React.FC<AiOnPageOptimizerProps> = ({
 
           {/* Multiple H1 Warning Banner */}
           {simulateMultiH1 && (
-            <div className="p-3.5 bg-amber-950/80 border border-amber-500/50 rounded-2xl flex items-center gap-2.5 text-amber-200 text-xs font-semibold">
+            <div className="p-3.5 bg-amber-950/80 border border-amber-500/50 rounded-2xl flex items-center gap-2.5 text-amber-200 text-xs font-semibold animate-pulse">
               <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0" />
               <span>{seoPackage.h1WarningNotice}</span>
             </div>
@@ -822,14 +974,27 @@ export const AiOnPageOptimizer: React.FC<AiOnPageOptimizerProps> = ({
 
         {/* 5. H2 / H3 CONTENT STRUCTURE */}
         <div className="glass-panel p-6 rounded-3xl border border-slate-800 bg-slate-900/90 shadow-xl space-y-4">
-          <div className="pb-3 border-b border-slate-800">
-            <div className="flex items-center gap-2">
-              <span className="w-6 h-6 rounded-full bg-cyan-500/20 border border-cyan-500/40 text-cyan-300 flex items-center justify-center text-xs font-black">
-                5
-              </span>
-              <h3 className="text-base font-black text-white">H2 / H3 Content Hierarchy</h3>
+          <div className="flex items-center justify-between pb-3 border-b border-slate-800">
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="w-6 h-6 rounded-full bg-cyan-500/20 border border-cyan-500/40 text-cyan-300 flex items-center justify-center text-xs font-black">
+                  5
+                </span>
+                <h3 className="text-base font-black text-white">H2 / H3 Content Hierarchy</h3>
+              </div>
+              <p className="text-xs text-slate-400 mt-0.5">Logical heading hierarchy ensuring comprehensive topical depth and scannability</p>
             </div>
-            <p className="text-xs text-slate-400 mt-0.5">Logical heading hierarchy ensuring comprehensive topical depth and scannability</p>
+
+            <button
+              onClick={() => {
+                const outline = seoPackage.headingStructure.map(h => `H2: ${h.h2}\n${(h.h3s || []).map(sub => `  H3: ${sub}`).join('\n')}`).join('\n\n');
+                copyToClipboard(outline, 'headings-all');
+              }}
+              className="px-3 py-1.5 bg-cyan-600/30 hover:bg-cyan-600/50 text-cyan-200 hover:text-white rounded-xl text-xs font-bold flex items-center gap-1.5 transition border border-cyan-500/30"
+            >
+              {copiedKey === 'headings-all' ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+              <span>Copy Outline</span>
+            </button>
           </div>
 
           <div className="space-y-3">
@@ -874,7 +1039,7 @@ export const AiOnPageOptimizer: React.FC<AiOnPageOptimizerProps> = ({
 
             <div className="flex items-center gap-2">
               <span className="text-xs font-bold text-emerald-400">
-                Score: {seoPackage.checklistScore}% Passed
+                Score: {seoPackage.checklistScore}% Passed ({seoPackage.checklist.filter(c => c.passed).length}/16)
               </span>
             </div>
           </div>
@@ -901,7 +1066,14 @@ export const AiOnPageOptimizer: React.FC<AiOnPageOptimizerProps> = ({
                   )}
                 </div>
                 <div className="space-y-0.5">
-                  <div className="text-xs font-bold text-white">{item.label}</div>
+                  <div className="text-xs font-bold text-white flex items-center gap-1.5">
+                    <span>{item.label}</span>
+                    {item.passed ? (
+                      <span className="text-[10px] text-emerald-400 font-normal">Passed</span>
+                    ) : (
+                      <span className="text-[10px] text-amber-400 font-normal">Action Required</span>
+                    )}
+                  </div>
                   <div className="text-[11px] text-slate-400 leading-tight">{item.explanation}</div>
                 </div>
               </div>
@@ -923,18 +1095,18 @@ export const AiOnPageOptimizer: React.FC<AiOnPageOptimizerProps> = ({
             </div>
 
             <button
-              onClick={() => copyToClipboard(seoPackage.urlSlug, 'url-slug')}
+              onClick={() => copyToClipboard(`https://${activeDomain}${seoPackage.urlSlug}`, 'url-slug')}
               className="px-3 py-1.5 bg-rose-600/30 hover:bg-rose-600/50 text-rose-200 hover:text-white rounded-xl text-xs font-bold flex items-center gap-1.5 transition border border-rose-500/30 self-start sm:self-auto"
             >
               {copiedKey === 'url-slug' ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
-              <span>Copy Slug</span>
+              <span>Copy Full URL</span>
             </button>
           </div>
 
           <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800 flex items-center justify-between gap-4">
             <div>
               <div className="text-sm font-black text-white font-mono">
-                https://{client.domain}<span className="text-rose-400 font-bold">{seoPackage.urlSlug}</span>
+                https://{activeDomain}<span className="text-rose-400 font-bold">{seoPackage.urlSlug}</span>
               </div>
               <p className="text-xs text-slate-400 mt-1">{seoPackage.slugRationale}</p>
             </div>
