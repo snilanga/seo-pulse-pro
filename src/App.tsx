@@ -21,6 +21,7 @@ import { DatabaseModal } from './components/database/DatabaseModal';
 import { BacklinkGenerator } from './components/backlinks/BacklinkGenerator';
 import { AdminDashboard } from './components/admin/AdminDashboard';
 import { LoginModal } from './components/auth/LoginModal';
+import { Home, ArrowLeft } from 'lucide-react';
 
 
 import { 
@@ -200,6 +201,33 @@ export function App() {
 
         {/* Dynamic Main Workspace Content */}
         <main className="flex-1 p-4 lg:p-8 max-w-7xl mx-auto w-full">
+          {/* Universal Navigation Breadcrumbs & Back to Dashboard button */}
+          {!isClientPortal && activeTab !== 'dashboard' && (
+            <div className="mb-5 flex items-center justify-between bg-slate-900/90 border border-slate-800/90 rounded-2xl px-4 py-2.5 backdrop-blur-md shadow-sm">
+              <div className="flex items-center gap-2 text-xs text-slate-400">
+                <button
+                  onClick={() => setActiveTab('dashboard')}
+                  className="flex items-center gap-1.5 text-indigo-400 hover:text-indigo-300 font-semibold transition"
+                  title="Go to Home Overview Dashboard"
+                >
+                  <Home className="w-3.5 h-3.5" />
+                  <span>Home Dashboard</span>
+                </button>
+                <span className="text-slate-600">/</span>
+                <span className="text-slate-200 capitalize font-medium">
+                  {activeTab.replace('-', ' ')}
+                </span>
+              </div>
+              <button
+                onClick={() => setActiveTab('dashboard')}
+                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white border border-slate-700 transition shadow-sm"
+              >
+                <ArrowLeft className="w-3.5 h-3.5 text-indigo-400" />
+                <span>← Back to Dashboard</span>
+              </button>
+            </div>
+          )}
+
           {isClientPortal ? (
             <ClientPortalView
               client={selectedClient}
@@ -239,6 +267,7 @@ export function App() {
                     setActiveKeywordsToDeploy(kwList);
                     setActiveTab('code-injector');
                   }}
+                  onBackToHome={() => setActiveTab('dashboard')}
                 />
               )}
 
@@ -247,6 +276,7 @@ export function App() {
                   initialBusinessName={selectedClient.name}
                   initialDomain={selectedClient.domain}
                   initialCity={selectedClient.targetRegion?.split(' ')[0] || 'Colombo'}
+                  onBackToHome={() => setActiveTab('dashboard')}
                 />
               )}
 

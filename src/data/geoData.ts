@@ -312,6 +312,231 @@ export const COUNTRIES_AND_CITIES: CountryLocation[] = [
     ]
   },
   {
+    name: 'Italy',
+    code: 'IT',
+    flag: '🇮🇹',
+    popularCities: [
+      'Rome',
+      'Milan',
+      'Naples',
+      'Turin',
+      'Florence',
+      'Venice',
+      'Bologna',
+      'Palermo',
+      'Genoa',
+      'Verona'
+    ]
+  },
+  {
+    name: 'Spain',
+    code: 'ES',
+    flag: '🇪🇸',
+    popularCities: [
+      'Madrid',
+      'Barcelona',
+      'Valencia',
+      'Seville',
+      'Zaragoza',
+      'Málaga',
+      'Murcia',
+      'Palma de Mallorca',
+      'Bilbao',
+      'Alicante'
+    ]
+  },
+  {
+    name: 'Brazil',
+    code: 'BR',
+    flag: '🇧🇷',
+    popularCities: [
+      'São Paulo',
+      'Rio de Janeiro',
+      'Brasília',
+      'Salvador',
+      'Fortaleza',
+      'Belo Horizonte',
+      'Curitiba',
+      'Manaus',
+      'Recife',
+      'Porto Alegre'
+    ]
+  },
+  {
+    name: 'Switzerland',
+    code: 'CH',
+    flag: '🇨🇭',
+    popularCities: [
+      'Zurich',
+      'Geneva',
+      'Basel',
+      'Lausanne',
+      'Bern',
+      'Winterthur',
+      'Lucerne',
+      'St. Gallen',
+      'Lugano'
+    ]
+  },
+  {
+    name: 'Sweden',
+    code: 'SE',
+    flag: '🇸🇪',
+    popularCities: [
+      'Stockholm',
+      'Gothenburg',
+      'Malmö',
+      'Uppsala',
+      'Västerås',
+      'Örebro',
+      'Linköping',
+      'Helsingborg'
+    ]
+  },
+  {
+    name: 'Norway',
+    code: 'NO',
+    flag: '🇳🇴',
+    popularCities: [
+      'Oslo',
+      'Bergen',
+      'Trondheim',
+      'Stavanger',
+      'Bærum',
+      'Kristiansand',
+      'Drammen',
+      'Tromsø'
+    ]
+  },
+  {
+    name: 'Denmark',
+    code: 'DK',
+    flag: '🇩🇰',
+    popularCities: [
+      'Copenhagen',
+      'Aarhus',
+      'Odense',
+      'Aalborg',
+      'Esbjerg',
+      'Randers',
+      'Kolding'
+    ]
+  },
+  {
+    name: 'Thailand',
+    code: 'TH',
+    flag: '🇹🇭',
+    popularCities: [
+      'Bangkok',
+      'Nonthaburi',
+      'Chiang Mai',
+      'Phuket',
+      'Pattaya',
+      'Hat Yai',
+      'Udon Thani',
+      'Surat Thani'
+    ]
+  },
+  {
+    name: 'Indonesia',
+    code: 'ID',
+    flag: '🇮🇩',
+    popularCities: [
+      'Jakarta',
+      'Surabaya',
+      'Bandung',
+      'Medan',
+      'Bekasi',
+      'Denpasar (Bali)',
+      'Semarang',
+      'Tangerang',
+      'Palembang',
+      'Makassar'
+    ]
+  },
+  {
+    name: 'Philippines',
+    code: 'PH',
+    flag: '🇵🇭',
+    popularCities: [
+      'Manila',
+      'Quezon City',
+      'Davao City',
+      'Caloocan',
+      'Cebu City',
+      'Zamboanga City',
+      'Taguig',
+      'Pasig',
+      'Cagayan de Oro',
+      'Makati'
+    ]
+  },
+  {
+    name: 'Pakistan',
+    code: 'PK',
+    flag: '🇵🇰',
+    popularCities: [
+      'Karachi',
+      'Lahore',
+      'Faisalabad',
+      'Rawalpindi',
+      'Gujranwala',
+      'Peshawar',
+      'Multan',
+      'Islamabad',
+      'Quetta',
+      'Sialkot'
+    ]
+  },
+  {
+    name: 'Bangladesh',
+    code: 'BD',
+    flag: '🇧🇩',
+    popularCities: [
+      'Dhaka',
+      'Chittagong',
+      'Khulna',
+      'Rajshahi',
+      'Sylhet',
+      'Barisal',
+      'Rangpur',
+      'Comilla'
+    ]
+  },
+  {
+    name: 'Mexico',
+    code: 'MX',
+    flag: '🇲🇽',
+    popularCities: [
+      'Mexico City',
+      'Guadalajara',
+      'Monterrey',
+      'Puebla',
+      'Tijuana',
+      'León',
+      'Juárez',
+      'Zapopan',
+      'Mérida',
+      'Cancún'
+    ]
+  },
+  {
+    name: 'Turkey',
+    code: 'TR',
+    flag: '🇹🇷',
+    popularCities: [
+      'Istanbul',
+      'Ankara',
+      'Izmir',
+      'Bursa',
+      'Antalya',
+      'Adana',
+      'Konya',
+      'Gaziantep',
+      'Mersin'
+    ]
+  },
+  {
     name: 'Global / Worldwide',
     code: 'GL',
     flag: '🌐',

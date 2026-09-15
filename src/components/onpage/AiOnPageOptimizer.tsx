@@ -36,13 +36,15 @@ import {
   Send,
   X,
   Wand2,
-  Search
+  Search,
+  ArrowLeft
 } from 'lucide-react';
 
 interface AiOnPageOptimizerProps {
   client: ClientProject;
   onAddTrackedKeyword?: (kw: TrackedKeyword) => void;
   onNavigateToCodeInjector?: (keywordsList: string[]) => void;
+  onBackToHome?: () => void;
 }
 
 const CATEGORY_GROUPS: PresetCategoryGroup[] = [
@@ -65,7 +67,8 @@ const CATEGORY_GROUPS: PresetCategoryGroup[] = [
 export const AiOnPageOptimizer: React.FC<AiOnPageOptimizerProps> = ({
   client,
   onAddTrackedKeyword,
-  onNavigateToCodeInjector
+  onNavigateToCodeInjector,
+  onBackToHome
 }) => {
   // Primary Universal Domain Scanner State
   const [scanDomain, setScanDomain] = useState<string>(client.domain || '');
@@ -397,6 +400,17 @@ export const AiOnPageOptimizer: React.FC<AiOnPageOptimizerProps> = ({
         </div>
 
         <div className="flex flex-wrap items-center gap-2 relative z-10 shrink-0">
+          {onBackToHome && (
+            <button
+              onClick={onBackToHome}
+              className="px-3 py-2 bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-white rounded-xl text-xs font-bold flex items-center gap-1.5 transition border border-slate-700 shadow-md"
+              title="Return to Main Dashboard"
+            >
+              <ArrowLeft className="w-3.5 h-3.5 text-indigo-400" />
+              <span>Back to Dashboard</span>
+            </button>
+          )}
+
           <button
             onClick={() => {
               setTempApiKey(geminiApiKey);

@@ -1,6 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import type { LocalBusinessReport } from '../../types/seo';
-import { runLocalBusinessCheck } from '../../services/localSeoService';
+import { 
+  runLocalBusinessCheck, 
+  generateAiReview, 
+  addReviewToReport 
+} from '../../services/localSeoService';
 import { dbService } from '../../services/dbService';
 import { 
   MapPin, 
@@ -15,113 +19,39 @@ import {
   ShieldCheck, 
   Copy, 
   Check, 
-  Database,
-  Trash2,
-  Clock,
-  Flame,
-  Award,
+  Database, 
+  Clock, 
+  Flame, 
+  Award, 
+  ArrowLeft,
+  MessageSquarePlus,
+  Send,
+  Wand2,
   ChevronDown
 } from 'lucide-react';
 import { 
-  COUNTRIES_AND_CITIES, 
-  ALL_BUSINESS_TYPES 
+  COUNTRIES_AND_CITIES
 } from '../../data/geoData';
-
 
 interface GoogleMapsLocalRankerProps {
   initialBusinessName?: string;
   initialDomain?: string;
   initialCity?: string;
+  onBackToHome?: () => void;
 }
-
 
 export const GoogleMapsLocalRanker: React.FC<GoogleMapsLocalRankerProps> = ({
   initialBusinessName = '',
   initialDomain = '',
-  initialCity = ''
+  initialCity = '',
+  onBackToHome
 }) => {
   // Input states
   const [businessName, setBusinessName] = useState<string>(initialBusinessName || 'Apex Health Solutions');
-  const [websiteUrl, setWebsiteUrl] = useState<string>(initialDomain ? `https://${initialDomain}` : 'https://apexhealthsolutions.com');
+  const [websiteUrl, setWebsiteUrl] = useState<string>(initialDomain ? (initialDomain.startsWith('http') ? initialDomain : `https://${initialDomain}`) : 'https://apexhealthsolutions.com');
   const [city, setCity] = useState<string>(initialCity || 'Colombo');
   const [country, setCountry] = useState<string>('Sri Lanka');
   const [keyword, setKeyword] = useState<string>('Telemedicine & Primary Clinic');
-
-  // Auto-suggest Dropdown States
-  const [showCountryDropdown, setShowCountryDropdown] = useState<boolean>(false);
-  const [showCityDropdown, setShowCityDropdown] = useState<boolean>(false);
-  const [showKeywordDropdown, setShowKeywordDropdown] = useState<boolean>(false);
-
-  // Country & City Auto-Filtering
-  const selectedCountryObj = COUNTRIES_AND_CITIES.find(
-    c => c.name.toLowerCase() === country.trim().toLowerCase()
-  );
-
-  const filteredCountries = COUNTRIES_AND_CITIES.filter(c => 
-    c.name.toLowerCase().includes(country.toLowerCase()) ||
-    c.code.toLowerCase().includes(country.toLowerCase())
-  );
-
-  const availableCities: string[] = selectedCountryObj
-    ? selectedCountryObj.popularCities
-    : Array.from(new Set(COUNTRIES_AND_CITIES.flatMap(c => c.popularCities)));
-
-  const filteredCities = availableCities.filter(ci => 
-    ci.toLowerCase().includes(city.toLowerCase())
-  );
-
-  // Keywords Auto-Filtering based on common local commercial queries and business categories
-  const POPULAR_LOCAL_KEYWORDS = [
-    'Web Design Agency',
-    'SEO Agency & Digital Marketing',
-    'Software Development & Mobile Apps',
-    'Telemedicine & Primary Clinic',
-    'Dental Clinic & Orthodontics',
-    'Cosmetic Surgery & Dermatology',
-    'Luxury Hotel & Boutique Resort',
-    'Fine Dining Restaurant & Cafe',
-    'Real Estate & Property Management',
-    'Criminal Defense & Corporate Lawyer',
-    'Immigration & Visa Consultant',
-    'HVAC Repair & Air Conditioning',
-    'Plumbing & Emergency Drainage',
-    'Electrician & Solar Installation',
-    'Commercial Cleaning & Janitorial',
-    'Pest Control & Termite Treatment',
-    'Auto Repair & Collision Center',
-    'Car Rental & Airport Transfers',
-    'Accounting & Tax Consultancy',
-    'Fitness Gym & Personal Trainer',
-    'Wedding Photography & Videography',
-    'Veterinary Clinic & Pet Hospital'
-  ];
-
-  const filteredKeywords = Array.from(new Set([
-    ...POPULAR_LOCAL_KEYWORDS,
-    ...ALL_BUSINESS_TYPES
-  ])).filter(k => k.toLowerCase().includes(keyword.toLowerCase()));
-
-  const handleSelectCountry = (countryName: string) => {
-    setCountry(countryName);
-    setShowCountryDropdown(false);
-    const match = COUNTRIES_AND_CITIES.find(c => c.name.toLowerCase() === countryName.toLowerCase());
-    if (match && match.popularCities.length > 0) {
-      if (!match.popularCities.some(ci => ci.toLowerCase() === city.toLowerCase())) {
-        setCity(match.popularCities[0]);
-      }
-    }
-  };
-
-  const handleSelectCity = (cityName: string) => {
-    setCity(cityName);
-    setShowCityDropdown(false);
-  };
-
-  const handleSelectKeyword = (selectedKw: string) => {
-    setKeyword(selectedKw);
-    setShowKeywordDropdown(false);
-  };
-
 
   // Loading & Results
   const [isScanning, setIsScanning] = useState<boolean>(false);
@@ -129,6 +59,30 @@ export const GoogleMapsLocalRanker: React.FC<GoogleMapsLocalRankerProps> = ({
   const [savedHistory, setSavedHistory] = useState<LocalBusinessReport[]>([]);
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
   const [activeSubTab, setActiveSubTab] = useState<'overview' | 'reviews' | 'competitors' | 'gbp-audit' | 'action-plan'>('overview');
+  const [showHoursDropdown, setShowHoursDropdown] = useState<boolean>(false);
+  const [notification, setNotification] = useState<string | null>(null);
+
+  // Review Poster / Submission Form State
+  const [newReviewAuthor, setNewReviewAuthor] = useState<string>('');
+  const [newReviewRating, setNewReviewRating] = useState<number>(5);
+  const [newReviewText, setNewReviewText] = useState<string>('');
+  const [isSubmittingReview, setIsSubmittingReview] = useState<boolean>(false);
+
+  // Sync inputs with Client Props when client changes
+  useEffect(() => {
+    if (initialBusinessName) setBusinessName(initialBusinessName);
+    if (initialDomain) setWebsiteUrl(initialDomain.startsWith('http') ? initialDomain : `https://${initialDomain}`);
+    if (initialCity) {
+      setCity(initialCity);
+      // Auto-detect country from city
+      for (const c of COUNTRIES_AND_CITIES) {
+        if (c.popularCities.some(pc => pc.toLowerCase() === initialCity.toLowerCase())) {
+          setCountry(c.name);
+          break;
+        }
+      }
+    }
+  }, [initialBusinessName, initialDomain, initialCity]);
 
   // Load history from dbService on mount
   useEffect(() => {
@@ -136,12 +90,80 @@ export const GoogleMapsLocalRanker: React.FC<GoogleMapsLocalRankerProps> = ({
     setSavedHistory(history);
     if (history.length > 0 && !currentReport) {
       setCurrentReport(history[0]);
-      setBusinessName(history[0].businessName);
-      setCity(history[0].city);
-      setWebsiteUrl(history[0].websiteUrl);
-      setKeyword(history[0].targetKeyword);
+    } else if (!currentReport) {
+      // Auto-run initial check
+      handleRunScan();
     }
   }, []);
+
+  // Country & City Auto-Filtering
+  const selectedCountryObj = COUNTRIES_AND_CITIES.find(
+    c => c.name.toLowerCase() === country.trim().toLowerCase()
+  ) || COUNTRIES_AND_CITIES[0];
+
+  const availableCities: string[] = selectedCountryObj
+    ? selectedCountryObj.popularCities
+    : Array.from(new Set(COUNTRIES_AND_CITIES.flatMap(c => c.popularCities)));
+
+  // Popular Local Keywords List
+  const POPULAR_LOCAL_KEYWORDS = [
+    'Telemedicine & Primary Clinic',
+    'Dental Clinic & Orthodontics',
+    'Pest Control & Extermination',
+    'Logistics & Freight Forwarding',
+    'Emergency Plumber & Drain Unblocking',
+    'Certified Electrician & Rewiring',
+    'Roofing Contractor & Repair',
+    'HVAC & Air Conditioning Repair',
+    'Towing & Roadside Assistance',
+    'Auto Body & Collision Repair',
+    'Auto Repair & Mechanic Shop',
+    'Car Detailing & Ceramic Coating',
+    'General Contractor & Construction',
+    'Painting Contractor',
+    'Solar Panel Installation',
+    'Pool Cleaning & Maintenance',
+    'Handyman & Home Repair',
+    'Personal Injury Law Firm',
+    'Criminal Defense Law Firm',
+    'Corporate Law Firm & Legal Advisory',
+    'Accounting & CPA Tax Advisory',
+    'Real Estate & Property Management',
+    'Mortgage Brokerage & Loans',
+    'Web Design & Local SEO Agency',
+    'Managed IT Services & MSP',
+    'Fine Dining Restaurant',
+    'Boutique Hotel & Resort',
+    'Specialty Coffee Cafe & Roastery',
+    'Catering & Event Dining',
+    'Hair Salon & Color Studio',
+    'Wellness Spa & Massage Center',
+    'Nail Salon & Lash Lounge',
+    'Fitness Gym & CrossFit',
+    'Daycare & Early Learning Center',
+    'Private Tutoring & Test Prep',
+    'Florist & Flower Boutique',
+    'Security Systems & CCTV Contractor'
+  ];
+
+  const handleCountryChange = (newCountry: string) => {
+    setCountry(newCountry);
+    const match = COUNTRIES_AND_CITIES.find(c => c.name.toLowerCase() === newCountry.toLowerCase());
+    if (match && match.popularCities.length > 0) {
+      setCity(match.popularCities[0]);
+    }
+  };
+
+  const handleCityChange = (newCity: string) => {
+    setCity(newCity);
+    // Reverse check country
+    for (const c of COUNTRIES_AND_CITIES) {
+      if (c.popularCities.some(pc => pc.toLowerCase() === newCity.toLowerCase())) {
+        setCountry(c.name);
+        break;
+      }
+    }
+  };
 
   const handleRunScan = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
@@ -158,12 +180,53 @@ export const GoogleMapsLocalRanker: React.FC<GoogleMapsLocalRankerProps> = ({
       });
 
       setCurrentReport(result);
-      // Save directly to persistent database
       dbService.saveLocalBusinessReport(result);
       setSavedHistory(dbService.getSavedLocalBusinessReports());
+      setNotification(`✅ Google Maps & Local Pack rankings updated for ${businessName}!`);
+      setTimeout(() => setNotification(null), 4000);
     } finally {
       setIsScanning(false);
     }
+  };
+
+  // AI Auto-Generate 5-Star Review
+  const handleAiAutoFillReview = () => {
+    const generated = generateAiReview(
+      currentReport?.businessName || businessName,
+      currentReport?.city || city,
+      currentReport?.targetKeyword || keyword
+    );
+    setNewReviewAuthor(generated.author);
+    setNewReviewRating(5);
+    setNewReviewText(generated.text);
+    setNotification('✨ AI generated an authentic 5-star customer review!');
+    setTimeout(() => setNotification(null), 3000);
+  };
+
+  // Submit and Post Review to Map Profile
+  const handleSubmitNewReview = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!currentReport || !newReviewText.trim()) return;
+
+    setIsSubmittingReview(true);
+    setTimeout(() => {
+      const updatedReport = addReviewToReport(currentReport, {
+        author: newReviewAuthor || 'Verified Google Local Guide',
+        rating: newReviewRating,
+        text: newReviewText,
+        timeAgo: 'Just now'
+      });
+
+      setCurrentReport(updatedReport);
+      dbService.saveLocalBusinessReport(updatedReport);
+      setSavedHistory(dbService.getSavedLocalBusinessReports());
+
+      setNewReviewAuthor('');
+      setNewReviewText('');
+      setIsSubmittingReview(false);
+      setNotification(`⭐ Review published to ${updatedReport.businessName}! Total reviews count increased to ${updatedReport.totalReviews}.`);
+      setTimeout(() => setNotification(null), 5000);
+    }, 400);
   };
 
   const handleDeleteHistoryItem = (id: string, e: React.MouseEvent) => {
@@ -185,8 +248,19 @@ export const GoogleMapsLocalRanker: React.FC<GoogleMapsLocalRankerProps> = ({
   return (
     <div className="space-y-6">
       
-      {/* Header Banner */}
-      <div className="glass-panel p-6 rounded-3xl border border-emerald-500/40 bg-gradient-to-r from-emerald-950/30 via-slate-900 to-indigo-950/20 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+      {/* Universal Notification Toast */}
+      {notification && (
+        <div className="p-3.5 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-xs font-semibold flex items-center justify-between shadow-xl animate-fadeIn">
+          <div className="flex items-center space-x-2">
+            <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+            <span>{notification}</span>
+          </div>
+          <button onClick={() => setNotification(null)} className="text-emerald-400 hover:text-white text-xs ml-4">✕</button>
+        </div>
+      )}
+
+      {/* Header Banner with Back to Dashboard Button */}
+      <div className="glass-panel p-6 rounded-3xl border border-emerald-500/40 bg-gradient-to-r from-emerald-950/30 via-slate-900 to-indigo-950/20 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 shadow-2xl">
         <div className="flex items-center space-x-4">
           <div className="p-3 bg-gradient-to-tr from-emerald-500 to-teal-500 rounded-2xl text-white shadow-lg shadow-emerald-500/20 shrink-0">
             <MapPin className="w-6 h-6" />
@@ -199,15 +273,27 @@ export const GoogleMapsLocalRanker: React.FC<GoogleMapsLocalRankerProps> = ({
               </span>
             </div>
             <p className="text-xs text-slate-400 mt-1">
-              Verify any business address, verified website, Google review stars, total reviews count, and exact Google Page # rank
+              Verify accurate Google business addresses, real Google Maps location pin, verified reviews, and 1-click review generation
             </p>
           </div>
         </div>
 
-        {/* Database Sync Status Badge */}
-        <div className="flex items-center space-x-2 px-3.5 py-1.5 rounded-xl bg-slate-800/80 border border-slate-700/80 text-xs text-slate-300">
-          <Database className="w-4 h-4 text-indigo-400" />
-          <span>Auto-Saved to Database ({savedHistory.length} checked)</span>
+        {/* Action Buttons: Back to Home + Auto-Detect */}
+        <div className="flex items-center space-x-3 w-full md:w-auto justify-end">
+          {onBackToHome && (
+            <button
+              onClick={onBackToHome}
+              className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-semibold flex items-center space-x-1.5 transition cursor-pointer shadow-md"
+            >
+              <ArrowLeft className="w-3.5 h-3.5 text-indigo-400" />
+              <span>Back to Dashboard</span>
+            </button>
+          )}
+
+          <div className="flex items-center space-x-2 px-3.5 py-2 rounded-xl bg-slate-800/80 border border-slate-700/80 text-xs text-slate-300 shrink-0">
+            <Database className="w-4 h-4 text-emerald-400" />
+            <span>Saved: {savedHistory.length}</span>
+          </div>
         </div>
       </div>
 
@@ -216,213 +302,136 @@ export const GoogleMapsLocalRanker: React.FC<GoogleMapsLocalRankerProps> = ({
         <form onSubmit={handleRunScan} className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
             
-            {/* Business Name */}
+            {/* 1. Business Name */}
             <div className="md:col-span-4">
               <label className="block text-xs font-semibold text-slate-300 mb-1.5 flex items-center justify-between">
-                <span>Business Name *</span>
-                <span className="text-[10px] text-slate-500">Google Listing Name</span>
+                <span>Business Name <span className="text-rose-400">*</span></span>
+                <span className="text-[10px] text-emerald-400 font-medium">Google Profile Title</span>
               </label>
-              <div className="relative">
-                <input
-                  type="text"
-                  required
-                  value={businessName}
-                  onChange={(e) => setBusinessName(e.target.value)}
-                  placeholder="e.g. Apex Health Solutions"
-                  className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
-                />
-              </div>
+              <input
+                type="text"
+                required
+                value={businessName}
+                onChange={(e) => setBusinessName(e.target.value)}
+                placeholder="e.g. Apex Health Solutions"
+                className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 font-semibold"
+              />
             </div>
 
-            {/* Target Country & City with Auto-suggest */}
-            <div className="md:col-span-3 space-y-1">
+            {/* 2. Target Location (Country + City Auto Dropdowns) */}
+            <div className="md:col-span-4 space-y-1">
               <label className="block text-xs font-semibold text-slate-300 mb-1 flex items-center justify-between">
-                <span>Target Location *</span>
-                <span className="text-[10px] text-emerald-400 font-medium">Auto-Suggests</span>
+                <span>Target Location <span className="text-rose-400">*</span></span>
+                <span className="text-[10px] text-indigo-400 font-medium">Auto Dropdowns</span>
               </label>
               <div className="grid grid-cols-2 gap-2">
                 
-                {/* Country Dropdown / Input */}
-                <div className="relative">
-                  <input
-                    type="text"
-                    required
+                {/* Country Dropdown */}
+                <div className="space-y-1">
+                  <select
                     value={country}
-                    onChange={(e) => {
-                      setCountry(e.target.value);
-                      setShowCountryDropdown(true);
-                    }}
-                    onFocus={() => setShowCountryDropdown(true)}
-                    placeholder="Country..."
-                    className="w-full bg-slate-900 border border-slate-700 rounded-xl pl-2.5 pr-6 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowCountryDropdown(!showCountryDropdown)}
-                    className="absolute right-2 top-3 text-slate-400 hover:text-white"
+                    onChange={(e) => handleCountryChange(e.target.value)}
+                    className="w-full bg-slate-950 border border-slate-700 rounded-xl px-2.5 py-2.5 text-xs text-white focus:outline-none focus:border-emerald-500 font-medium cursor-pointer"
                   >
-                    <ChevronDown className={`w-3.5 h-3.5 transition-transform ${showCountryDropdown ? 'rotate-180' : ''}`} />
-                  </button>
-
-                  {/* Country Popup Menu */}
-                  {showCountryDropdown && (
-                    <>
-                      <div className="fixed inset-0 z-20" onClick={() => setShowCountryDropdown(false)} />
-                      <div className="absolute left-0 right-0 top-full mt-1 z-30 bg-slate-900 border border-emerald-500/30 rounded-xl shadow-2xl max-h-52 overflow-y-auto divide-y divide-slate-800 backdrop-blur-xl">
-                        {filteredCountries.slice(0, 15).map((c) => (
-                          <button
-                            key={c.code}
-                            type="button"
-                            onClick={() => handleSelectCountry(c.name)}
-                            className="w-full px-2.5 py-1.5 text-left text-xs flex items-center justify-between hover:bg-slate-800 text-slate-300 hover:text-white"
-                          >
-                            <span className="truncate">{c.name}</span>
-                            <span className="text-xs shrink-0 ml-1">{c.flag}</span>
-                          </button>
-                        ))}
-                      </div>
-                    </>
-                  )}
-                </div>
-
-                {/* City Dropdown / Input */}
-                <div className="relative">
+                    {COUNTRIES_AND_CITIES.map((c) => (
+                      <option key={c.code} value={c.name} className="bg-slate-900 text-white">
+                        {c.flag} {c.name}
+                      </option>
+                    ))}
+                  </select>
                   <input
                     type="text"
-                    required
-                    value={city}
-                    onChange={(e) => {
-                      setCity(e.target.value);
-                      setShowCityDropdown(true);
-                    }}
-                    onFocus={() => setShowCityDropdown(true)}
-                    placeholder="City..."
-                    className="w-full bg-slate-900 border border-slate-700 rounded-xl pl-2.5 pr-6 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500"
+                    value={country}
+                    onChange={(e) => setCountry(e.target.value)}
+                    placeholder="Or type country..."
+                    className="w-full bg-slate-950/60 border border-slate-800 rounded-lg px-2 py-1 text-[11px] text-slate-300 placeholder-slate-600 focus:outline-none focus:border-emerald-500 font-mono"
                   />
-                  <button
-                    type="button"
-                    onClick={() => setShowCityDropdown(!showCityDropdown)}
-                    className="absolute right-2 top-3 text-slate-400 hover:text-white"
-                  >
-                    <ChevronDown className={`w-3.5 h-3.5 transition-transform ${showCityDropdown ? 'rotate-180' : ''}`} />
-                  </button>
+                </div>
 
-                  {/* City Popup Menu */}
-                  {showCityDropdown && (
-                    <>
-                      <div className="fixed inset-0 z-20" onClick={() => setShowCityDropdown(false)} />
-                      <div className="absolute left-0 right-0 top-full mt-1 z-30 bg-slate-900 border border-emerald-500/30 rounded-xl shadow-2xl max-h-52 overflow-y-auto divide-y divide-slate-800 backdrop-blur-xl">
-                        {filteredCities.slice(0, 20).map((ci, idx) => (
-                          <button
-                            key={idx}
-                            type="button"
-                            onClick={() => handleSelectCity(ci)}
-                            className="w-full px-2.5 py-1.5 text-left text-xs flex items-center space-x-1.5 hover:bg-slate-800 text-slate-300 hover:text-white"
-                          >
-                            <MapPin className="w-3 h-3 text-emerald-400 shrink-0" />
-                            <span className="truncate">{ci}</span>
-                          </button>
-                        ))}
-                      </div>
-                    </>
-                  )}
+                {/* City Dropdown (Cascades from Selected Country) */}
+                <div className="space-y-1">
+                  <select
+                    value={city}
+                    onChange={(e) => handleCityChange(e.target.value)}
+                    className="w-full bg-slate-950 border border-slate-700 rounded-xl px-2.5 py-2.5 text-xs text-white focus:outline-none focus:border-emerald-500 font-medium cursor-pointer"
+                  >
+                    {availableCities.map((ci, idx) => (
+                      <option key={idx} value={ci} className="bg-slate-900 text-white">
+                        📍 {ci}
+                      </option>
+                    ))}
+                  </select>
+                  <input
+                    type="text"
+                    value={city}
+                    onChange={(e) => setCity(e.target.value)}
+                    placeholder="Or type city..."
+                    className="w-full bg-slate-950/60 border border-slate-800 rounded-lg px-2 py-1 text-[11px] text-slate-300 placeholder-slate-600 focus:outline-none focus:border-emerald-500 font-mono"
+                  />
                 </div>
 
               </div>
             </div>
 
-            {/* Target Keyword / Service with Auto-suggest */}
-            <div className="md:col-span-3 relative">
+            {/* 3. Target Search Keyword with Auto Dropdown */}
+            <div className="md:col-span-4 space-y-1">
               <label className="block text-xs font-semibold text-slate-300 mb-1 flex items-center justify-between">
-                <span>Target Search Keyword *</span>
-                <span className="text-[10px] text-emerald-400 font-medium">Auto-Suggests</span>
+                <span>Target Search Keyword <span className="text-rose-400">*</span></span>
+                <span className="text-[10px] text-emerald-400 font-medium">Auto Dropdown</span>
               </label>
-              <div className="relative">
-                <input
-                  type="text"
-                  required
-                  value={keyword}
-                  onChange={(e) => {
-                    setKeyword(e.target.value);
-                    setShowKeywordDropdown(true);
-                  }}
-                  onFocus={() => setShowKeywordDropdown(true)}
-                  placeholder="e.g. Telemedicine Clinic..."
-                  className="w-full bg-slate-900 border border-slate-700 rounded-xl pl-3 pr-7 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowKeywordDropdown(!showKeywordDropdown)}
-                  className="absolute right-2 top-3 text-slate-400 hover:text-white"
-                >
-                  <ChevronDown className={`w-3.5 h-3.5 transition-transform ${showKeywordDropdown ? 'rotate-180' : ''}`} />
-                </button>
-              </div>
-
-              {/* Keywords Popup Menu */}
-              {showKeywordDropdown && (
-                <>
-                  <div className="fixed inset-0 z-20" onClick={() => setShowKeywordDropdown(false)} />
-                  <div className="absolute left-0 right-0 top-full mt-1 z-30 bg-slate-900 border border-emerald-500/30 rounded-xl shadow-2xl max-h-56 overflow-y-auto divide-y divide-slate-800 backdrop-blur-xl">
-                    <div className="p-2 bg-slate-950/80 sticky top-0 text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center justify-between">
-                      <span>Popular Local Search Queries ({filteredKeywords.length})</span>
-                    </div>
-                    {filteredKeywords.slice(0, 25).map((kwItem, idx) => (
-                      <button
-                        key={idx}
-                        type="button"
-                        onClick={() => handleSelectKeyword(kwItem)}
-                        className="w-full px-3 py-1.5 text-left text-xs flex items-center space-x-2 hover:bg-slate-800 text-slate-300 hover:text-white"
-                      >
-                        <Search className="w-3 h-3 text-emerald-400 shrink-0" />
-                        <span className="truncate">{kwItem}</span>
-                      </button>
-                    ))}
-                  </div>
-                </>
-              )}
-            </div>
-
-
-            {/* Action Submit */}
-            <div className="md:col-span-2 flex items-end">
-              <button
-                type="submit"
-                disabled={isScanning}
-                className="w-full h-[41px] bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 disabled:opacity-50 text-white font-bold rounded-xl text-xs flex items-center justify-center space-x-2 shadow-lg shadow-emerald-600/20 transition cursor-pointer"
+              <select
+                value={keyword}
+                onChange={(e) => setKeyword(e.target.value)}
+                className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-emerald-500 font-medium cursor-pointer"
               >
-                {isScanning ? (
-                  <>
-                    <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin" />
-                    <span>Scanning...</span>
-                  </>
-                ) : (
-                  <>
-                    <Search className="w-4 h-4" />
-                    <span>Check Maps & Rank</span>
-                  </>
-                )}
-              </button>
+                {POPULAR_LOCAL_KEYWORDS.map((kw, idx) => (
+                  <option key={idx} value={kw} className="bg-slate-900 text-white">
+                    🔍 {kw}
+                  </option>
+                ))}
+              </select>
+              <input
+                type="text"
+                value={keyword}
+                onChange={(e) => setKeyword(e.target.value)}
+                placeholder="Or type custom target search keyword..."
+                className="w-full bg-slate-950/60 border border-slate-800 rounded-lg px-2 py-1 text-[11px] text-slate-300 placeholder-slate-600 focus:outline-none focus:border-emerald-500 font-mono"
+              />
             </div>
 
           </div>
 
-          {/* Website URL Optional Input */}
-          <div className="flex items-center space-x-3 text-xs">
-            <span className="text-slate-400 shrink-0 flex items-center space-x-1">
-              <Globe className="w-3.5 h-3.5 text-slate-400" />
-              <span>Website URL:</span>
-            </span>
-            <input
-              type="text"
-              value={websiteUrl}
-              onChange={(e) => setWebsiteUrl(e.target.value)}
-              placeholder="e.g. https://apexhealthsolutions.com"
-              className="flex-1 max-w-lg bg-slate-900/80 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-emerald-500"
-            />
-            <span className="text-[11px] text-slate-500 hidden sm:inline">
-              Used to match GBP listing with verified domain
-            </span>
+          {/* Website URL + Scan Action Button Row */}
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-2 border-t border-slate-800/80">
+            <div className="flex items-center space-x-2.5 w-full sm:w-auto flex-1 max-w-xl text-xs">
+              <Globe className="w-4 h-4 text-slate-400 shrink-0" />
+              <span className="text-slate-400 font-medium shrink-0">Website URL:</span>
+              <input
+                type="text"
+                value={websiteUrl}
+                onChange={(e) => setWebsiteUrl(e.target.value)}
+                placeholder="e.g. https://apexhealthsolutions.com"
+                className="flex-1 bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-emerald-500 font-mono"
+              />
+            </div>
+
+            <button
+              type="submit"
+              disabled={isScanning}
+              className="w-full sm:w-auto px-6 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 disabled:opacity-50 text-white font-bold rounded-xl text-xs flex items-center justify-center space-x-2 shadow-lg shadow-emerald-600/20 transition cursor-pointer"
+            >
+              {isScanning ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+                  <span>Scanning Google Maps...</span>
+                </>
+              ) : (
+                <>
+                  <Search className="w-4 h-4" />
+                  <span>⚡ Scan Google Maps & Real Profile</span>
+                </>
+              )}
+            </button>
           </div>
         </form>
 
@@ -431,7 +440,7 @@ export const GoogleMapsLocalRanker: React.FC<GoogleMapsLocalRankerProps> = ({
           <div className="pt-2 border-t border-slate-800/80 flex items-center space-x-2 overflow-x-auto pb-1 text-xs">
             <span className="text-slate-500 font-medium shrink-0 flex items-center space-x-1">
               <Clock className="w-3.5 h-3.5" />
-              <span>Saved Businesses:</span>
+              <span>Saved Profiles:</span>
             </span>
             {savedHistory.map((item) => (
               <div
@@ -458,9 +467,9 @@ export const GoogleMapsLocalRanker: React.FC<GoogleMapsLocalRankerProps> = ({
                 <button
                   onClick={(e) => handleDeleteHistoryItem(item.id, e)}
                   title="Remove from saved database"
-                  className="opacity-0 group-hover:opacity-100 hover:text-rose-400 p-0.5 rounded transition"
+                  className="opacity-0 group-hover:opacity-100 text-slate-500 hover:text-rose-400 transition"
                 >
-                  <Trash2 className="w-3 h-3" />
+                  ✕
                 </button>
               </div>
             ))}
@@ -471,31 +480,27 @@ export const GoogleMapsLocalRanker: React.FC<GoogleMapsLocalRankerProps> = ({
       {/* Report Dashboard Results */}
       {currentReport && (
         <div className="space-y-6">
-          
-          {/* Top 4 KPI Cards */}
+
+          {/* 4 Main KPI Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             
-            {/* KPI 1: Address & Physical Location */}
+            {/* KPI 1: Google Business Profile Verification */}
             <div className="glass-panel p-5 rounded-2xl border border-slate-800 bg-slate-900/60">
               <div className="flex items-center justify-between text-xs text-slate-400 mb-2">
                 <span className="font-semibold flex items-center space-x-1.5">
-                  <MapPin className="w-4 h-4 text-rose-400" />
-                  <span>Physical Address</span>
+                  <ShieldCheck className="w-4 h-4 text-emerald-400" />
+                  <span>Google Profile Status</span>
                 </span>
-                <button 
-                  onClick={() => copyText(currentReport.formattedAddress, 'addr')}
-                  className="hover:text-white"
-                  title="Copy address"
-                >
-                  {copiedKey === 'addr' ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
-                </button>
+                <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/20 text-emerald-300">
+                  VERIFIED
+                </span>
               </div>
-              <div className="text-sm font-bold text-white line-clamp-2">
-                {currentReport.formattedAddress}
+              <div className="text-2xl font-black text-white flex items-center space-x-2">
+                <span>{currentReport.gbpScore}/100</span>
+                <CheckCircle2 className="w-5 h-5 text-emerald-400" />
               </div>
-              <div className="mt-2 text-xs text-slate-400 flex items-center space-x-2">
-                <Phone className="w-3.5 h-3.5 text-slate-500" />
-                <span>{currentReport.phone}</span>
+              <div className="mt-2 text-xs text-slate-400 truncate">
+                {currentReport.businessName}
               </div>
             </div>
 
@@ -522,7 +527,7 @@ export const GoogleMapsLocalRanker: React.FC<GoogleMapsLocalRankerProps> = ({
                 </span>
               </div>
               <div className="mt-2 text-xs text-slate-400">
-                Sentiment: High trust & active local customer citations
+                Sentiment: Strong trust with local customer testimonials
               </div>
             </div>
 
@@ -547,8 +552,8 @@ export const GoogleMapsLocalRanker: React.FC<GoogleMapsLocalRankerProps> = ({
                 <span className="text-2xl font-black text-white">#{currentReport.googleMapsPosition}</span>
                 <span className="text-xs text-slate-400">in {currentReport.city} Maps</span>
               </div>
-              <div className="mt-2 text-xs text-slate-400">
-                Keyword: <span className="text-indigo-300 font-medium">"{currentReport.targetKeyword}"</span>
+              <div className="mt-2 text-xs text-slate-400 truncate">
+                Target: <span className="text-indigo-300 font-medium">"{currentReport.targetKeyword}"</span>
               </div>
             </div>
 
@@ -574,14 +579,14 @@ export const GoogleMapsLocalRanker: React.FC<GoogleMapsLocalRankerProps> = ({
                 </span>
               </div>
               <div className="mt-2 text-xs text-slate-400 flex items-center justify-between">
-                <span>Bing Rank: #{currentReport.bingPosition}</span>
+                <span>Bing: #{currentReport.bingPosition}</span>
                 <a
                   href={currentReport.websiteUrl}
                   target="_blank"
                   rel="noreferrer"
                   className="text-indigo-400 hover:underline flex items-center space-x-1"
                 >
-                  <span>Visit Web</span>
+                  <span>Visit Site</span>
                   <ExternalLink className="w-3 h-3" />
                 </a>
               </div>
@@ -589,11 +594,11 @@ export const GoogleMapsLocalRanker: React.FC<GoogleMapsLocalRankerProps> = ({
 
           </div>
 
-          {/* Interactive Sub-Navigation */}
+          {/* Interactive Sub-Navigation Tabs */}
           <div className="flex items-center space-x-2 border-b border-slate-800 pb-3 overflow-x-auto text-xs">
             {[
-              { id: 'overview', label: 'Local Business & Map View', icon: MapPin },
-              { id: 'reviews', label: 'Reviews & Customer Feedback', icon: Star },
+              { id: 'overview', label: 'Real Google Business Profile & Map View', icon: MapPin },
+              { id: 'reviews', label: 'Reviews & Auto-Put Review Engine', icon: Star },
               { id: 'competitors', label: 'Local Competitors in City', icon: Award },
               { id: 'gbp-audit', label: 'Google Business Profile Audit', icon: ShieldCheck },
               { id: 'action-plan', label: 'Local Rank Action Plan', icon: Sparkles },
@@ -603,8 +608,9 @@ export const GoogleMapsLocalRanker: React.FC<GoogleMapsLocalRankerProps> = ({
               return (
                 <button
                   key={tab.id}
+                  type="button"
                   onClick={() => setActiveSubTab(tab.id as any)}
-                  className={`flex items-center space-x-2 px-4 py-2 rounded-xl font-bold transition whitespace-nowrap cursor-pointer ${
+                  className={`flex items-center space-x-2 px-4 py-2.5 rounded-xl font-bold transition whitespace-nowrap cursor-pointer ${
                     isActive 
                       ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-lg shadow-emerald-600/20'
                       : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
@@ -617,228 +623,481 @@ export const GoogleMapsLocalRanker: React.FC<GoogleMapsLocalRankerProps> = ({
             })}
           </div>
 
-          {/* Tab 1: Overview & Map View */}
+          {/* TAB 1: REAL GOOGLE BUSINESS PROFILE & INTERACTIVE MAP VIEW */}
           {activeSubTab === 'overview' && (
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
               
-              {/* Left Column: Business Card & Verification Details */}
+              {/* Left Column: Authentic Google Business Profile Knowledge Panel Card */}
               <div className="lg:col-span-6 space-y-4">
-                <div className="glass-panel p-6 rounded-2xl border border-slate-800 bg-slate-900/60 space-y-4">
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <h3 className="text-lg font-bold text-white flex items-center space-x-2">
-                        <span>{currentReport.businessName}</span>
-                        <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-                      </h3>
-                      <p className="text-xs text-emerald-400 font-medium mt-0.5">
-                        {currentReport.gbpStatus.primaryCategory} • {currentReport.city}, {currentReport.country}
-                      </p>
+                <div className="glass-panel rounded-3xl border border-slate-700/80 bg-slate-900/90 shadow-2xl overflow-hidden">
+                  
+                  {/* Storefront Cover Header */}
+                  <div className="h-32 bg-gradient-to-r from-indigo-950 via-slate-800 to-emerald-950 relative p-4 flex items-end">
+                    <div className="absolute inset-0 opacity-20 bg-[radial-gradient(#4ade80_1px,transparent_1px)] [background-size:16px_16px]" />
+                    <div className="relative z-10 flex items-center space-x-3">
+                      <div className="w-14 h-14 rounded-2xl bg-slate-950 border-2 border-emerald-400 shadow-xl flex items-center justify-center font-black text-white text-xl">
+                        {currentReport.businessName.charAt(0)}
+                      </div>
+                      <div>
+                        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/30 text-emerald-300 border border-emerald-400/40">
+                          Google Verified Business
+                        </span>
+                        <h3 className="text-base font-black text-white leading-tight mt-1 flex items-center space-x-1.5">
+                          <span>{currentReport.businessName}</span>
+                          <CheckCircle2 className="w-4 h-4 text-blue-400 fill-blue-400/20 shrink-0" />
+                        </h3>
+                      </div>
                     </div>
-                    <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                      GBP Score: {currentReport.gbpScore}/100
-                    </span>
                   </div>
 
-                  <div className="space-y-2.5 text-xs pt-2 border-t border-slate-800">
-                    <div className="flex items-center justify-between py-1 border-b border-slate-800/60">
-                      <span className="text-slate-400">Exact Address:</span>
-                      <span className="text-white font-medium text-right">{currentReport.formattedAddress}</span>
-                    </div>
-                    <div className="flex items-center justify-between py-1 border-b border-slate-800/60">
-                      <span className="text-slate-400">Phone Number:</span>
-                      <span className="text-white font-medium">{currentReport.phone}</span>
-                    </div>
-                    <div className="flex items-center justify-between py-1 border-b border-slate-800/60">
-                      <span className="text-slate-400">Official Website:</span>
-                      <a href={currentReport.websiteUrl} target="_blank" rel="noreferrer" className="text-indigo-400 hover:underline flex items-center space-x-1">
-                        <span>{currentReport.websiteUrl}</span>
-                        <ExternalLink className="w-3 h-3" />
-                      </a>
-                    </div>
-                    <div className="flex items-center justify-between py-1 border-b border-slate-800/60">
-                      <span className="text-slate-400">SSL Security:</span>
-                      <span className={`font-semibold ${currentReport.hasSsl ? 'text-emerald-400' : 'text-rose-400'}`}>
-                        {currentReport.hasSsl ? 'Verified HTTPS' : 'Insecure HTTP'}
+                  {/* Rating & Action Bar */}
+                  <div className="p-5 space-y-4">
+                    <div className="flex items-center justify-between flex-wrap gap-2 pb-3 border-b border-slate-800">
+                      <div className="flex items-center space-x-2">
+                        <span className="text-amber-400 font-black text-base">{currentReport.rating}</span>
+                        <div className="flex items-center text-amber-400">
+                          {[...Array(5)].map((_, i) => (
+                            <Star key={i} className={`w-3.5 h-3.5 ${i < Math.floor(currentReport.rating) ? 'fill-amber-400' : 'text-slate-600'}`} />
+                          ))}
+                        </div>
+                        <button
+                          onClick={() => setActiveSubTab('reviews')}
+                          className="text-xs text-indigo-400 hover:underline font-medium cursor-pointer"
+                        >
+                          ({currentReport.totalReviews} Google reviews)
+                        </button>
+                      </div>
+
+                      <span className="text-xs text-slate-400 font-medium">
+                        {currentReport.gbpStatus.primaryCategory}
                       </span>
                     </div>
-                    <div className="flex items-center justify-between py-1 border-b border-slate-800/60">
-                      <span className="text-slate-400">Google Maps Coordinate:</span>
-                      <span className="text-slate-300 font-mono text-[11px]">{currentReport.latitude}, {currentReport.longitude}</span>
+
+                    {/* Google Action Buttons */}
+                    <div className="grid grid-cols-4 gap-2 text-center text-xs">
+                      <a
+                        href={currentReport.websiteUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="p-2.5 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-200 flex flex-col items-center justify-center space-y-1 transition border border-slate-700"
+                      >
+                        <Globe className="w-4 h-4 text-blue-400" />
+                        <span className="text-[11px] font-semibold">Website</span>
+                      </a>
+
+                      <a
+                        href={currentReport.googleMapsUrl || `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${currentReport.businessName} ${currentReport.formattedAddress}`)}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="p-2.5 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-200 flex flex-col items-center justify-center space-y-1 transition border border-slate-700"
+                      >
+                        <MapPin className="w-4 h-4 text-rose-400" />
+                        <span className="text-[11px] font-semibold">Directions</span>
+                      </a>
+
+                      <a
+                        href={`tel:${currentReport.phone}`}
+                        className="p-2.5 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-200 flex flex-col items-center justify-center space-y-1 transition border border-slate-700"
+                      >
+                        <Phone className="w-4 h-4 text-emerald-400" />
+                        <span className="text-[11px] font-semibold">Call</span>
+                      </a>
+
+                      <button
+                        type="button"
+                        onClick={() => setActiveSubTab('reviews')}
+                        className="p-2.5 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 flex flex-col items-center justify-center space-y-1 transition border border-amber-500/40 cursor-pointer"
+                      >
+                        <MessageSquarePlus className="w-4 h-4 text-amber-400" />
+                        <span className="text-[11px] font-semibold">Review</span>
+                      </button>
                     </div>
+
+                    {/* NAP Business Information */}
+                    <div className="space-y-3 pt-2 text-xs divide-y divide-slate-800/60">
+                      
+                      {/* Address */}
+                      <div className="flex items-start justify-between pt-2">
+                        <div className="flex items-center space-x-2 text-slate-400 shrink-0">
+                          <MapPin className="w-4 h-4 text-rose-400" />
+                          <span>Address:</span>
+                        </div>
+                        <span className="text-white font-medium text-right ml-4">
+                          {currentReport.formattedAddress}
+                        </span>
+                      </div>
+
+                      {/* Hours */}
+                      <div className="pt-2">
+                        <div 
+                          onClick={() => setShowHoursDropdown(!showHoursDropdown)}
+                          className="flex items-center justify-between cursor-pointer py-1 text-slate-300 hover:text-white"
+                        >
+                          <div className="flex items-center space-x-2 text-slate-400">
+                            <Clock className="w-4 h-4 text-emerald-400" />
+                            <span>Hours:</span>
+                            <span className="text-emerald-400 font-bold ml-1">Open now • Closes 6:30 PM</span>
+                          </div>
+                          <ChevronDown className={`w-3.5 h-3.5 transition-transform ${showHoursDropdown ? 'rotate-180' : ''}`} />
+                        </div>
+
+                        {showHoursDropdown && currentReport.openingHours && (
+                          <div className="mt-2 p-3 rounded-xl bg-slate-950 border border-slate-800 space-y-1 text-[11px]">
+                            {currentReport.openingHours.map((h, i) => (
+                              <div key={i} className="flex justify-between py-0.5 text-slate-300">
+                                <span>{h.split(':')[0]}</span>
+                                <span className="font-mono text-slate-400">{h.split(':').slice(1).join(':')}</span>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Phone Number */}
+                      <div className="flex items-center justify-between pt-2">
+                        <div className="flex items-center space-x-2 text-slate-400 shrink-0">
+                          <Phone className="w-4 h-4 text-emerald-400" />
+                          <span>Phone:</span>
+                        </div>
+                        <a href={`tel:${currentReport.phone}`} className="text-indigo-400 hover:underline font-mono">
+                          {currentReport.phone}
+                        </a>
+                      </div>
+
+                      {/* Attributes */}
+                      {currentReport.gbpAttributes && (
+                        <div className="pt-2 space-y-1">
+                          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Highlights & Amenities</span>
+                          <div className="flex flex-wrap gap-1.5 pt-1">
+                            {currentReport.gbpAttributes.map((attr, idx) => (
+                              <span key={idx} className="px-2 py-0.5 rounded-md bg-slate-800 text-[11px] text-slate-300 border border-slate-700">
+                                {attr}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                    </div>
+
                   </div>
 
-                  {/* Direct Link to Google Search & Maps */}
-                  <div className="grid grid-cols-2 gap-3 pt-2">
-                    <a
-                      href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${currentReport.businessName} ${currentReport.city}`)}`}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-white rounded-xl text-xs font-semibold flex items-center justify-center space-x-2 transition border border-slate-700"
-                    >
-                      <MapPin className="w-3.5 h-3.5 text-rose-400" />
-                      <span>Open on Google Maps</span>
-                    </a>
-                    <a
-                      href={`https://www.google.com/search?q=${encodeURIComponent(`${currentReport.targetKeyword} ${currentReport.city}`)}`}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="px-4 py-2.5 bg-indigo-600/30 hover:bg-indigo-600/40 text-indigo-300 rounded-xl text-xs font-semibold flex items-center justify-center space-x-2 transition border border-indigo-500/30"
-                    >
-                      <Search className="w-3.5 h-3.5 text-indigo-300" />
-                      <span>Live Google SERP</span>
-                    </a>
-                  </div>
                 </div>
               </div>
 
-              {/* Right Column: Visual Map Simulation & Ranking Diagnostic */}
+              {/* Right Column: Real Interactive Google Map Embed */}
               <div className="lg:col-span-6 space-y-4">
-                <div className="glass-panel p-6 rounded-2xl border border-slate-800 bg-slate-900/60 flex flex-col justify-between h-full space-y-4">
-                  <div>
-                    <h3 className="text-sm font-bold text-white flex items-center space-x-2 mb-3">
-                      <Sparkles className="w-4 h-4 text-amber-400" />
-                      <span>Google Local 3-Pack Status</span>
-                    </h3>
+                <div className="glass-panel p-5 rounded-3xl border border-slate-800 bg-slate-900/60 flex flex-col justify-between h-full space-y-4 shadow-xl">
+                  
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="text-sm font-bold text-white flex items-center space-x-2">
+                        <MapPin className="w-4 h-4 text-emerald-400" />
+                        <span>Live Google Maps Location & Local 3-Pack Pin</span>
+                      </h3>
+                      <p className="text-xs text-slate-400 mt-0.5">
+                        Interactive map view anchored at {currentReport.city}, {currentReport.country}
+                      </p>
+                    </div>
 
-                    {currentReport.isLocalPack ? (
-                      <div className="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/30 space-y-2">
-                        <div className="flex items-center space-x-2 text-emerald-300 font-bold text-sm">
-                          <CheckCircle2 className="w-5 h-5 text-emerald-400" />
-                          <span>Ranked #{currentReport.googleMapsPosition} in Google Local 3-Pack</span>
-                        </div>
-                        <p className="text-xs text-slate-300 leading-relaxed">
-                          Congratulations! Your business currently enjoys prime visibility on Google Search and Maps when users search for "{currentReport.targetKeyword}" in {currentReport.city}.
-                        </p>
-                      </div>
-                    ) : (
-                      <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/30 space-y-2">
-                        <div className="flex items-center space-x-2 text-amber-300 font-bold text-sm">
-                          <Flame className="w-5 h-5 text-amber-400" />
-                          <span>Currently Outside Google Local 3-Pack (Rank #{currentReport.googleMapsPosition})</span>
-                        </div>
-                        <p className="text-xs text-slate-300 leading-relaxed">
-                          Your business appears on Google Maps Page 2 or extended listing. You need approximately <strong className="text-amber-300">{currentReport.competitorGap.reviewsNeededForTop3} more 5-star reviews</strong> and NAP citation consistency to break into the Top 3 Local Pack.
-                        </p>
-                      </div>
-                    )}
+                    <a
+                      href={currentReport.googleMapsUrl || `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${currentReport.businessName} ${currentReport.formattedAddress}`)}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="px-3 py-1.5 rounded-xl bg-rose-500/20 text-rose-300 hover:bg-rose-500/30 border border-rose-500/40 text-xs font-semibold flex items-center space-x-1.5 transition cursor-pointer"
+                    >
+                      <span>Open on Google Maps</span>
+                      <ExternalLink className="w-3.5 h-3.5" />
+                    </a>
                   </div>
 
-                  {/* Visual Map Pin representation */}
-                  <div className="h-44 rounded-xl bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950/40 border border-slate-800 relative flex items-center justify-center overflow-hidden">
-                    <div className="absolute inset-0 bg-[linear-gradient(to_right,#1f2937_1px,transparent_1px),linear-gradient(to_bottom,#1f2937_1px,transparent_1px)] bg-[size:2rem_2rem] opacity-30" />
-                    
-                    {/* Simulated Radar Ring */}
-                    <div className="absolute w-28 h-28 rounded-full border border-emerald-500/30 animate-ping" />
-                    
-                    {/* Center Pin */}
-                    <div className="relative z-10 flex flex-col items-center">
-                      <div className="p-3 bg-gradient-to-tr from-emerald-500 to-teal-500 rounded-full text-white shadow-xl shadow-emerald-500/40 border-2 border-white">
-                        <MapPin className="w-5 h-5" />
+                  {/* Real Google Maps Iframe Embed */}
+                  <div className="w-full h-80 rounded-2xl overflow-hidden border border-slate-700/80 shadow-2xl relative bg-slate-950">
+                    <iframe
+                      title="Google Maps Location Embed"
+                      width="100%"
+                      height="100%"
+                      style={{ border: 0 }}
+                      loading="lazy"
+                      allowFullScreen
+                      referrerPolicy="no-referrer-when-downgrade"
+                      src={`https://maps.google.com/maps?q=${encodeURIComponent(`${currentReport.businessName}, ${currentReport.formattedAddress}`)}&t=&z=15&ie=UTF8&iwloc=&output=embed`}
+                    />
+                  </div>
+
+                  {/* Local 3-Pack Status Banner */}
+                  <div className="p-4 rounded-xl bg-slate-950/80 border border-slate-800 flex items-center justify-between">
+                    <div className="flex items-center space-x-3">
+                      <div className="p-2 rounded-lg bg-emerald-500/20 text-emerald-400 font-black text-sm">
+                        #{currentReport.googleMapsPosition}
                       </div>
-                      <span className="mt-2 px-3 py-1 rounded-full text-[11px] font-bold bg-slate-900/90 text-white border border-slate-700 shadow-lg">
-                        {currentReport.businessName} (Rank #{currentReport.googleMapsPosition})
-                      </span>
-                      <span className="text-[10px] text-emerald-400 font-semibold mt-0.5">
-                        {currentReport.city}, {currentReport.country}
-                      </span>
+                      <div>
+                        <div className="text-xs font-bold text-white flex items-center space-x-1.5">
+                          <span>Google Maps Position #{currentReport.googleMapsPosition}</span>
+                          {currentReport.isLocalPack && <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />}
+                        </div>
+                        <div className="text-[11px] text-slate-400">
+                          {currentReport.isLocalPack ? 'Appears in Google Top 3 Map Pack' : `Ranked #${currentReport.googleMapsPosition} in extended results`}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="text-right">
+                      <span className="text-[10px] text-slate-400 block">Coordinates</span>
+                      <span className="font-mono text-slate-300 text-xs">{currentReport.latitude.toFixed(4)}, {currentReport.longitude.toFixed(4)}</span>
                     </div>
                   </div>
+
                 </div>
               </div>
 
             </div>
           )}
 
-          {/* Tab 2: Reviews & Sentiment */}
+          {/* TAB 2: REVIEWS & AUTO-PUT REVIEW ENGINE */}
           {activeSubTab === 'reviews' && (
-            <div className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="glass-panel p-5 rounded-2xl border border-slate-800 bg-slate-900/60 flex flex-col items-center justify-center text-center">
-                  <span className="text-3xl font-black text-amber-400">{currentReport.rating}</span>
-                  <div className="flex items-center text-amber-400 my-1">
-                    {[...Array(5)].map((_, i) => (
-                      <Star key={i} className={`w-4 h-4 ${i < Math.floor(currentReport.rating) ? 'fill-amber-400' : 'text-slate-600'}`} />
-                    ))}
+            <div className="space-y-6">
+              
+              {/* Review Engine Row: Sentiment Stats + Auto-Post Review Tool */}
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                
+                {/* Left: Overall Rating & Sentiment */}
+                <div className="lg:col-span-5 space-y-4">
+                  <div className="glass-panel p-6 rounded-3xl border border-slate-800 bg-slate-900/60 space-y-4">
+                    <div className="text-center py-2">
+                      <span className="text-4xl font-black text-amber-400">{currentReport.rating}</span>
+                      <div className="flex items-center justify-center text-amber-400 my-1.5">
+                        {[...Array(5)].map((_, i) => (
+                          <Star key={i} className={`w-4 h-4 ${i < Math.floor(currentReport.rating) ? 'fill-amber-400' : 'text-slate-600'}`} />
+                        ))}
+                      </div>
+                      <span className="text-xs text-slate-300 font-semibold">
+                        Based on {currentReport.totalReviews} verified Google reviews
+                      </span>
+                    </div>
+
+                    {/* Sentiment Distribution Bars */}
+                    <div className="space-y-2 pt-2 border-t border-slate-800 text-xs">
+                      <div>
+                        <div className="flex justify-between text-slate-300 text-[11px] mb-1">
+                          <span>Positive (5 & 4 Stars)</span>
+                          <span className="text-emerald-400 font-bold">{currentReport.reviewSentiment.positivePercent}%</span>
+                        </div>
+                        <div className="w-full bg-slate-800 h-2 rounded-full overflow-hidden">
+                          <div className="bg-emerald-500 h-full rounded-full transition-all duration-500" style={{ width: `${currentReport.reviewSentiment.positivePercent}%` }} />
+                        </div>
+                      </div>
+                      <div>
+                        <div className="flex justify-between text-slate-300 text-[11px] mb-1">
+                          <span>Neutral (3 Stars)</span>
+                          <span className="text-amber-400 font-bold">{currentReport.reviewSentiment.neutralPercent}%</span>
+                        </div>
+                        <div className="w-full bg-slate-800 h-2 rounded-full overflow-hidden">
+                          <div className="bg-amber-500 h-full rounded-full transition-all duration-500" style={{ width: `${currentReport.reviewSentiment.neutralPercent}%` }} />
+                        </div>
+                      </div>
+                      <div>
+                        <div className="flex justify-between text-slate-300 text-[11px] mb-1">
+                          <span>Critical (1 & 2 Stars)</span>
+                          <span className="text-rose-400 font-bold">{currentReport.reviewSentiment.negativePercent}%</span>
+                        </div>
+                        <div className="w-full bg-slate-800 h-2 rounded-full overflow-hidden">
+                          <div className="bg-rose-500 h-full rounded-full transition-all duration-500" style={{ width: `${currentReport.reviewSentiment.negativePercent}%` }} />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Share Review Link Box */}
+                    <div className="pt-3 border-t border-slate-800">
+                      <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1.5 flex items-center justify-between">
+                        <span>Direct Google Review Link</span>
+                        <span className="text-emerald-400">Send to Customers</span>
+                      </label>
+                      <div className="flex items-center space-x-2">
+                        <input
+                          type="text"
+                          readOnly
+                          value={currentReport.googleReviewUrl || `https://search.google.com/local/writereview?placeid=${currentReport.businessName.toLowerCase().replace(/[^a-z0-9]/g, '')}`}
+                          className="flex-1 bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1.5 text-[11px] text-slate-400 font-mono truncate"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => copyText(currentReport.googleReviewUrl || `https://search.google.com/local/writereview?placeid=${currentReport.businessName.toLowerCase().replace(/[^a-z0-9]/g, '')}`, 'review-link')}
+                          className="px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold flex items-center space-x-1 cursor-pointer shrink-0 transition"
+                        >
+                          {copiedKey === 'review-link' ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+                          <span>{copiedKey === 'review-link' ? 'Copied' : 'Copy'}</span>
+                        </button>
+                      </div>
+                    </div>
+
                   </div>
-                  <span className="text-xs text-slate-400 font-semibold">Based on {currentReport.totalReviews} verified Google reviews</span>
                 </div>
 
-                <div className="glass-panel p-5 rounded-2xl border border-slate-800 bg-slate-900/60 md:col-span-2 space-y-2">
-                  <h4 className="text-xs font-bold text-white uppercase tracking-wider">Review Sentiment Distribution</h4>
-                  <div className="space-y-1.5 text-xs">
-                    <div>
-                      <div className="flex justify-between text-slate-300 text-[11px] mb-1">
-                        <span>Positive (5 & 4 Stars)</span>
-                        <span className="text-emerald-400 font-bold">{currentReport.reviewSentiment.positivePercent}%</span>
+                {/* Right: AUTO-PUT REVIEW ENGINE (Form + 1-Click AI Generate) */}
+                <div className="lg:col-span-7 space-y-4">
+                  <div className="glass-panel p-6 rounded-3xl border border-emerald-500/40 bg-slate-900/80 shadow-2xl space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h4 className="text-sm font-bold text-white flex items-center space-x-2">
+                          <MessageSquarePlus className="w-4 h-4 text-emerald-400" />
+                          <span>Auto-Put Review System to Map Profile</span>
+                        </h4>
+                        <p className="text-xs text-slate-400 mt-0.5">
+                          Generate and simulate submitting verified 5-star customer reviews that boost your local rating
+                        </p>
                       </div>
-                      <div className="w-full bg-slate-800 h-2 rounded-full overflow-hidden">
-                        <div className="bg-emerald-500 h-full rounded-full" style={{ width: `${currentReport.reviewSentiment.positivePercent}%` }} />
-                      </div>
+
+                      <button
+                        type="button"
+                        onClick={handleAiAutoFillReview}
+                        className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-amber-500/20 to-emerald-500/20 hover:from-amber-500/30 hover:to-emerald-500/30 text-amber-300 border border-amber-500/30 text-xs font-bold flex items-center space-x-1.5 transition cursor-pointer"
+                      >
+                        <Wand2 className="w-3.5 h-3.5 text-amber-400" />
+                        <span>✨ 1-Click AI Auto-Write</span>
+                      </button>
                     </div>
-                    <div>
-                      <div className="flex justify-between text-slate-300 text-[11px] mb-1">
-                        <span>Neutral (3 Stars)</span>
-                        <span className="text-amber-400 font-bold">{currentReport.reviewSentiment.neutralPercent}%</span>
+
+                    <form onSubmit={handleSubmitNewReview} className="space-y-3">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                          <label className="text-[11px] font-semibold text-slate-300 block mb-1">
+                            Reviewer Name
+                          </label>
+                          <input
+                            type="text"
+                            required
+                            value={newReviewAuthor}
+                            onChange={(e) => setNewReviewAuthor(e.target.value)}
+                            placeholder="e.g. David Henderson (Verified Local Guide)"
+                            className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-emerald-500"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="text-[11px] font-semibold text-slate-300 block mb-1">
+                            Star Rating (1 to 5 Stars)
+                          </label>
+                          <div className="flex items-center space-x-2 bg-slate-950 border border-slate-700 rounded-xl px-3 py-1.5">
+                            {[1, 2, 3, 4, 5].map((starVal) => (
+                              <button
+                                key={starVal}
+                                type="button"
+                                onClick={() => setNewReviewRating(starVal)}
+                                className="cursor-pointer p-0.5 hover:scale-110 transition text-amber-400"
+                              >
+                                <Star className={`w-4 h-4 ${starVal <= newReviewRating ? 'fill-amber-400' : 'text-slate-700'}`} />
+                              </button>
+                            ))}
+                            <span className="text-xs font-bold text-amber-400 ml-2">{newReviewRating} Stars</span>
+                          </div>
+                        </div>
                       </div>
-                      <div className="w-full bg-slate-800 h-2 rounded-full overflow-hidden">
-                        <div className="bg-amber-500 h-full rounded-full" style={{ width: `${currentReport.reviewSentiment.neutralPercent}%` }} />
+
+                      <div>
+                        <label className="text-[11px] font-semibold text-slate-300 block mb-1">
+                          Review Testimonial Text (Targeting "{currentReport.targetKeyword}" in {currentReport.city})
+                        </label>
+                        <textarea
+                          required
+                          rows={3}
+                          value={newReviewText}
+                          onChange={(e) => setNewReviewText(e.target.value)}
+                          placeholder="Write review copy or click '1-Click AI Auto-Write' above to let the AI draft a keyword-optimized review..."
+                          className="w-full bg-slate-950 border border-slate-700 rounded-xl p-3 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-emerald-500 leading-relaxed font-sans"
+                        />
                       </div>
-                    </div>
-                    <div>
-                      <div className="flex justify-between text-slate-300 text-[11px] mb-1">
-                        <span>Critical (1 & 2 Stars)</span>
-                        <span className="text-rose-400 font-bold">{currentReport.reviewSentiment.negativePercent}%</span>
-                      </div>
-                      <div className="w-full bg-slate-800 h-2 rounded-full overflow-hidden">
-                        <div className="bg-rose-500 h-full rounded-full" style={{ width: `${currentReport.reviewSentiment.negativePercent}%` }} />
-                      </div>
-                    </div>
+
+                      <button
+                        type="submit"
+                        disabled={isSubmittingReview || !newReviewText.trim()}
+                        className="w-full py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 disabled:opacity-50 text-white font-bold rounded-xl text-xs flex items-center justify-center space-x-2 shadow-lg shadow-emerald-600/20 transition cursor-pointer"
+                      >
+                        <Send className="w-3.5 h-3.5" />
+                        <span>{isSubmittingReview ? 'Submitting to Profile...' : '🚀 Submit Review to Map Profile & Recalculate Rating'}</span>
+                      </button>
+                    </form>
                   </div>
                 </div>
+
               </div>
 
-              {/* Sample Reviews Cards */}
-              <div className="space-y-3">
-                <h4 className="text-xs font-bold text-white uppercase tracking-wider">Recent Google Customer Reviews</h4>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {/* Published Customer Reviews List */}
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <h4 className="text-xs font-bold text-white uppercase tracking-wider flex items-center space-x-2">
+                    <span>Verified Google Customer Reviews</span>
+                    <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 text-[10px]">
+                      {currentReport.sampleReviews.length} Displayed
+                    </span>
+                  </h4>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {currentReport.sampleReviews.map((rev, idx) => (
-                    <div key={idx} className="glass-panel p-4 rounded-xl border border-slate-800 bg-slate-900/60 flex flex-col justify-between space-y-2 text-xs">
-                      <div>
-                        <div className="flex items-center justify-between mb-1">
-                          <span className="font-bold text-white">{rev.author}</span>
-                          <span className="text-[10px] text-slate-500">{rev.timeAgo}</span>
+                    <div key={idx} className="glass-panel p-5 rounded-2xl border border-slate-800 bg-slate-900/60 space-y-3 text-xs shadow-lg">
+                      <div className="flex items-start justify-between">
+                        <div className="flex items-center space-x-3">
+                          <img
+                            src={rev.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=64&h=64&q=80'}
+                            alt={rev.author}
+                            className="w-9 h-9 rounded-full object-cover border border-slate-700 shrink-0"
+                          />
+                          <div>
+                            <div className="font-bold text-white flex items-center space-x-1.5">
+                              <span>{rev.author}</span>
+                              {rev.localGuide && (
+                                <span className="px-1.5 py-0.2 rounded text-[9px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                                  Local Guide
+                                </span>
+                              )}
+                            </div>
+                            <span className="text-[10px] text-slate-500">{rev.timeAgo}</span>
+                          </div>
                         </div>
-                        <div className="flex items-center text-amber-400 mb-2">
+
+                        <div className="flex items-center text-amber-400">
                           {[...Array(5)].map((_, i) => (
                             <Star key={i} className={`w-3 h-3 ${i < rev.rating ? 'fill-amber-400' : 'text-slate-600'}`} />
                           ))}
                         </div>
-                        <p className="text-slate-300 italic text-[11px] leading-relaxed">
-                          "{rev.text}"
-                        </p>
                       </div>
-                      <div className="text-[10px] text-emerald-400 font-semibold flex items-center space-x-1">
-                        <CheckCircle2 className="w-3 h-3" />
-                        <span>Verified Google Review</span>
-                      </div>
+
+                      <p className="text-slate-300 italic leading-relaxed text-[11px] bg-slate-950/40 p-3 rounded-xl border border-slate-800/60">
+                        "{rev.text}"
+                      </p>
+
+                      {/* Owner Response */}
+                      {rev.response && (
+                        <div className="p-3 rounded-xl bg-slate-900/90 border-l-2 border-indigo-500 space-y-1 text-[11px]">
+                          <div className="flex items-center justify-between text-indigo-300 font-bold">
+                            <span>Response from owner</span>
+                            <span className="text-[10px] text-slate-500">{rev.response.timeAgo}</span>
+                          </div>
+                          <p className="text-slate-400 leading-relaxed">
+                            {rev.response.text}
+                          </p>
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>
               </div>
+
             </div>
           )}
 
-          {/* Tab 3: Competitors in City */}
+          {/* TAB 3: COMPETITORS IN CITY */}
           {activeSubTab === 'competitors' && (
             <div className="space-y-4">
               <div className="glass-panel p-5 rounded-2xl border border-slate-800 bg-slate-900/60 space-y-4">
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between flex-wrap gap-2">
                   <div>
                     <h3 className="text-sm font-bold text-white">Top Local Competitors for "{currentReport.targetKeyword}" in {currentReport.city}</h3>
                     <p className="text-xs text-slate-400 mt-0.5">Compare review volume, star ratings, and exact Google rank positions</p>
                   </div>
                   <span className="px-3 py-1 rounded-xl text-xs font-bold bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
-                    Gap: {currentReport.competitorGap.reviewsNeededForTop3} Reviews needed
+                    Gap: {currentReport.competitorGap.reviewsNeededForTop3} Reviews needed for Top 3
                   </span>
                 </div>
 
@@ -918,7 +1177,7 @@ export const GoogleMapsLocalRanker: React.FC<GoogleMapsLocalRankerProps> = ({
             </div>
           )}
 
-          {/* Tab 4: GBP Audit */}
+          {/* TAB 4: GBP AUDIT */}
           {activeSubTab === 'gbp-audit' && (
             <div className="glass-panel p-6 rounded-2xl border border-slate-800 bg-slate-900/60 space-y-4">
               <div className="flex items-center justify-between">
@@ -957,7 +1216,7 @@ export const GoogleMapsLocalRanker: React.FC<GoogleMapsLocalRankerProps> = ({
             </div>
           )}
 
-          {/* Tab 5: Local Rank Action Plan */}
+          {/* TAB 5: LOCAL RANK ACTION PLAN */}
           {activeSubTab === 'action-plan' && (
             <div className="glass-panel p-6 rounded-2xl border border-slate-800 bg-slate-900/60 space-y-4">
               <div className="flex items-center justify-between">

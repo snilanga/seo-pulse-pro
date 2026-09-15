@@ -470,11 +470,25 @@ export interface LocalBusinessReport {
     negativePercent: number;
   };
   sampleReviews: {
+    id?: string;
     author: string;
+    avatar?: string;
+    localGuide?: boolean;
     rating: number;
     timeAgo: string;
     text: string;
+    response?: {
+      author: string;
+      text: string;
+      timeAgo: string;
+    };
   }[];
+
+  // Real Google Business Profile details
+  openingHours?: string[];
+  googleMapsUrl?: string;
+  googleReviewUrl?: string;
+  gbpAttributes?: string[];
 
   // Google Ranking Position
   googleMapsPosition: number; // 1, 2, 3...
