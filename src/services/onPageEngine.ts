@@ -86,13 +86,18 @@ export interface OnPageSeoPackage {
 export type PresetCategoryGroup = 
   | 'All' 
   | 'Health & Medical' 
-  | 'Home & Local Services' 
+  | 'Home & Trade Services' 
+  | 'Logistics & Transport' 
+  | 'Automotive Services' 
   | 'Food & Hospitality' 
   | 'Professional & Legal' 
-  | 'Automotive' 
-  | 'Tech & E-Commerce' 
-  | 'Beauty & Wellness' 
-  | 'Events & Creative';
+  | 'Real Estate & Finance' 
+  | 'Tech & IT Services' 
+  | 'Beauty & Personal Care' 
+  | 'Fitness & Sports' 
+  | 'Education & Learning' 
+  | 'Events & Creative' 
+  | 'Security & Industrial';
 
 export interface QuickPreset {
   id: string;
@@ -175,13 +180,65 @@ export const ONPAGE_QUICK_PRESETS: QuickPreset[] = [
     pageOrTopic: 'Home Page',
     description: 'Small animal vaccinations, grooming & 24/7 veterinary ER'
   },
+  {
+    id: 'chiropractic',
+    label: 'Chiropractic Clinic',
+    icon: '🦴',
+    categoryGroup: 'Health & Medical',
+    businessType: 'Chiropractic & Wellness Clinic',
+    serviceOrProduct: 'Spinal Adjustments & Disc Decompression Therapy',
+    targetKeyword: 'best chiropractor in Austin',
+    city: 'Austin',
+    country: 'United States',
+    pageOrTopic: 'Services Page',
+    description: 'Sciatica relief, posture correction & whiplash rehabilitation'
+  },
+  {
+    id: 'physical-therapy',
+    label: 'Physical Therapy & Rehab',
+    icon: '🩺',
+    categoryGroup: 'Health & Medical',
+    businessType: 'Physical Therapy & Sports Rehab',
+    serviceOrProduct: 'Post-Surgical Orthopedic Rehab & Joint Mobility',
+    targetKeyword: 'best physical therapy clinic in London',
+    city: 'London',
+    country: 'United Kingdom',
+    pageOrTopic: 'Home Page',
+    description: 'Sports injury recovery, dry needling & gait fall prevention'
+  },
+  {
+    id: 'dermatology',
+    label: 'Dermatology & Skin Clinic',
+    icon: '✨',
+    categoryGroup: 'Health & Medical',
+    businessType: 'Dermatology & Skin Clinic',
+    serviceOrProduct: 'Acne Treatment & Anti-Aging Skin Care',
+    targetKeyword: 'best dermatologist in New York',
+    city: 'New York',
+    country: 'United States',
+    pageOrTopic: 'Services Page',
+    description: 'Mole screening, Botox fillers, eczema therapy & laser peels'
+  },
 
-  // 2. HOME & LOCAL SERVICES
+  // 2. HOME & TRADE SERVICES
+  {
+    id: 'pest-control',
+    label: 'Pest Control & Exterminator',
+    icon: '🐜',
+    categoryGroup: 'Home & Trade Services',
+    businessType: 'Pest Control & Extermination',
+    serviceOrProduct: 'Termite Inspection & Eco-Safe Pest Eradication',
+    targetKeyword: 'best pest control service in Colombo',
+    city: 'Colombo',
+    country: 'Sri Lanka',
+    pageOrTopic: 'Services Page',
+    description: 'Termite barriers, rodent exclusion, bed bug heat & ant removal'
+  },
   {
     id: 'plumber',
     label: 'Emergency Plumber',
     icon: '🔧',
-    categoryGroup: 'Home & Local Services',
+    categoryGroup: 'Home & Trade Services',
     businessType: 'Plumbing & Drainage Service',
     serviceOrProduct: '24/7 Pipe Burst Repair & Drain Unblocking',
     targetKeyword: 'emergency plumber in London near me',
@@ -194,7 +251,7 @@ export const ONPAGE_QUICK_PRESETS: QuickPreset[] = [
     id: 'electrician',
     label: 'Electrical Contractor',
     icon: '⚡',
-    categoryGroup: 'Home & Local Services',
+    categoryGroup: 'Home & Trade Services',
     businessType: 'Electrical Contractor',
     serviceOrProduct: 'EV Charger Installation & Rewiring',
     targetKeyword: 'certified electrician in Austin',
@@ -207,7 +264,7 @@ export const ONPAGE_QUICK_PRESETS: QuickPreset[] = [
     id: 'roofing',
     label: 'Roofing & Gutters',
     icon: '🏠',
-    categoryGroup: 'Home & Local Services',
+    categoryGroup: 'Home & Trade Services',
     businessType: 'Roofing Contractor',
     serviceOrProduct: 'Roof Replacement & Storm Damage Repair',
     targetKeyword: 'best roofing contractor in Dallas',
@@ -220,7 +277,7 @@ export const ONPAGE_QUICK_PRESETS: QuickPreset[] = [
     id: 'hvac',
     label: 'HVAC & AC Repair',
     icon: '❄️',
-    categoryGroup: 'Home & Local Services',
+    categoryGroup: 'Home & Trade Services',
     businessType: 'HVAC & Cooling Services',
     serviceOrProduct: 'Air Conditioning Repair & Heat Pump Installation',
     targetKeyword: 'best HVAC company in Houston',
@@ -233,7 +290,7 @@ export const ONPAGE_QUICK_PRESETS: QuickPreset[] = [
     id: 'cleaning',
     label: 'Cleaning & Maid Service',
     icon: '🧹',
-    categoryGroup: 'Home & Local Services',
+    categoryGroup: 'Home & Trade Services',
     businessType: 'Commercial & Home Cleaning',
     serviceOrProduct: 'Deep House Cleaning & Office Sanitization',
     targetKeyword: 'best cleaning service in New York',
@@ -246,7 +303,7 @@ export const ONPAGE_QUICK_PRESETS: QuickPreset[] = [
     id: 'landscaping',
     label: 'Landscaping & Tree Care',
     icon: '🌳',
-    categoryGroup: 'Home & Local Services',
+    categoryGroup: 'Home & Trade Services',
     businessType: 'Landscaping & Lawn Care',
     serviceOrProduct: 'Landscape Architecture & Tree Removal',
     targetKeyword: 'best landscaping company in Miami',
@@ -259,7 +316,7 @@ export const ONPAGE_QUICK_PRESETS: QuickPreset[] = [
     id: 'locksmith',
     label: '24/7 Locksmith',
     icon: '🔒',
-    categoryGroup: 'Home & Local Services',
+    categoryGroup: 'Home & Trade Services',
     businessType: 'Emergency Locksmith Service',
     serviceOrProduct: '24/7 Home Lockout & Smart Lock Installation',
     targetKeyword: 'emergency locksmith near me London',
@@ -269,10 +326,75 @@ export const ONPAGE_QUICK_PRESETS: QuickPreset[] = [
     description: 'Car key cutting, commercial master keys & rapid lockout rescue'
   },
   {
+    id: 'handyman',
+    label: 'Handyman & Home Repair',
+    icon: '🔨',
+    categoryGroup: 'Home & Trade Services',
+    businessType: 'Handyman & Home Repair',
+    serviceOrProduct: 'Drywall Patching & Fixture Installation',
+    targetKeyword: 'reliable handyman in Chicago',
+    city: 'Chicago',
+    country: 'United States',
+    pageOrTopic: 'Services Page',
+    description: 'Door repairs, carpentry, TV mounting & household fixes'
+  },
+  {
+    id: 'painter',
+    label: 'Painting Contractor',
+    icon: '🖌️',
+    categoryGroup: 'Home & Trade Services',
+    businessType: 'Painting Contractor',
+    serviceOrProduct: 'Interior & Exterior House Painting',
+    targetKeyword: 'best house painters in Toronto',
+    city: 'Toronto',
+    country: 'Canada',
+    pageOrTopic: 'Services Page',
+    description: 'Cabinet spray finishing, commercial coatings & accent walls'
+  },
+  {
+    id: 'pool-service',
+    label: 'Pool Cleaning & Maintenance',
+    icon: '🏊',
+    categoryGroup: 'Home & Trade Services',
+    businessType: 'Pool Cleaning & Maintenance',
+    serviceOrProduct: 'Weekly Pool Water Balancing & Equipment Repair',
+    targetKeyword: 'best pool service in Miami',
+    city: 'Miami',
+    country: 'United States',
+    pageOrTopic: 'Services Page',
+    description: 'Chemical balancing, leak detection, acid washing & pump repair'
+  },
+  {
+    id: 'solar-energy',
+    label: 'Solar Panel Installation',
+    icon: '☀️',
+    categoryGroup: 'Home & Trade Services',
+    businessType: 'Solar Energy Contractor',
+    serviceOrProduct: 'Rooftop Solar PV Installation & Battery Storage',
+    targetKeyword: 'best solar panel company in Sydney',
+    city: 'Sydney',
+    country: 'Australia',
+    pageOrTopic: 'Home Page',
+    description: 'Commercial & residential solar systems with zero-down financing'
+  },
+  {
+    id: 'general-contractor',
+    label: 'General Contractor',
+    icon: '🏗️',
+    categoryGroup: 'Home & Trade Services',
+    businessType: 'General Contractor & Construction',
+    serviceOrProduct: 'Kitchen Remodeling & Home Additions',
+    targetKeyword: 'best general contractor in Los Angeles',
+    city: 'Los Angeles',
+    country: 'United States',
+    pageOrTopic: 'Home Page',
+    description: 'Luxury bathroom renovations, custom buildouts & structural design'
+  },
+  {
     id: 'decor',
     label: 'Home Decor & Furniture',
     icon: '🛋️',
-    categoryGroup: 'Home & Local Services',
+    categoryGroup: 'Home & Trade Services',
     businessType: 'Furniture & Interior Decor',
     serviceOrProduct: 'Handcrafted Modern Wooden Living Decor',
     targetKeyword: 'artisan handcrafted furniture in New York',
@@ -282,7 +404,115 @@ export const ONPAGE_QUICK_PRESETS: QuickPreset[] = [
     description: 'Sustainable solid wood tables, organic linen & minimalist design'
   },
 
-  // 3. FOOD & HOSPITALITY
+  // 3. LOGISTICS & TRANSPORT
+  {
+    id: 'logistics',
+    label: 'Logistics & Freight Forwarding',
+    icon: '🚢',
+    categoryGroup: 'Logistics & Transport',
+    businessType: 'Logistics & Freight Forwarding',
+    serviceOrProduct: 'Ocean & Air Freight Forwarding and 3PL Warehousing',
+    targetKeyword: 'best logistics company in Colombo',
+    city: 'Colombo',
+    country: 'Sri Lanka',
+    pageOrTopic: 'Home Page',
+    description: 'Customs clearance, global freight shipping, FTL/LTL & supply chain'
+  },
+  {
+    id: 'courier',
+    label: 'Courier & Express Delivery',
+    icon: '📦',
+    categoryGroup: 'Logistics & Transport',
+    businessType: 'Courier & Express Delivery',
+    serviceOrProduct: 'Same-Day Emergency Parcel Delivery & Dispatch',
+    targetKeyword: 'same day courier service in London',
+    city: 'London',
+    country: 'United Kingdom',
+    pageOrTopic: 'Services Page',
+    description: 'Urgent document couriers, eCommerce dispatch & door-to-door delivery'
+  },
+  {
+    id: 'moving',
+    label: 'Moving & Storage',
+    icon: '🚚',
+    categoryGroup: 'Logistics & Transport',
+    businessType: 'Moving & Relocation Company',
+    serviceOrProduct: 'Residential Moving & Secure Storage Units',
+    targetKeyword: 'best moving company in Chicago',
+    city: 'Chicago',
+    country: 'United States',
+    pageOrTopic: 'Services Page',
+    description: 'Long-distance moves, packing supplies & climate-controlled storage'
+  },
+  {
+    id: 'towing',
+    label: 'Towing & Roadside Assist',
+    icon: '🛞',
+    categoryGroup: 'Logistics & Transport',
+    businessType: 'Towing & Roadside Assistance',
+    serviceOrProduct: '24/7 Flatbed Towing & Roadside Battery Jump',
+    targetKeyword: 'emergency towing service near me Dallas',
+    city: 'Dallas',
+    country: 'United States',
+    pageOrTopic: 'Services Page',
+    description: 'Fast 20-min vehicle lockout, winch recovery & heavy truck towing'
+  },
+  {
+    id: 'car-rental',
+    label: 'Car Rental Agency',
+    icon: '🚗',
+    categoryGroup: 'Logistics & Transport',
+    businessType: 'Car Rental Agency',
+    serviceOrProduct: 'Luxury Sedan & SUV Airport Fleet Rentals',
+    targetKeyword: 'best luxury car rental in Dubai',
+    city: 'Dubai',
+    country: 'United Arab Emirates',
+    pageOrTopic: 'Fleet Page',
+    description: 'No deposit options, free airport delivery & 24/7 road service'
+  },
+
+  // 4. AUTOMOTIVE SERVICES
+  {
+    id: 'auto-repair',
+    label: 'Auto Repair & Mechanic',
+    icon: '🏎️',
+    categoryGroup: 'Automotive Services',
+    businessType: 'Auto Repair & Mechanic Shop',
+    serviceOrProduct: 'Brake Repair, Engine Diagnostics & Transmission Service',
+    targetKeyword: 'best auto mechanic in Los Angeles',
+    city: 'Los Angeles',
+    country: 'United States',
+    pageOrTopic: 'Services Page',
+    description: 'Certified technicians, factory maintenance & wheel alignment'
+  },
+  {
+    id: 'auto-detailing',
+    label: 'Car Detailing & Ceramic',
+    icon: '🧼',
+    categoryGroup: 'Automotive Services',
+    businessType: 'Car Detailing & Ceramic Coating Studio',
+    serviceOrProduct: 'Paint Correction & Ceramic Shield Protection',
+    targetKeyword: 'best car detailing in Miami',
+    city: 'Miami',
+    country: 'United States',
+    pageOrTopic: 'Services Page',
+    description: 'Interior steam clean, ceramic quartz coating & tinting'
+  },
+  {
+    id: 'auto-collision',
+    label: 'Auto Body & Collision',
+    icon: '🚙',
+    categoryGroup: 'Automotive Services',
+    businessType: 'Auto Body & Collision Repair',
+    serviceOrProduct: 'Collision Frame Straightening & Paintless Dent Repair',
+    targetKeyword: 'best auto body shop in Houston',
+    city: 'Houston',
+    country: 'United States',
+    pageOrTopic: 'Services Page',
+    description: 'Factory color match painting, bumper repairs & insurance claims'
+  },
+
+  // 5. FOOD & HOSPITALITY
   {
     id: 'restaurant',
     label: 'Fine Dining Restaurant',
@@ -348,10 +578,23 @@ export const ONPAGE_QUICK_PRESETS: QuickPreset[] = [
     pageOrTopic: 'Home Page',
     description: 'Wood oven pizza, family dining & fast neighborhood delivery'
   },
-
-  // 4. PROFESSIONAL & LEGAL
   {
-    id: 'lawyer',
+    id: 'catering',
+    label: 'Catering & Event Dining',
+    icon: '🍱',
+    categoryGroup: 'Food & Hospitality',
+    businessType: 'Catering & Event Dining',
+    serviceOrProduct: 'Full-Service Wedding Buffets & Corporate Luncheons',
+    targetKeyword: 'best catering service in New York',
+    city: 'New York',
+    country: 'United States',
+    pageOrTopic: 'Services Page',
+    description: 'Live chef action stations, cocktail canapes & bespoke menus'
+  },
+
+  // 6. PROFESSIONAL & LEGAL
+  {
+    id: 'corporate-law',
     label: 'Corporate Law Firm',
     icon: '⚖️',
     categoryGroup: 'Professional & Legal',
@@ -377,6 +620,32 @@ export const ONPAGE_QUICK_PRESETS: QuickPreset[] = [
     description: 'Prenuptial agreements, custody disputes & asset settlements'
   },
   {
+    id: 'personal-injury',
+    label: 'Personal Injury Lawyer',
+    icon: '🛡️',
+    categoryGroup: 'Professional & Legal',
+    businessType: 'Personal Injury Law Firm',
+    serviceOrProduct: 'Auto Accident Claims & Medical Malpractice Legal Counsel',
+    targetKeyword: 'best personal injury lawyer in Miami',
+    city: 'Miami',
+    country: 'United States',
+    pageOrTopic: 'Home Page',
+    description: 'No-win-no-fee representation, accident settlements & slip and fall'
+  },
+  {
+    id: 'criminal-defense',
+    label: 'Criminal Defense Attorney',
+    icon: '🏛️',
+    categoryGroup: 'Professional & Legal',
+    businessType: 'Criminal Defense Law Firm',
+    serviceOrProduct: 'DUI Defense & White-Collar Criminal Litigation',
+    targetKeyword: 'top criminal defense attorney in Chicago',
+    city: 'Chicago',
+    country: 'United States',
+    pageOrTopic: 'Home Page',
+    description: '24/7 jail bail hearings, felony trial defense & case dismissals'
+  },
+  {
     id: 'accounting',
     label: 'Accounting & CPA Tax',
     icon: '💰',
@@ -390,22 +659,9 @@ export const ONPAGE_QUICK_PRESETS: QuickPreset[] = [
     description: 'IRS/HMRC tax returns, payroll management & financial audits'
   },
   {
-    id: 'real-estate',
-    label: 'Real Estate Agency',
-    icon: '🏡',
-    categoryGroup: 'Professional & Legal',
-    businessType: 'Real Estate Brokerage',
-    serviceOrProduct: 'Luxury Residential Sales & Property Management',
-    targetKeyword: 'best real estate agents in Dubai',
-    city: 'Dubai',
-    country: 'United Arab Emirates',
-    pageOrTopic: 'Home Page',
-    description: 'Luxury villas, waterfront apartments & high-yield investments'
-  },
-  {
     id: 'insurance',
     label: 'Insurance Broker',
-    icon: '🛡️',
+    icon: '📑',
     categoryGroup: 'Professional & Legal',
     businessType: 'Independent Insurance Agency',
     serviceOrProduct: 'Commercial Liability & Comprehensive Health Insurance',
@@ -416,66 +672,53 @@ export const ONPAGE_QUICK_PRESETS: QuickPreset[] = [
     description: 'Home, auto, commercial property & umbrella policies'
   },
 
-  // 5. AUTOMOTIVE & TRANSPORT
+  // 7. REAL ESTATE & FINANCE
   {
-    id: 'car-rental',
-    label: 'Car Rental Agency',
-    icon: '🚗',
-    categoryGroup: 'Automotive',
-    businessType: 'Car Rental Agency',
-    serviceOrProduct: 'Luxury Sedan & SUV Airport Fleet Rentals',
-    targetKeyword: 'best luxury car rental in Dubai',
+    id: 'real-estate',
+    label: 'Real Estate Agency',
+    icon: '🏡',
+    categoryGroup: 'Real Estate & Finance',
+    businessType: 'Real Estate Brokerage',
+    serviceOrProduct: 'Luxury Residential Sales & Property Management',
+    targetKeyword: 'best real estate agents in Dubai',
     city: 'Dubai',
     country: 'United Arab Emirates',
-    pageOrTopic: 'Fleet Page',
-    description: 'No deposit options, free airport delivery & 24/7 road service'
+    pageOrTopic: 'Home Page',
+    description: 'Luxury villas, waterfront apartments & high-yield investments'
   },
   {
-    id: 'auto-repair',
-    label: 'Auto Repair & Mechanic',
-    icon: '🏎️',
-    categoryGroup: 'Automotive',
-    businessType: 'Auto Repair & Mechanic Shop',
-    serviceOrProduct: 'Brake Repair, Engine Diagnostics & Transmission Service',
-    targetKeyword: 'best auto mechanic in Los Angeles',
-    city: 'Los Angeles',
-    country: 'United States',
+    id: 'property-management',
+    label: 'Property Management',
+    icon: '🔑',
+    categoryGroup: 'Real Estate & Finance',
+    businessType: 'Property Management Company',
+    serviceOrProduct: 'Tenant Placement, Rent Collection & Maintenance',
+    targetKeyword: 'best property management company in Toronto',
+    city: 'Toronto',
+    country: 'Canada',
     pageOrTopic: 'Services Page',
-    description: 'Certified technicians, factory maintenance & wheel alignment'
+    description: 'Full-service landlord support, lease agreements & Airbnb hosting'
   },
   {
-    id: 'auto-detailing',
-    label: 'Car Detailing & Ceramic',
-    icon: '🧼',
-    categoryGroup: 'Automotive',
-    businessType: 'Car Detailing & Ceramic Coating Studio',
-    serviceOrProduct: 'Paint Correction & Ceramic Shield Protection',
-    targetKeyword: 'best car detailing in Miami',
-    city: 'Miami',
-    country: 'United States',
-    pageOrTopic: 'Services Page',
-    description: 'Interior steam clean, ceramic quartz coating & tinting'
-  },
-  {
-    id: 'moving',
-    label: 'Moving & Storage',
-    icon: '🚚',
-    categoryGroup: 'Automotive',
-    businessType: 'Moving & Relocation Company',
-    serviceOrProduct: 'Residential Moving & Secure Storage Units',
-    targetKeyword: 'best moving company in Chicago',
-    city: 'Chicago',
-    country: 'United States',
-    pageOrTopic: 'Services Page',
-    description: 'Long-distance moves, packing supplies & climate-controlled storage'
+    id: 'mortgage',
+    label: 'Mortgage Brokerage',
+    icon: '🏦',
+    categoryGroup: 'Real Estate & Finance',
+    businessType: 'Mortgage Brokerage',
+    serviceOrProduct: 'Home Purchase Loans & Mortgage Refinancing',
+    targetKeyword: 'best mortgage broker in Sydney',
+    city: 'Sydney',
+    country: 'Australia',
+    pageOrTopic: 'Home Page',
+    description: 'First-time homebuyer loans, low rates & rapid pre-approvals'
   },
 
-  // 6. TECH & E-COMMERCE
+  // 8. TECH & IT SERVICES
   {
     id: 'saas',
     label: 'Cloud Security SaaS',
     icon: '💻',
-    categoryGroup: 'Tech & E-Commerce',
+    categoryGroup: 'Tech & IT Services',
     businessType: 'Cloud Security Platform',
     serviceOrProduct: 'SOC2 & ISO27001 Cloud Compliance Monitoring',
     targetKeyword: 'enterprise cloud compliance software',
@@ -488,7 +731,7 @@ export const ONPAGE_QUICK_PRESETS: QuickPreset[] = [
     id: 'web-agency',
     label: 'Web Design & SEO Agency',
     icon: '🌐',
-    categoryGroup: 'Tech & E-Commerce',
+    categoryGroup: 'Tech & IT Services',
     businessType: 'Digital Marketing & Web Agency',
     serviceOrProduct: 'Custom Web Design, Webflow & Local SEO Marketing',
     targetKeyword: 'best web design agency in London',
@@ -498,10 +741,23 @@ export const ONPAGE_QUICK_PRESETS: QuickPreset[] = [
     description: 'High-conversion UI/UX websites, Shopify stores & rank growth'
   },
   {
+    id: 'managed-it',
+    label: 'Managed IT & Cyber Services',
+    icon: '🖥️',
+    categoryGroup: 'Tech & IT Services',
+    businessType: 'Managed IT Services & MSP',
+    serviceOrProduct: '24/7 Network Monitoring & Cloud Backup Solutions',
+    targetKeyword: 'best managed IT services in Dallas',
+    city: 'Dallas',
+    country: 'United States',
+    pageOrTopic: 'Services Page',
+    description: 'Helpdesk support, cybersecurity firewall & Microsoft 365 setup'
+  },
+  {
     id: 'apparel',
     label: 'Fashion E-Commerce',
     icon: '🛍️',
-    categoryGroup: 'Tech & E-Commerce',
+    categoryGroup: 'Tech & IT Services',
     businessType: 'Boutique Apparel Brand',
     serviceOrProduct: 'Sustainable Streetwear & Designer Accessories',
     targetKeyword: 'sustainable fashion brand in New York',
@@ -511,12 +767,12 @@ export const ONPAGE_QUICK_PRESETS: QuickPreset[] = [
     description: 'Organic cotton hoodies, denim & worldwide carbon-neutral shipping'
   },
 
-  // 7. BEAUTY & WELLNESS
+  // 9. BEAUTY & PERSONAL CARE
   {
     id: 'salon',
     label: 'Hair Salon & Colorists',
     icon: '💇',
-    categoryGroup: 'Beauty & Wellness',
+    categoryGroup: 'Beauty & Personal Care',
     businessType: 'Hair Salon & Color Studio',
     serviceOrProduct: 'Balayage Highlights, Hair Extensions & Keratin Treatment',
     targetKeyword: 'best hair salon in Paris',
@@ -529,7 +785,7 @@ export const ONPAGE_QUICK_PRESETS: QuickPreset[] = [
     id: 'spa',
     label: 'Day Spa & Massage',
     icon: '💆',
-    categoryGroup: 'Beauty & Wellness',
+    categoryGroup: 'Beauty & Personal Care',
     businessType: 'Wellness Spa & Massage Center',
     serviceOrProduct: 'Deep Tissue Massage & Hydrotherapy Facial',
     targetKeyword: 'best wellness spa in Bali',
@@ -542,7 +798,7 @@ export const ONPAGE_QUICK_PRESETS: QuickPreset[] = [
     id: 'barbershop',
     label: 'Men\'s Barbershop',
     icon: '💈',
-    categoryGroup: 'Beauty & Wellness',
+    categoryGroup: 'Beauty & Personal Care',
     businessType: 'Traditional Men\'s Barbershop',
     serviceOrProduct: 'Beard Sculpting & Hot Towel Straight Razor Shave',
     targetKeyword: 'best barbershop in Brooklyn',
@@ -552,10 +808,25 @@ export const ONPAGE_QUICK_PRESETS: QuickPreset[] = [
     description: 'Fade haircuts, executive beard grooming & scalp treatments'
   },
   {
+    id: 'nail-salon',
+    label: 'Nail Salon & Lash Lounge',
+    icon: '💅',
+    categoryGroup: 'Beauty & Personal Care',
+    businessType: 'Nail Salon & Lash Lounge',
+    serviceOrProduct: 'Gel Acrylic Nails & Russian Manicure Pedicure',
+    targetKeyword: 'best nail salon in Los Angeles',
+    city: 'Los Angeles',
+    country: 'United States',
+    pageOrTopic: 'Services Page',
+    description: 'Custom nail art, volume lash extensions & eyebrow threading'
+  },
+
+  // 10. FITNESS & SPORTS
+  {
     id: 'gym',
     label: 'Fitness Gym & CrossFit',
     icon: '🏋️',
-    categoryGroup: 'Beauty & Wellness',
+    categoryGroup: 'Fitness & Sports',
     businessType: 'Athletic Gym & Fitness Center',
     serviceOrProduct: 'Personal Training & Functional HIIT Classes',
     targetKeyword: 'best fitness gym in Austin',
@@ -568,7 +839,7 @@ export const ONPAGE_QUICK_PRESETS: QuickPreset[] = [
     id: 'yoga',
     label: 'Yoga & Pilates Studio',
     icon: '🧘',
-    categoryGroup: 'Beauty & Wellness',
+    categoryGroup: 'Fitness & Sports',
     businessType: 'Yoga & Reformer Pilates Studio',
     serviceOrProduct: 'Hot Vinyasa Yoga & Reformer Core Pilates',
     targetKeyword: 'best yoga studio in Sydney',
@@ -578,7 +849,35 @@ export const ONPAGE_QUICK_PRESETS: QuickPreset[] = [
     description: 'Beginner to master yoga classes, sound baths & teacher workshops'
   },
 
-  // 8. EVENTS & CREATIVE
+  // 11. EDUCATION & LEARNING
+  {
+    id: 'daycare',
+    label: 'Daycare & Preschool',
+    icon: '🧸',
+    categoryGroup: 'Education & Learning',
+    businessType: 'Daycare & Early Learning Center',
+    serviceOrProduct: 'Infant Childcare & Montessori Early Education',
+    targetKeyword: 'best daycare in Toronto near me',
+    city: 'Toronto',
+    country: 'Canada',
+    pageOrTopic: 'Home Page',
+    description: 'Safe preschool learning, after-school care & nutritious meals'
+  },
+  {
+    id: 'tutoring',
+    label: 'Private Tutoring & Test Prep',
+    icon: '📚',
+    categoryGroup: 'Education & Learning',
+    businessType: 'Private Tutoring & Test Prep',
+    serviceOrProduct: '1-on-1 SAT Math & Science Coaching',
+    targetKeyword: 'best private tutors in London',
+    city: 'London',
+    country: 'United Kingdom',
+    pageOrTopic: 'Home Page',
+    description: 'Academic subject mastery, college exam prep & online classes'
+  },
+
+  // 12. EVENTS & CREATIVE
   {
     id: 'photography',
     label: 'Photography Studio',
@@ -604,6 +903,34 @@ export const ONPAGE_QUICK_PRESETS: QuickPreset[] = [
     country: 'Italy',
     pageOrTopic: 'Home Page',
     description: 'Full-service venue selection, floral design & day-of coordination'
+  },
+  {
+    id: 'florist',
+    label: 'Florist & Flower Boutique',
+    icon: '💐',
+    categoryGroup: 'Events & Creative',
+    businessType: 'Florist & Floral Boutique',
+    serviceOrProduct: 'Same-Day Bouquet Delivery & Wedding Flower Styling',
+    targetKeyword: 'best flower shop in Colombo',
+    city: 'Colombo',
+    country: 'Sri Lanka',
+    pageOrTopic: 'Shop Page',
+    description: 'Fresh roses, bespoke bouquets, centerpieces & event florals'
+  },
+
+  // 13. SECURITY & INDUSTRIAL
+  {
+    id: 'security-cctv',
+    label: 'Security & CCTV Installation',
+    icon: '📹',
+    categoryGroup: 'Security & Industrial',
+    businessType: 'Security Systems & CCTV Contractor',
+    serviceOrProduct: 'Commercial 4K CCTV & Smart Alarm Systems',
+    targetKeyword: 'best CCTV installation in Houston',
+    city: 'Houston',
+    country: 'United States',
+    pageOrTopic: 'Services Page',
+    description: 'Access control biometric doors, 24/7 alarm monitoring & video doorbells'
   }
 ];
 
@@ -1030,6 +1357,117 @@ export function autoDetectOnPageInputFromDomain(
     businessType = 'Photography & Cinematography Studio';
     serviceOrProduct = 'Wedding Photography & Commercial Brand Visuals';
     targetKeyword = `best photographer in ${city}`;
+  } else if (/pest|termite|exterminat|bug|rodent/.test(str)) {
+    businessType = 'Pest Control & Extermination';
+    serviceOrProduct = 'Termite Inspection & Eco-Safe Pest Eradication';
+    targetKeyword = `best pest control in ${city}`;
+    pageOrTopic = 'Services Page';
+  } else if (/logistic|freight|cargo|shipping|supply.*chain|forwarding/.test(str)) {
+    businessType = 'Logistics & Freight Forwarding';
+    serviceOrProduct = 'Ocean & Air Freight Forwarding and 3PL Warehousing';
+    targetKeyword = `best logistics company in ${city}`;
+  } else if (/courier|express.*deliver|dispatch|parcel/.test(str)) {
+    businessType = 'Courier & Express Delivery';
+    serviceOrProduct = 'Same-Day Emergency Parcel Courier Service';
+    targetKeyword = `same day courier service in ${city}`;
+    pageOrTopic = 'Services Page';
+  } else if (/tow|towing|roadside|wrecker/.test(str)) {
+    businessType = 'Towing & Roadside Assistance';
+    serviceOrProduct = '24/7 Flatbed Towing & Roadside Battery Jump';
+    targetKeyword = `emergency towing near me in ${city}`;
+    pageOrTopic = 'Services Page';
+  } else if (/collision|autobody|auto.*body|dent.*repair/.test(str)) {
+    businessType = 'Auto Body & Collision Repair';
+    serviceOrProduct = 'Collision Frame Straightening & Paintless Dent Repair';
+    targetKeyword = `best auto body shop in ${city}`;
+    pageOrTopic = 'Services Page';
+  } else if (/handyman|home.*repair|odd.*job/.test(str)) {
+    businessType = 'Handyman & Home Repair';
+    serviceOrProduct = 'Drywall Patching & Fixture Installation';
+    targetKeyword = `reliable handyman in ${city}`;
+    pageOrTopic = 'Services Page';
+  } else if (/paint|painter|painting/.test(str)) {
+    businessType = 'Painting Contractor';
+    serviceOrProduct = 'Interior & Exterior House Painting';
+    targetKeyword = `best house painters in ${city}`;
+    pageOrTopic = 'Services Page';
+  } else if (/pool|swim.*pool/.test(str)) {
+    businessType = 'Pool Cleaning & Maintenance';
+    serviceOrProduct = 'Weekly Pool Water Balancing & Equipment Repair';
+    targetKeyword = `best pool service in ${city}`;
+    pageOrTopic = 'Services Page';
+  } else if (/solar|photovoltaic|sunpower/.test(str)) {
+    businessType = 'Solar Energy Contractor';
+    serviceOrProduct = 'Rooftop Solar PV Installation & Battery Storage';
+    targetKeyword = `best solar panel company in ${city}`;
+  } else if (/contractor|builder|remodel|construction/.test(str)) {
+    businessType = 'General Contractor & Construction';
+    serviceOrProduct = 'Kitchen Remodeling & Home Additions';
+    targetKeyword = `best general contractor in ${city}`;
+  } else if (/personal.*injury|accident.*law|injury.*law/.test(str)) {
+    businessType = 'Personal Injury Law Firm';
+    serviceOrProduct = 'Auto Accident Claims & Medical Malpractice Legal Counsel';
+    targetKeyword = `best personal injury lawyer in ${city}`;
+  } else if (/criminal.*defense|dui.*lawyer|defense.*attorney/.test(str)) {
+    businessType = 'Criminal Defense Law Firm';
+    serviceOrProduct = 'DUI Defense & White-Collar Criminal Litigation';
+    targetKeyword = `top criminal defense attorney in ${city}`;
+  } else if (/chiro|chiropractic|spine.*align/.test(str)) {
+    businessType = 'Chiropractic & Wellness Clinic';
+    serviceOrProduct = 'Spinal Adjustments & Disc Decompression Therapy';
+    targetKeyword = `best chiropractor in ${city}`;
+    pageOrTopic = 'Services Page';
+  } else if (/physical.*therapy|physio|sports.*rehab/.test(str)) {
+    businessType = 'Physical Therapy & Sports Rehab';
+    serviceOrProduct = 'Post-Surgical Orthopedic Rehab & Joint Mobility';
+    targetKeyword = `best physical therapy in ${city}`;
+  } else if (/derma|skincare|skin.*clinic|botox/.test(str)) {
+    businessType = 'Dermatology & Skin Clinic';
+    serviceOrProduct = 'Acne Treatment & Anti-Aging Skin Care';
+    targetKeyword = `best dermatologist in ${city}`;
+    pageOrTopic = 'Services Page';
+  } else if (/managed.*it|msp|it.*support|cybersecurity/.test(str)) {
+    businessType = 'Managed IT Services & MSP';
+    serviceOrProduct = '24/7 Network Monitoring & Cloud Backup Solutions';
+    targetKeyword = `best managed IT services in ${city}`;
+    pageOrTopic = 'Services Page';
+  } else if (/florist|flower|floral.*shop/.test(str)) {
+    businessType = 'Florist & Floral Boutique';
+    serviceOrProduct = 'Same-Day Bouquet Delivery & Wedding Flower Styling';
+    targetKeyword = `best flower shop in ${city}`;
+    pageOrTopic = 'Shop Page';
+  } else if (/daycare|childcare|preschool|nursery/.test(str)) {
+    businessType = 'Daycare & Early Learning Center';
+    serviceOrProduct = 'Infant Childcare & Montessori Early Education';
+    targetKeyword = `best daycare in ${city}`;
+  } else if (/tutor|tutoring|test.*prep|learning.*center/.test(str)) {
+    businessType = 'Private Tutoring & Test Prep';
+    serviceOrProduct = '1-on-1 SAT Math & Science Coaching';
+    targetKeyword = `best private tutors in ${city}`;
+  } else if (/mortgage|home.*loan|lending/.test(str)) {
+    businessType = 'Mortgage Brokerage';
+    serviceOrProduct = 'Home Purchase Loans & Mortgage Refinancing';
+    targetKeyword = `best mortgage broker in ${city}`;
+  } else if (/property.*manag|rental.*manag/.test(str)) {
+    businessType = 'Property Management Company';
+    serviceOrProduct = 'Tenant Placement, Rent Collection & Maintenance';
+    targetKeyword = `best property management company in ${city}`;
+    pageOrTopic = 'Services Page';
+  } else if (/cater|catering|event.*dining/.test(str)) {
+    businessType = 'Catering & Event Dining';
+    serviceOrProduct = 'Full-Service Wedding Buffets & Corporate Luncheons';
+    targetKeyword = `best catering service in ${city}`;
+    pageOrTopic = 'Services Page';
+  } else if (/nail.*salon|nail.*bar|lash.*lounge/.test(str)) {
+    businessType = 'Nail Salon & Lash Lounge';
+    serviceOrProduct = 'Gel Acrylic Nails & Russian Manicure Pedicure';
+    targetKeyword = `best nail salon in ${city}`;
+    pageOrTopic = 'Services Page';
+  } else if (/cctv|security.*camera|alarm.*system/.test(str)) {
+    businessType = 'Security Systems & CCTV Contractor';
+    serviceOrProduct = 'Commercial 4K CCTV & Smart Alarm Systems';
+    targetKeyword = `best CCTV installation in ${city}`;
+    pageOrTopic = 'Services Page';
   } else if (/move|mover|storage/.test(str)) {
     businessType = 'Moving & Relocation Company';
     serviceOrProduct = 'Residential Moving & Secure Storage Units';
@@ -1133,6 +1571,20 @@ export function parseNaturalLanguagePrompt(
     serviceOrProduct = 'Cloud Security & Compliance';
     targetKeyword = 'enterprise cloud compliance software';
     pageOrTopic = 'Product Page';
+  } else if (/pest|termite|exterminator|bug|rodent/.test(lower)) {
+    businessType = 'Pest Control & Extermination';
+    serviceOrProduct = 'Termite Inspection & Eco-Safe Pest Eradication';
+    targetKeyword = `best pest control in ${city}`;
+    pageOrTopic = 'Services Page';
+  } else if (/logistic|freight|shipping|cargo|supply.*chain|forwarding/.test(lower)) {
+    businessType = 'Logistics & Freight Forwarding';
+    serviceOrProduct = 'Ocean & Air Freight Forwarding and 3PL Warehousing';
+    targetKeyword = `best logistics company in ${city}`;
+  } else if (/courier|dispatch|parcel|express.*delivery/.test(lower)) {
+    businessType = 'Courier & Express Delivery';
+    serviceOrProduct = 'Same-Day Emergency Parcel Courier Service';
+    targetKeyword = `same day courier service in ${city}`;
+    pageOrTopic = 'Services Page';
   } else if (/car rental|rental car|rent a car/.test(lower)) {
     businessType = 'Car Rental Agency';
     serviceOrProduct = 'Luxury & Airport Car Rentals';
@@ -1562,6 +2014,176 @@ export const BUSINESS_SERVICES_MAP: { [businessType: string]: string[] } = {
     'Luxury Floral Design & Theme Decor Styling',
     'Corporate Galas, Conferences & Product Launches',
     'Day-Of Event Management & Vendor Sourcing'
+  ],
+  'Pest Control & Extermination': [
+    'Termite Inspection & Chemical Barrier Protection',
+    'Eco-Safe Rodent Control, Trapping & Exclusion',
+    'Bed Bug Heat Treatment & Eradication',
+    'Cockroach & Ant Perimeter Spraying',
+    'Mosquito & Tick Yard Fogging Services',
+    'Commercial Restaurant Pest Management'
+  ],
+  'Logistics & Freight Forwarding': [
+    'International Ocean Container & Air Cargo Freight',
+    'Customs Clearance Brokerage & Regulatory Compliance',
+    'Full Truckload (FTL) & Less-Than-Truckload (LTL) Shipping',
+    '3PL Warehousing, Pick-Pack & E-Commerce Fulfillment',
+    'Cold Chain & Temperature-Controlled Transport',
+    'Last-Mile Delivery Route Logistics'
+  ],
+  'Courier & Express Delivery': [
+    'Same-Day Emergency Parcel Courier Service',
+    'Urgent Document & Legal Contract Dispatch',
+    'Medical Specimen & Pharmaceutical Courier',
+    'Next-Day B2B Regional Package Distribution',
+    'Door-to-Door E-Commerce Delivery Tracking'
+  ],
+  'Towing & Roadside Assistance': [
+    '24/7 Flatbed Towing & Wheel-Lift Recovery',
+    'Emergency Battery Jump-Start & Mobile Replacement',
+    'Roadside Flat Tire Change & Fuel Delivery',
+    'Vehicle Lockout Rescue & Winch Pullouts',
+    'Heavy-Duty Commercial Truck Towing'
+  ],
+  'Auto Body & Collision Repair': [
+    'Complete Collision Repair & Laser Frame Straightening',
+    'Paintless Dent Repair (PDR) & Hail Damage Repair',
+    'Computerized Color-Match Automotive Spray Painting',
+    'Bumper Reconditioning & Panel Replacement',
+    'Insurance Claim Management & Loaner Car Assistance'
+  ],
+  'Handyman & Home Repair': [
+    'Drywall Patching, Sheetrock Repair & Texture',
+    'Interior Door Hanging & Window Hardware Repair',
+    'TV Wall Mounting & Flat-Pack Furniture Assembly',
+    'Deck Staining, Wood Sealing & Fence Repair',
+    'Light Plumbing, Faucet & Fixture Replacements'
+  ],
+  'Painting Contractor': [
+    'Interior Room Painting & Custom Accent Walls',
+    'Exterior Weatherproof House Painting & Pressure Wash',
+    'Kitchen Cabinet Spray Refinishing & Lacquering',
+    'Commercial Office Painting & Epoxy Floor Coating',
+    'Wallpaper Removal & Drywall Priming'
+  ],
+  'Pool Cleaning & Maintenance': [
+    'Weekly Pool Water Chemical Balancing & Skimming',
+    'Pool Pump, Filter & Heater Repair & Upgrades',
+    'Acid Washing & Tile Calcium Scale Removal',
+    'In-Ground Pool Leak Detection & Resurfacing',
+    'Seasonal Pool Opening, Closing & Winterization'
+  ],
+  'Solar Energy Contractor': [
+    'Residential Rooftop Solar Panel PV Installation',
+    'Tesla Powerwall & Solar Battery Storage Systems',
+    'Commercial Solar Array Engineering & Permitting',
+    'Solar Panel Cleaning & Inverter Diagnostics',
+    'Government Solar Tax Rebate & Net Metering Setup'
+  ],
+  'General Contractor & Construction': [
+    'Complete Kitchen Remodeling & Custom Cabinetry',
+    'Luxury Bathroom Renovations & Walk-In Showers',
+    'Home Additions, ADU Units & Second-Story Builds',
+    'Commercial Tenant Improvement & Office Buildouts',
+    'Architectural Blueprints & Structural Engineering'
+  ],
+  'Personal Injury Law Firm': [
+    'Car, Motorcycle & Truck Accident Injury Claims',
+    'Slip and Fall Premises Liability Lawsuits',
+    'Medical Malpractice & Surgical Negligence Claims',
+    'Wrongful Death Legal Representation & Settlements',
+    'No-Win-No-Fee Free Initial Legal Consultations'
+  ],
+  'Criminal Defense Law Firm': [
+    'DUI & DWI Drunk Driving Offense Defense',
+    'Drug Possession, Distribution & Expungements',
+    'White-Collar Fraud & Embezzlement Legal Defense',
+    'Assault, Battery & Domestic Violence Defense',
+    '24/7 Immediate Jail Bail Hearing Representation'
+  ],
+  'Chiropractic & Wellness Clinic': [
+    'Gentle Spinal Adjustments & Posture Alignment',
+    'Non-Surgical Spinal Disc Decompression Therapy',
+    'Sciatica & Chronic Lower Back Pain Relief',
+    'Sports Injury Chiropractic Rehab & Muscle Release',
+    'Auto Accident Whiplash Rehabilitation Therapy'
+  ],
+  'Physical Therapy & Sports Rehab': [
+    'Post-Surgical Joint Replacement Rehabilitation',
+    'Sports Performance, Mobility & Kinetic Therapy',
+    'Dry Needling, Cupping & Deep Tissue Mobilization',
+    'Vestibular Balance Therapy & Fall Prevention',
+    'Workplace Ergonomic Assessments & Chronic Pain Care'
+  ],
+  'Dermatology & Skin Clinic': [
+    'Full-Body Skin Cancer Screenings & Mole Biopsy',
+    'Clinical Acne Therapy & Medical Chemical Peels',
+    'Botox Injections, Dermal Fillers & Anti-Aging',
+    'Psoriasis, Eczema & Chronic Rash Treatments',
+    'Laser Skin Resurfacing & Surgical Scar Revision'
+  ],
+  'Managed IT Services & MSP': [
+    '24/7 Remote Network Monitoring & Helpdesk Support',
+    'Enterprise Cybersecurity Firewall & Endpoint Antivirus',
+    'Microsoft 365, Azure & Cloud Email Migrations',
+    'Automated Disaster Recovery & Ransomware Backups',
+    'Cloud VoIP Phone Systems & Hardware Procurement'
+  ],
+  'Florist & Floral Boutique': [
+    'Same-Day Fresh Flower Bouquet Hand Delivery',
+    'Custom Wedding Floral Bouquets & Centerpieces',
+    'Sympathy Funeral Wreaths & Condolence Arrangements',
+    'Luxury Preserved Rose Boxes & Birthday Florals',
+    'Corporate Weekly Plant & Floral Office Styling'
+  ],
+  'Daycare & Early Learning Center': [
+    'Infant & Toddler Full-Day Licensed Childcare',
+    'Montessori Early Childhood Education Curriculum',
+    'After-School Care Programs & Homework Tutoring',
+    'Nutritious Chef-Prepared Meals & Snacks',
+    'Secure Mobile App with Live Daily Parent Updates'
+  ],
+  'Private Tutoring & Test Prep': [
+    '1-on-1 SAT, ACT & AP Exam Prep Coaching',
+    'K-12 Mathematics, Calculus & Physics Tutoring',
+    'English Reading Comprehension & Writing Skills',
+    'College Admissions Counseling & Essay Guidance',
+    'STEM Robotics & Python Coding Workshops'
+  ],
+  'Mortgage Brokerage': [
+    'First-Time Homebuyer Low-Downpayment Loans',
+    'Mortgage Refinancing & Cash-Out Equity Extraction',
+    'Fixed-Rate & Adjustable-Rate Home Loan Options',
+    'Jumbo Home Loans & Commercial Property Mortgages',
+    'Fast 24-Hour Pre-Approval Letter Issuance'
+  ],
+  'Property Management Company': [
+    'Tenant Screening, Background Checks & Lease Drafting',
+    '24/7 Emergency Maintenance Dispatch & Vendor Care',
+    'Automated Rent Collection & Monthly Financial Reports',
+    'Legal Eviction Protection & Regulatory Compliance',
+    'Short-Term Airbnb Vacation Rental Co-Hosting'
+  ],
+  'Catering & Event Dining': [
+    'Full-Service Wedding Catering Buffets & Plated Meals',
+    'Corporate Executive Luncheon & Breakfast Drop-Off',
+    'Live On-Site BBQ Smoker & Chef Action Stations',
+    'Cocktail Party Hors d\'Oeuvres & Charcuterie Boards',
+    'Custom Vegan, Halal & Gluten-Free Event Menus'
+  ],
+  'Nail Salon & Lash Lounge': [
+    'Russian Gel Manicures & Acrylic Nail Extensions',
+    'Luxury Organic Pedicures & Callus Treatments',
+    'Custom Hand-Painted Nail Art & Chrome Finishes',
+    'Volume & Hybrid Eyelash Extension Applications',
+    'Eyebrow Tinting, Lamination & Threading Shaping'
+  ],
+  'Security Systems & CCTV Contractor': [
+    'Commercial 4K Ultra-HD CCTV Camera Installation',
+    'Smart Home Security Alarm & Motion Sensor Systems',
+    'Keycard, Fob & Biometric Access Control Entry',
+    '24/7 UL-Listed Central Station Alarm Monitoring',
+    'Smart Video Doorbells & Cloud Video Storage'
   ]
 };
 

@@ -48,13 +48,18 @@ interface AiOnPageOptimizerProps {
 const CATEGORY_GROUPS: PresetCategoryGroup[] = [
   'All',
   'Health & Medical',
-  'Home & Local Services',
+  'Home & Trade Services',
+  'Logistics & Transport',
+  'Automotive Services',
   'Food & Hospitality',
   'Professional & Legal',
-  'Automotive',
-  'Tech & E-Commerce',
-  'Beauty & Wellness',
-  'Events & Creative'
+  'Real Estate & Finance',
+  'Tech & IT Services',
+  'Beauty & Personal Care',
+  'Fitness & Sports',
+  'Education & Learning',
+  'Events & Creative',
+  'Security & Industrial'
 ];
 
 export const AiOnPageOptimizer: React.FC<AiOnPageOptimizerProps> = ({
