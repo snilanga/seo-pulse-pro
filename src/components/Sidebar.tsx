@@ -14,10 +14,11 @@ import {
   Sparkles,
   Link2,
   ShieldCheck,
-  MapPin
+  MapPin,
+  FileCheck2
 } from 'lucide-react';
 
-export type TabType = 'domain-checker' | 'research-agent' | 'maps-checker' | 'dashboard' | 'audit' | 'serp' | 'keywords' | 'competitors' | 'reports' | 'ai-agent' | 'trending-keywords' | 'code-injector' | 'page-inspector' | 'backlinks' | 'admin';
+export type TabType = 'domain-checker' | 'research-agent' | 'onpage-optimizer' | 'maps-checker' | 'dashboard' | 'audit' | 'serp' | 'keywords' | 'competitors' | 'reports' | 'ai-agent' | 'trending-keywords' | 'code-injector' | 'page-inspector' | 'backlinks' | 'admin';
 
 interface SidebarProps {
   activeTab: TabType;
@@ -43,6 +44,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
       icon: SearchCheck,
       badge: 'Page # & Grade',
       badgeColor: 'bg-gradient-to-r from-blue-500 to-indigo-500 text-white border-blue-400'
+    },
+    {
+      id: 'onpage-optimizer' as TabType,
+      label: 'AI On-Page SEO Package',
+      icon: FileCheck2,
+      badge: '⚡ 9 Modules',
+      badgeColor: 'bg-gradient-to-r from-cyan-500 via-blue-500 to-indigo-500 text-white border-cyan-400 font-bold'
     },
     {
       id: 'research-agent' as TabType,

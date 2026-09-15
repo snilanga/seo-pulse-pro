@@ -15,6 +15,7 @@ import { ClientCodeInjector } from './components/keywords/ClientCodeInjector';
 import { SerpPageInspector } from './components/serp/SerpPageInspector';
 import { InstantDomainAudit } from './components/audit/InstantDomainAudit';
 import { AiSeoResearchAgent } from './components/research/AiSeoResearchAgent';
+import { AiOnPageOptimizer } from './components/onpage/AiOnPageOptimizer';
 import { GoogleMapsLocalRanker } from './components/maps/GoogleMapsLocalRanker';
 import { DatabaseModal } from './components/database/DatabaseModal';
 import { BacklinkGenerator } from './components/backlinks/BacklinkGenerator';
@@ -227,6 +228,17 @@ export function App() {
                 <AiSeoResearchAgent
                   client={selectedClient}
                   onAddKeyword={handleAddTrackedKeyword}
+                />
+              )}
+
+              {activeTab === 'onpage-optimizer' && (
+                <AiOnPageOptimizer
+                  client={selectedClient}
+                  onAddTrackedKeyword={handleAddTrackedKeyword}
+                  onNavigateToCodeInjector={(kwList) => {
+                    setActiveKeywordsToDeploy(kwList);
+                    setActiveTab('code-injector');
+                  }}
                 />
               )}
 
