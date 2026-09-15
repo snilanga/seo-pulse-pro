@@ -10,7 +10,7 @@ import { CompetitorAnalysis } from './components/competitors/CompetitorAnalysis'
 import { ClientReportGenerator } from './components/reports/ClientReportGenerator';
 import { ClientPortalView } from './components/portal/ClientPortalView';
 import { AiSeoAgent } from './components/agent/AiSeoAgent';
-import { TrendingKeywords } from './components/keywords/TrendingKeywords';
+import { MostSearchedKeywords } from './components/keywords/MostSearchedKeywords';
 import { ClientCodeInjector } from './components/keywords/ClientCodeInjector';
 import { SerpPageInspector } from './components/serp/SerpPageInspector';
 import { InstantDomainAudit } from './components/audit/InstantDomainAudit';
@@ -277,7 +277,7 @@ export function App() {
               )}
 
               {activeTab === 'trending-keywords' && (
-                <TrendingKeywords
+                <MostSearchedKeywords
                   client={selectedClient}
                   onAddTrackedKeyword={handleAddTrackedKeyword}
                   onNavigateToCodeInjector={(kwList) => {

@@ -95,10 +95,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
     },
     {
       id: 'trending-keywords' as TabType,
-      label: 'Trending Key Generator',
+      label: 'Most Searched Keywords',
       icon: Flame,
-      badge: 'Google Trends',
-      badgeColor: 'bg-amber-500/20 text-amber-300 border-amber-500/30'
+      badge: '🔥 Keyword Engine',
+      badgeColor: 'bg-gradient-to-r from-amber-500 via-orange-500 to-rose-500 text-white border-amber-400 font-bold'
     },
     {
       id: 'code-injector' as TabType,
