@@ -7,6 +7,10 @@ import {
   inspectAndGenerateFromDomain,
   generateWithGeminiApi,
   ONPAGE_QUICK_PRESETS,
+  BUSINESS_SERVICES_MAP,
+  POPULAR_CITIES,
+  POPULAR_COUNTRIES,
+  PAGE_TOPIC_OPTIONS,
   type OnPageSeoPackage, 
   type OnPageSeoInput,
   type QuickPreset,
@@ -663,81 +667,197 @@ export const AiOnPageOptimizer: React.FC<AiOnPageOptimizerProps> = ({
         {showManualForm && (
           <form onSubmit={handleManualSubmit} className="p-6 pt-2 border-t border-slate-800 space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              <div>
-                <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">
-                  Business Type <span className="text-rose-400">*</span>
-                </label>
+              {/* 1. Business Type with Auto Dropdown */}
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <label className="text-[10px] font-bold text-slate-300 uppercase tracking-wider">
+                    Business Type <span className="text-rose-400">*</span>
+                  </label>
+                  <span className="text-[9px] text-indigo-400 font-medium">Auto Dropdown</span>
+                </div>
+                <select
+                  value={businessType}
+                  onChange={(e) => {
+                    const newType = e.target.value;
+                    setBusinessType(newType);
+                    const defaultServices = BUSINESS_SERVICES_MAP[newType];
+                    if (defaultServices && defaultServices.length > 0) {
+                      setServiceOrProduct(defaultServices[0]);
+                    }
+                    setTargetKeyword(`best ${newType.toLowerCase()} in ${city}`);
+                  }}
+                  className="w-full bg-slate-950 border border-slate-700/80 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500 font-semibold"
+                >
+                  {CATEGORY_GROUPS.filter(g => g !== 'All').map((group) => (
+                    <optgroup key={group} label={group} className="bg-slate-900 text-indigo-300 font-bold">
+                      {ONPAGE_QUICK_PRESETS.filter(p => p.categoryGroup === group).map((preset) => (
+                        <option key={preset.id} value={preset.businessType} className="bg-slate-950 text-white font-normal">
+                          {preset.icon} {preset.label}
+                        </option>
+                      ))}
+                    </optgroup>
+                  ))}
+                </select>
                 <input
                   type="text"
                   value={businessType}
                   onChange={(e) => setBusinessType(e.target.value)}
-                  placeholder="e.g. Dental Clinic, Hotel, Lawyer, Restaurant"
-                  className="w-full bg-slate-950 border border-slate-700/80 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 font-semibold"
+                  placeholder="Or type custom business type..."
+                  className="w-full bg-slate-950/60 border border-slate-800 rounded-lg px-2.5 py-1 text-[11px] text-slate-300 placeholder-slate-600 focus:outline-none focus:border-indigo-500 font-mono"
                 />
               </div>
 
-              <div>
-                <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">
-                  Service or Product <span className="text-rose-400">*</span>
-                </label>
+              {/* 2. Service or Product with Auto Dropdown */}
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <label className="text-[10px] font-bold text-slate-300 uppercase tracking-wider">
+                    Service or Product <span className="text-rose-400">*</span>
+                  </label>
+                  <span className="text-[9px] text-indigo-400 font-medium">Auto Dropdown</span>
+                </div>
+                <select
+                  value={serviceOrProduct}
+                  onChange={(e) => setServiceOrProduct(e.target.value)}
+                  className="w-full bg-slate-950 border border-slate-700/80 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500 font-semibold"
+                >
+                  {(BUSINESS_SERVICES_MAP[businessType] || [
+                    'Specialized Consultations & Solutions',
+                    'Standard Professional Services',
+                    '24/7 Emergency Support',
+                    'Premium Packages & Repairs'
+                  ]).map((svc, idx) => (
+                    <option key={idx} value={svc} className="bg-slate-950 text-white">
+                      {svc}
+                    </option>
+                  ))}
+                </select>
                 <input
                   type="text"
                   value={serviceOrProduct}
                   onChange={(e) => setServiceOrProduct(e.target.value)}
-                  placeholder="e.g. Teeth Cleaning, Implants, Luxury Suites"
-                  className="w-full bg-slate-950 border border-slate-700/80 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 font-semibold"
+                  placeholder="Or type custom service or product..."
+                  className="w-full bg-slate-950/60 border border-slate-800 rounded-lg px-2.5 py-1 text-[11px] text-slate-300 placeholder-slate-600 focus:outline-none focus:border-indigo-500 font-mono"
                 />
               </div>
 
-              <div>
-                <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">
-                  Target Keyword (or Leave Blank to Auto-Pick)
-                </label>
+              {/* 3. Target Keyword with Auto Dropdown */}
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <label className="text-[10px] font-bold text-slate-300 uppercase tracking-wider">
+                    Target Keyword
+                  </label>
+                  <span className="text-[9px] text-indigo-400 font-medium">Auto Dropdown</span>
+                </div>
+                <select
+                  value={targetKeyword}
+                  onChange={(e) => setTargetKeyword(e.target.value)}
+                  className="w-full bg-slate-950 border border-slate-700/80 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500 font-mono"
+                >
+                  <option value="" className="bg-slate-950 text-slate-400">✨ Leave Blank to Auto-Pick Best Keyword</option>
+                  <option value={`best ${businessType.toLowerCase()} in ${city}`}>best {businessType.toLowerCase()} in {city}</option>
+                  <option value={`top rated ${businessType.toLowerCase()} in ${city}`}>top rated {businessType.toLowerCase()} in {city}</option>
+                  <option value={`${serviceOrProduct.toLowerCase()} in ${city}`}>{serviceOrProduct.toLowerCase()} in {city}</option>
+                  <option value={`affordable ${serviceOrProduct.toLowerCase()} in ${city}`}>affordable {serviceOrProduct.toLowerCase()} in {city}</option>
+                  <option value={`emergency ${businessType.toLowerCase()} in ${city} open now`}>emergency {businessType.toLowerCase()} in {city} open now</option>
+                  <option value={`trusted ${businessType.toLowerCase()} specialist in ${city}`}>trusted {businessType.toLowerCase()} specialist in {city}</option>
+                </select>
                 <input
                   type="text"
                   value={targetKeyword}
                   onChange={(e) => setTargetKeyword(e.target.value)}
-                  placeholder="e.g. best dentist in Colombo"
-                  className="w-full bg-slate-950 border border-slate-700/80 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 font-mono"
+                  placeholder="Or type custom target keyword..."
+                  className="w-full bg-slate-950/60 border border-slate-800 rounded-lg px-2.5 py-1 text-[11px] text-slate-300 placeholder-slate-600 focus:outline-none focus:border-indigo-500 font-mono"
                 />
               </div>
 
-              <div>
-                <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">
-                  City / Location <span className="text-rose-400">*</span>
-                </label>
+              {/* 4. City / Location with Auto Dropdown */}
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <label className="text-[10px] font-bold text-slate-300 uppercase tracking-wider">
+                    City / Location <span className="text-rose-400">*</span>
+                  </label>
+                  <span className="text-[9px] text-indigo-400 font-medium">Auto Dropdown</span>
+                </div>
+                <select
+                  value={city}
+                  onChange={(e) => {
+                    const selectedCity = e.target.value;
+                    setCity(selectedCity);
+                    const found = POPULAR_CITIES.find(c => c.city === selectedCity);
+                    if (found) {
+                      setCountry(found.country);
+                    }
+                  }}
+                  className="w-full bg-slate-950 border border-slate-700/80 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500 font-semibold"
+                >
+                  {POPULAR_CITIES.map((c, idx) => (
+                    <option key={idx} value={c.city} className="bg-slate-950 text-white">
+                      📍 {c.city}, {c.country}
+                    </option>
+                  ))}
+                </select>
                 <input
                   type="text"
                   value={city}
                   onChange={(e) => setCity(e.target.value)}
-                  placeholder="e.g. Colombo, Austin, Toronto"
-                  className="w-full bg-slate-950 border border-slate-700/80 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500"
+                  placeholder="Or type custom city..."
+                  className="w-full bg-slate-950/60 border border-slate-800 rounded-lg px-2.5 py-1 text-[11px] text-slate-300 placeholder-slate-600 focus:outline-none focus:border-indigo-500"
                 />
               </div>
 
-              <div>
-                <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">
-                  Country
-                </label>
+              {/* 5. Country with Auto Dropdown */}
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <label className="text-[10px] font-bold text-slate-300 uppercase tracking-wider">
+                    Country
+                  </label>
+                  <span className="text-[9px] text-indigo-400 font-medium">Auto Dropdown</span>
+                </div>
+                <select
+                  value={country}
+                  onChange={(e) => setCountry(e.target.value)}
+                  className="w-full bg-slate-950 border border-slate-700/80 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500 font-semibold"
+                >
+                  {POPULAR_COUNTRIES.map((cnt, idx) => (
+                    <option key={idx} value={cnt} className="bg-slate-950 text-white">
+                      🌍 {cnt}
+                    </option>
+                  ))}
+                </select>
                 <input
                   type="text"
                   value={country}
                   onChange={(e) => setCountry(e.target.value)}
-                  placeholder="e.g. Sri Lanka, United States"
-                  className="w-full bg-slate-950 border border-slate-700/80 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500"
+                  placeholder="Or type custom country..."
+                  className="w-full bg-slate-950/60 border border-slate-800 rounded-lg px-2.5 py-1 text-[11px] text-slate-300 placeholder-slate-600 focus:outline-none focus:border-indigo-500"
                 />
               </div>
 
-              <div>
-                <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">
-                  Page / Topic
-                </label>
+              {/* 6. Page / Topic with Auto Dropdown */}
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <label className="text-[10px] font-bold text-slate-300 uppercase tracking-wider">
+                    Page / Topic
+                  </label>
+                  <span className="text-[9px] text-indigo-400 font-medium">Auto Dropdown</span>
+                </div>
+                <select
+                  value={pageOrTopic}
+                  onChange={(e) => setPageOrTopic(e.target.value)}
+                  className="w-full bg-slate-950 border border-slate-700/80 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500 font-semibold"
+                >
+                  {PAGE_TOPIC_OPTIONS.map((topicOpt, idx) => (
+                    <option key={idx} value={topicOpt} className="bg-slate-950 text-white">
+                      📄 {topicOpt}
+                    </option>
+                  ))}
+                </select>
                 <input
                   type="text"
                   value={pageOrTopic}
                   onChange={(e) => setPageOrTopic(e.target.value)}
-                  placeholder="e.g. Home Page, Service Landing Page"
-                  className="w-full bg-slate-950 border border-slate-700/80 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500"
+                  placeholder="Or type custom page / topic..."
+                  className="w-full bg-slate-950/60 border border-slate-800 rounded-lg px-2.5 py-1 text-[11px] text-slate-300 placeholder-slate-600 focus:outline-none focus:border-indigo-500"
                 />
               </div>
             </div>

@@ -1330,3 +1330,290 @@ Return ONLY valid JSON matching this schema:
     return fallback;
   }
 }
+
+export const BUSINESS_SERVICES_MAP: { [businessType: string]: string[] } = {
+  'Dental Clinic': [
+    'Cosmetic Dentistry & Dental Implants',
+    'Teeth Cleaning & Preventative Care',
+    'Laser Teeth Whitening',
+    'Dental Crowns & Veneers',
+    'Emergency Tooth Extraction',
+    'Root Canal Therapy',
+    'Invisalign & Orthodontics',
+    'Pediatric Dental Care'
+  ],
+  'Medical Clinic & Telehealth': [
+    'General Practice & Urgent Care Consultations',
+    'Virtual Doctor Consultations & Diagnostics',
+    'Preventative Health Checkups & Lab Tests',
+    'Pediatric & Family Medicine',
+    'Chronic Disease Management',
+    'Prescription Refill & Specialist Referrals'
+  ],
+  'Community Pharmacy': [
+    'Prescription Dispensing & Medical Supplies',
+    '24/7 Prescription Delivery',
+    'Over-The-Counter Medications',
+    'Health Supplements & Vitamins',
+    'Vaccination & Flu Shots'
+  ],
+  'Optometry & Eye Clinic': [
+    'Comprehensive Eye Exams & Vision Testing',
+    'Laser Eye Surgery & Cataract Removal',
+    'Designer Eyeglasses & Prescription Lenses',
+    'Contact Lens Fitting & Dry Eye Treatment'
+  ],
+  'Veterinary Hospital & Pet Clinic': [
+    'Emergency Pet ER & Surgical Care',
+    'Pet Vaccinations & Wellness Exams',
+    'Pet Dental Care & Cleaning',
+    'Pet Grooming & Boarding Services'
+  ],
+  'Plumbing & Drainage Service': [
+    '24/7 Pipe Burst Repair & Drain Unblocking',
+    'Emergency Leak Detection & Water Line Repair',
+    'Water Heater Installation & Replacement',
+    'Sewer Line Camera Inspection & Hydro Jetting',
+    'Bathroom & Kitchen Fixture Replacement'
+  ],
+  'Electrical Contractor': [
+    'EV Charger Installation & Smart Panel Upgrades',
+    'Residential & Commercial Rewiring',
+    'Emergency Circuit Breaker Repair',
+    'Indoor & Outdoor Architectural Lighting',
+    'Solar Panel Installation & Battery Storage'
+  ],
+  'Roofing Contractor': [
+    'Roof Replacement & Storm Damage Repair',
+    'Emergency Leak Inspection & Tarping',
+    'Asphalt Shingle, Tile & Metal Roofing',
+    'Commercial Flat Roof Coating',
+    'Gutter Installation & Siding Repair'
+  ],
+  'HVAC & Cooling Services': [
+    'Air Conditioning Repair & Compressor Service',
+    'Furnace & Heat Pump Installation',
+    'Same-Day AC Emergency Maintenance',
+    'Duct Cleaning & Indoor Air Quality Purification'
+  ],
+  'Commercial & Home Cleaning': [
+    'Deep House Cleaning & Move-In/Move-Out Clean',
+    'Corporate Office Sanitization & Janitorial',
+    'Post-Construction Cleanup & Floor Waxing',
+    'Window Cleaning & Carpet Steam Wash'
+  ],
+  'Landscaping & Lawn Care': [
+    'Landscape Architecture & Custom Patio Pavers',
+    'Lawn Mowing, Fertilization & Sodding',
+    'Tree Removal, Pruning & Stump Grinding',
+    'Irrigation & Sprinkler System Installation'
+  ],
+  'Emergency Locksmith Service': [
+    '24/7 Home & Commercial Lockout Rescue',
+    'Smart Lock & Keyless Entry Installation',
+    'Car Key Replacement & Transponder Programming',
+    'Master Key Systems & High-Security Deadbolts'
+  ],
+  'Furniture & Interior Decor': [
+    'Handcrafted Modern Wooden Living Decor',
+    'Solid Teak & Oak Dining Tables',
+    'Custom Upholstered Sofas & Sectionals',
+    'Minimalist Home Lighting & Area Rugs'
+  ],
+  'Fine Dining Restaurant': [
+    'Seafood & Artisanal Culinary Tasting Menu',
+    'Private Dining Rooms & Corporate Events',
+    'Chef-Curated Wine Pairing & Cocktails',
+    'Candle-Lit Anniversary & Romance Dining'
+  ],
+  'Boutique Hotel & Resort': [
+    'Ocean View Luxury Suites & Penthouse',
+    'Wellness Spa Retreat & Infinity Pool Access',
+    'Private Beach Cabanas & Concierge Tours',
+    'Gourmet Breakfast Buffet & Evening Cocktails'
+  ],
+  'Specialty Coffee Roastery & Cafe': [
+    'Single-Origin Pour-Over Espresso',
+    'Weekend Brunch & Sourdough Sandwiches',
+    'Cold Brew & Specialty Matcha Drinks',
+    'Fresh Artisan Pastries & Vegan Treats'
+  ],
+  'Artisan Bakery & Patisserie': [
+    'Sourdough Breads & Crusty Baguettes',
+    'Custom Wedding & Birthday Cakes',
+    'French Croissants, Macarons & Tarts'
+  ],
+  'Wood-Fired Pizzeria': [
+    'Authentic Neapolitan Wood-Fired Pizza',
+    'Handmade Fresh Pasta & Lasagna',
+    'Italian Gelato & Tiramisu Desserts',
+    'Online Ordering & Fast Hot Delivery'
+  ],
+  'Corporate Law Firm': [
+    'Corporate Litigation & Commercial Advisory',
+    'Mergers & Acquisitions Legal Counsel',
+    'Business Contract Drafting & Review',
+    'Intellectual Property & Trademark Filing'
+  ],
+  'Family Law Practice': [
+    'Divorce Mediation & Asset Division',
+    'Child Custody & Visitation Rights',
+    'Prenuptial & Postnuptial Agreements',
+    'Spousal Support & Alimony Legal Counsel'
+  ],
+  'Certified Public Accounting Firm': [
+    'Corporate Tax Preparation & IRS/HMRC Filing',
+    'Small Business Bookkeeping & Payroll Management',
+    'Financial Auditing & Wealth Advisory',
+    'Startup Entity Formation & Fractional CFO'
+  ],
+  'Real Estate Brokerage': [
+    'Luxury Residential Home Sales & Buyer Representation',
+    'Commercial Property Leasing & Acquisitions',
+    'Rental Property Management & Tenant Screening',
+    'Off-Plan Investment Villa Projects'
+  ],
+  'Independent Insurance Agency': [
+    'Commercial Business Liability Insurance',
+    'Comprehensive Homeowners & Auto Policies',
+    'Health, Life & Disability Insurance Packages',
+    'Workers Compensation & Umbrella Liability'
+  ],
+  'Car Rental Agency': [
+    'Luxury Sedan & SUV Airport Fleet Rentals',
+    'Economy Daily & Weekly Rental Vehicles',
+    'Chauffeur-Driven Executive Limousines',
+    'Zero-Deposit & Unlimited Mileage Rentals'
+  ],
+  'Auto Repair & Mechanic Shop': [
+    'Brake Repair, Rotor Replacement & Bleeding',
+    'Computer Engine Diagnostics & Check Engine Light',
+    'Transmission Flush, Repair & Rebuild',
+    'Oil Change, Tire Rotation & Wheel Alignment'
+  ],
+  'Car Detailing & Ceramic Coating Studio': [
+    'Multi-Stage Paint Correction & Swirl Removal',
+    '9H Ceramic Quartz Coating & Protection',
+    'Deep Interior Steam Cleaning & Leather Treatment',
+    'Paint Protection Film (PPF) & Window Tinting'
+  ],
+  'Moving & Relocation Company': [
+    'Residential Home & Apartment Moving',
+    'Long-Distance & Interstate Relocations',
+    'Corporate Office Moving & IT Equipment Transport',
+    'Full Packing Services & Climate-Controlled Storage'
+  ],
+  'Cloud Security Platform': [
+    'SOC2 & ISO27001 Cloud Compliance Monitoring',
+    'Automated Cloud Vulnerability Scanning',
+    'IAM Access Governance & Zero-Trust Architecture',
+    'Real-Time Cloud Security Posture Management (CSPM)'
+  ],
+  'Digital Marketing & Web Agency': [
+    'Custom Web Design & Conversion Rate Optimization',
+    'Technical & Local SEO Organic Traffic Growth',
+    'Google Ads (PPC) & Paid Social Campaigns',
+    'E-Commerce Shopify Development & Scaling'
+  ],
+  'Boutique Apparel Brand': [
+    'Sustainable Organic Streetwear & Hoodies',
+    'Designer Denim & Handcrafted Jackets',
+    'Eco-Friendly Activewear & Athleisure',
+    'Worldwide Carbon-Neutral Fast Shipping'
+  ],
+  'Hair Salon & Color Studio': [
+    'Balayage Highlights, Ombre & Precision Cuts',
+    'Hair Extensions & Brazilian Keratin Smoothing',
+    'Bridal Hair Styling & Makeup Packages',
+    'Scalp Detox Treatments & Organic Hair Color'
+  ],
+  'Wellness Spa & Massage Center': [
+    'Deep Tissue & Swedish Therapeutic Massage',
+    'Hot Stone Massage & Aromatherapy Wraps',
+    'Anti-Aging Facial Treatments & Microdermabrasion',
+    'Couples Spa Retreat & Hydrotherapy Baths'
+  ],
+  'Traditional Men\'s Barbershop': [
+    'Precision Skin Fades & Scissor Haircuts',
+    'Beard Sculpting & Hot Towel Straight Razor Shave',
+    'Gentlemen\'s Scalp Treatment & Hair Care',
+    'Kids & Seniors Classic Haircuts'
+  ],
+  'Athletic Gym & Fitness Center': [
+    'Personal Training & Functional Movement Coaching',
+    'CrossFit & High-Intensity HIIT Group Classes',
+    'Olympic Weightlifting & Strength Zones',
+    'Nutrition Coaching & Body Composition Scans'
+  ],
+  'Yoga & Reformer Pilates Studio': [
+    'Reformer Pilates Core Sculpting Classes',
+    'Hot Vinyasa Yoga & Yin Yoga Meditation',
+    'Sound Bath Relaxation & Breathwork Workshops',
+    'Private 1-on-1 Pilates & Instructor Training'
+  ],
+  'Photography & Cinematography Studio': [
+    'Wedding Photography & Cinematic 4K Film',
+    'Commercial Brand Advertising & Product Shoots',
+    'Studio Portraits, Family & Headshot Photography',
+    'Aerial Drone Videography & Event Coverage'
+  ],
+  'Event Design & Wedding Planning': [
+    'Full-Service Destination Wedding Coordination',
+    'Luxury Floral Design & Theme Decor Styling',
+    'Corporate Galas, Conferences & Product Launches',
+    'Day-Of Event Management & Vendor Sourcing'
+  ]
+};
+
+export const POPULAR_CITIES = [
+  { city: 'Colombo', country: 'Sri Lanka' },
+  { city: 'Kandy', country: 'Sri Lanka' },
+  { city: 'Galle', country: 'Sri Lanka' },
+  { city: 'Negombo', country: 'Sri Lanka' },
+  { city: 'London', country: 'United Kingdom' },
+  { city: 'New York', country: 'United States' },
+  { city: 'Austin', country: 'United States' },
+  { city: 'Miami', country: 'United States' },
+  { city: 'Dallas', country: 'United States' },
+  { city: 'Houston', country: 'United States' },
+  { city: 'Los Angeles', country: 'United States' },
+  { city: 'San Francisco', country: 'United States' },
+  { city: 'Chicago', country: 'United States' },
+  { city: 'Dubai', country: 'United Arab Emirates' },
+  { city: 'Sydney', country: 'Australia' },
+  { city: 'Melbourne', country: 'Australia' },
+  { city: 'Toronto', country: 'Canada' },
+  { city: 'Paris', country: 'France' },
+  { city: 'Singapore', country: 'Singapore' },
+  { city: 'Tokyo', country: 'Japan' },
+  { city: 'Bali', country: 'Indonesia' }
+];
+
+export const POPULAR_COUNTRIES = [
+  'Sri Lanka',
+  'United States',
+  'United Kingdom',
+  'United Arab Emirates',
+  'Australia',
+  'Canada',
+  'France',
+  'Germany',
+  'Singapore',
+  'Japan',
+  'Italy',
+  'Indonesia'
+];
+
+export const PAGE_TOPIC_OPTIONS = [
+  'Home Page',
+  'Main Services Page',
+  'Service Landing Page',
+  'Pricing & Packages Page',
+  'Emergency 24/7 Page',
+  'About Us Page',
+  'Contact & Booking Page',
+  'Shop / Catalog Page',
+  'Product Details Page',
+  'Blog / Resource Guide'
+];
+
